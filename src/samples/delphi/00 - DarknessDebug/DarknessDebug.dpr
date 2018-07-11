@@ -42,7 +42,7 @@ begin
 
     MSG_PLATFORM_INITIALIZED: begin
       PlatformPipe := dgGetMessagePipe(Pointer(UTF8Encode('platform')));
-      Response := dgSendMessageWait(PlatformPipe, MSG_CREATE_WINDOW, 100, 100, 0, 0 );
+      Response := dgSendMessageWait(PlatformPipe, MSG_PLATFORM_CREATE_WINDOW, 100, 100, 0, 0 );
     end
 
     else begin
