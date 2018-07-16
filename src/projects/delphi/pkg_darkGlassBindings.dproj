@@ -6,7 +6,7 @@
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>1247</TargetedPlatforms>
         <AppType>Package</AppType>
     </PropertyGroup>
@@ -90,7 +90,7 @@
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <SanitizedProjectName>pkg_darkGlassBindings</SanitizedProjectName>
         <DCC_BplOutput>..\..\..\out\lib\bpl</DCC_BplOutput>
-        <DCC_UnitSearchPath>..\..\..\out\lib\$(Platform)\$(Config);..\..\..\..\darkThreading\out\lib\$(Platform)\$(Config);..\..\..\..\darkDynlib\out\lib\$(Platform)\$(Config);..\..\..\..\darkCollections\out\lib\$(Platform)\$(Config);..\..\..\..\darkLog\out\lib\$(Platform)\$(Config);..\..\..\..\darkIO\out\lib\$(Platform)\$(Config);..\..\..\..\darkUnicode\out\lib\$(Platform)\$(Config);..\..\..\..\darkPlatform\out\lib\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\..\out\lib\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_IMPLICIT_IMPORT>false</DCC_IMPLICIT_IMPORT>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">

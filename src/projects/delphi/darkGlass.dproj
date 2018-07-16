@@ -6,7 +6,7 @@
         <MainSource>darkGlass.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>135</TargetedPlatforms>
         <AppType>Library</AppType>
     </PropertyGroup>
@@ -62,8 +62,8 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <DCC_DcuOutput>..\..\out\lib\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_ExeOutput>..\..\out\bin\$(Platform)\$(Config)</DCC_ExeOutput>
+        <DCC_DcuOutput>..\..\..\out\lib\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>..\..\..\out\bin\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_E>false</DCC_E>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
@@ -73,8 +73,8 @@
         <DCC_UsePackage>RESTComponents;emsclientfiredac;DataSnapFireDAC;FireDACIBDriver;emsclient;FireDACCommon;RESTBackendComponents;soapserver;CloudService;FireDACCommonDriver;inet;FireDAC;FireDACSqliteDriver;soaprtl;soapmidas;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>darkGlass</SanitizedProjectName>
-        <DCC_BplOutput>..\..\out\lib\bpl</DCC_BplOutput>
-        <DCC_UnitSearchPath>..\..\..\darkThreading\out\lib\$(Platform)\$(Config);..\..\..\darkDynlib\out\lib\$(Platform)\$(Config);..\..\..\darkCollections\out\lib\$(Platform)\$(Config);..\..\..\darkLog\out\lib\$(Platform)\$(Config);..\..\..\darkIO\out\lib\$(Platform)\$(Config);..\..\..\darkUnicode\out\lib\$(Platform)\$(Config);..\..\..\darkPlatform\out\lib\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_BplOutput>..\..\..\out\lib\bpl</DCC_BplOutput>
+        <DCC_UnitSearchPath>..\..\..\out\lib\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Linux64)'!=''">
         <DCC_UsePackage>FireDACADSDriver;DatasnapConnectorsFreePascal;FireDACMSSQLDriver;inetdb;emsedge;dbexpress;IndyCore;dsnap;DataSnapCommon;DataSnapConnectors;bindengine;FireDACOracleDriver;FireDACMySQLDriver;FireDACCommonODBC;DataSnapClient;IndySystem;FireDACDb2Driver;FireDACInfxDriver;emshosting;FireDACPgDriver;FireDACASADriver;FireDACTDataDriver;DbxCommonDriver;DataSnapServer;xmlrtl;DataSnapNativeClient;rtl;DbxClientDriver;CustomIPTransport;bindcomp;dbxcds;FireDACODBCDriver;DataSnapIndy10ServerTransport;dsnapxml;dbrtl;IndyProtocols;FireDACMongoDBDriver;DataSnapServerMidas;$(DCC_UsePackage)</DCC_UsePackage>

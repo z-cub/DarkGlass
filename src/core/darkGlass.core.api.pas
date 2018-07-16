@@ -28,7 +28,7 @@ unit darkGlass.core.api;
 
 interface
 uses
-  darkGlass.core.handles,
+  darkHandles,
   darkThreading,
   darkPlatform;
 
