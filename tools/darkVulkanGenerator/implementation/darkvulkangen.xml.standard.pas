@@ -1,3 +1,29 @@
+//------------------------------------------------------------------------------
+// This file is part of the DarkGlass game engine project.
+// More information can be found here: http://chapmanworld.com/darkglass
+//
+// DarkGlass is licensed under the MIT License:
+//
+// Copyright 2018 Craig Chapman
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the “Software”),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+//------------------------------------------------------------------------------
 unit darkvulkangen.xml.standard;
 
 interface
@@ -17,6 +43,7 @@ type
     fFilename: string;
     fXMLDocument: IXMLDocument;
   private
+    function GeneratePointerType(NewTypeName, TargetType: string; PtrCount: uint32; UnitNode: IdvASTUnit): IdvTypeDef;
     class procedure Explode(cDelimiter, sValue: string; var Results: TArrayOfString; iCount: uint32 = 0); static;
     function GetIdentifier(SourceStr: string; var PtrCount: uint32): string;
     function CreateVulkanUnit(ASTNode: IdvASTNode): IdvASTUnit;
@@ -925,6 +952,27 @@ begin
   end;
 end;
 
+function TdvXMLParser.GeneratePointerType( NewTypeName: string; TargetType: string; PtrCount: uint32; UnitNode: IdvASTUnit ): IdvTypeDef;
+var
+  PS: string;
+  PreviousName: string;
+  ReturnTypeNode: IdvTypeDef;
+  idx: uint32;
+begin
+  PreviousName := 'T'+NewTypeName;
+  ReturnTypeNode := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(PreviousName,tkAlias)) as IdvTypeDef;
+  ReturnTypeNode.InsertChild(TdvTypeDef.Create(TargetType,TdvTypeKind.tkUserDefined));
+  //- Add pointers to the return type node.
+  Ps := '';
+  for idx := 0 to pred(PtrCount) do begin
+    Ps := Ps + 'P';
+    ReturnTypeNode := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(Ps+NewTypeName,tkTypedPointer)) as IdvTypeDef;
+    ReturnTypeNode.InsertChild(TdvTypeDef.Create(PreviousName,tkUserDefined));
+    PreviousName := 'P'+PreviousName;
+  end;
+  Result := ReturnTypeNode;
+end;
+
 function TdvXMLParser.ParseFuncPointerTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
 var
   FunctionName: string;
@@ -936,8 +984,9 @@ var
   FuncTypeDef: IdvTypeDef;
   idx: uint32;
   ReturnTypeNode: IdvTypeDef;
-  PS: string;
-  PreviousName: string;
+  ParamType: IdvTypeDef;
+  ParameterStr: string;
+  TypeStr: string;
 begin
   // Parsing a function pointer.
   Result := False;
@@ -958,39 +1007,59 @@ begin
     exit;
   end;
   FunctionName := XMLNode.ChildNodes[1].Text;
+
+  FuncTypeDef := TdvTypeDef.Create(FunctionName,tkFuncPointer);
   //- If the return type is a void, and not a pointer, we're defining a procedure call-back
   if (utReturnType='VOID') and (PtrCount=0) then begin
-    FuncTypeDef := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(FunctionName,tkFuncPointer)) as IdvTypeDef;
     FuncTypeDef.InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkVoid));
   end else if (utReturnType='VOID') and (PtrCount=1) then begin
-    FuncTypeDef := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(FunctionName,tkFuncPointer)) as IdvTypeDef;
     FuncTypeDef.InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkPointer));
   end else begin
     //- We must build the return type as a separate type def.
     if PtrCount=0 then begin
       //- Straight return type.
-      FuncTypeDef := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(FunctionName,tkFuncPointer)) as IdvTypeDef;
       FuncTypeDef.InsertChild(TdvTypeDef.Create(ReturnType,TdvTypeKind.tkUserDefined));
     end else begin
       //- Generate the return type.
-      PreviousName := 'T'+FunctionName+'Result';
-      ReturnTypeNode := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(PreviousName,tkAlias)) as IdvTypeDef;
-      ReturnTypeNode.InsertChild(TdvTypeDef.Create(ReturnType,TdvTypeKind.tkUserDefined));
-      //- Add pointers to the return type node.
-      Ps := '';
-      for idx := 0 to pred(PtrCount) do begin
-        Ps := Ps + 'P';
-        ReturnTypeNode := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(Ps+FunctionName+'Result',tkTypedPointer)) as IdvTypeDef;
-        ReturnTypeNode.InsertChild(TdvTypeDef.Create(PreviousName,tkUserDefined));
-        PreviousName := 'P'+PreviousName;
-      end;
-      FuncTypeDef := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(FunctionName,tkFuncPointer)) as IdvTypeDef;
-      FuncTypeDef.InsertChild(TdvTypeDef.Create(PreviousName,TdvTypeKind.tkUserDefined));
+      ReturnTypeNode := GeneratePointerType( FunctionName+'Result', ReturnType, PtrCount, UnitNode );
+      FuncTypeDef.InsertChild(TdvTypeDef.Create(ReturnTypeNode.Name,TdvTypeKind.tkUserDefined));
     end;
   end;
+
+  //- Now it's time to handle parameters to the function.
+  if XMLNode.ChildNodes.Count=3 then begin
+    Result := True;
+    exit;
+  end;
+  for idx := 3 to pred(XMLNode.ChildNodes.Count) do begin
+    if Uppercase(Trim((XMLNode.ChildNodes[idx].NodeName)))<>'TYPE' then begin
+      continue;
+    end;
+    if (idx=pred(XMLNode.ChildNodes.Count)) then begin
+      continue;
+    end;
+    //- next node should be a text node.
+    TypeStr := XMLNode.ChildNodes[idx].Text;
+    ParameterStr := XMLNode.ChildNodes[succ(idx)].Text;
+    //- We now have all the data about a parameter.
+    ParameterStr := GetIdentifier(ParameterStr,PtrCount);
+    if (PtrCount=0) then begin
+      //- Straight named parameter.
+      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,TypeStr));
+    end else if (PtrCount=1) and (uppercase(trim(TypeStr))='VOID') then begin
+      //- void pointer parameter
+      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pointer'));
+    end else if (PtrCount=1) and (uppercase(trim(TypeStr))='CHAR') then begin
+      //- pchar
+      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pAnsiChar'));
+    end else begin
+      ParamType := GeneratePointerType( ParameterStr, TypeStr, PtrCount, UnitNode );
+      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,ParamType.Name));
+    end;
+  end;
+  //- Insert the func def.
+  UnitNode.InterfaceSection.Types.InsertChild(FuncTypeDef);
   //- Are we done yet?
-
-
   Result := True;
 end;
 
