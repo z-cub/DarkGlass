@@ -157,17 +157,20 @@ begin
      tkNativeInt: Result := 'nativeint';
 
     tkRecord: begin
+      setLineBreaks(2);
       Result := 'record' + sLineBreak;
         if getChildCount>0 then begin
           for idx := 0 to pred(getChildCount) do begin
             if Supports(getChild(idx),IdvTypeDef) then begin
-              Result := Result + getIndentation(Indentation+cIndentationStep) + (getChild(idx) as IdvTypeDef).Name + ': ' + (getChild(idx) as IdvTypeDef).getTypeString( Indentation );
+              Result := Result +
+                getIndentation(Indentation+cIndentationStep) +
+                (getChild(idx) as IdvTypeDef).Name + ': ' + (getChild(idx) as IdvTypeDef).getTypeString( Indentation ) + ';'+sLineBreak;
             end else begin
               Result := Result + '## Unsupported child node in AST! ##';
             end;
           end;
         end;
-      Result := Result + 'end;';
+      Result := Result + getIndentation(Indentation) + 'end';
     end;
 
     //- Function
@@ -234,7 +237,7 @@ begin
     Stream.WriteString(getIndentation(Indentation)+'//',UnicodeFormat);
   end;
 
-  Stream.WriteString(getIndentation(Indentation)+fName+' = '+getTypeString(Indentation)+';'+sLineBreak,UnicodeFormat);
+  Stream.WriteString(getIndentation(Indentation)+fName+' = '+getTypeString(Indentation)+';'+LineBreaks,UnicodeFormat);
 
   if not WriteAfterNode(Stream,UnicodeFormat,Indentation) then begin
     exit;

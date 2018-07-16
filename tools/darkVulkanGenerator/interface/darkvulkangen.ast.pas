@@ -148,6 +148,24 @@ type
     ['{C56105C0-9AE0-4E45-A69C-E7E04285E837}']
   end;
 
+  ///  Defines a variable with both name and type-kind
+  IdvVariable = interface( IdvASTNode )
+    ['{EC85E4AA-C768-4F2D-BDD5-8B7EBF862850}']
+    function getName: string;
+    procedure setName( value: string );
+    function getTypeKind: string;
+    procedure setTypeKind( value: string );
+
+    //- Pascal Only, Properties -//
+    property Name: string read getName write setName;
+    property TypeKind: string read getTypeKind write setTypeKind;
+  end;
+
+  /// Defines a section of variables, where each child is an IdvVariable
+  IdvVariables = interface( IdvASTNode )
+    ['{D20F4CA0-7DA2-4E00-AC68-71A5E9E2698D}']
+  end;
+
   TdvTypeKind = (
     tkVoid,         //- Generates nothing
     tkUserDefined,  //- A user defined type simply uses it's name as the type name (and therefore can be the child of an alias).
@@ -219,11 +237,16 @@ type
     //- otherwise a new IdvTypeDefs is created and returned.
     function getTypes: IdvTypeDefs;
 
+    //- If the last added child was an IdvVariables, it will be returned,
+    //- otherwise a new IdvVariables is created and returned.
+    function getVariables: IdvVariables;
+
     //- Pascal Only, properties -//
     property Kind: TASTUnitSectionKind read getKind;
     property UsesList: IdvUsesList read getUsesList;
     property Constants: IdvConstants read getConstants;
     property Types: IdvTypeDefs read getTypes;
+    property Variables: IdvVariables read getVariables;
   end;
 
   ///  <summary>
@@ -354,8 +377,11 @@ type
     procedure setReturnType( value: string );
     function getName: string;
     procedure setName( value: string );
+    function getIsVariable: boolean;
+    procedure setIsVariable( value: boolean );
 
     //- Pascal Only, properties.
+    property IsVariable: boolean read getIsVariable write setIsVariable;
     property ReturnType: string read getReturnType write setReturnType;
   end;
 
@@ -454,6 +480,15 @@ type
     class function Create: IdvConstants;
   end;
 
+  TdvVariable = class
+    class function Create( Name: string; TypeKind: string ): IdvVariable;
+  end;
+
+  TdvVariables = class
+    class function Create: IdvVariables;
+  end;
+
+
   TdvTypeDefs = class
     class function Create: IdvTypeDefs;
   end;
@@ -483,6 +518,8 @@ uses
   darkvulkangen.ast.typedsymbol.standard,
   darkvulkangen.ast.constant.standard,
   darkvulkangen.ast.constants.standard,
+  darkvulkangen.ast.variable.standard,
+  darkvulkangen.ast.variables.standard,
   darkvulkangen.ast.typedefs.standard,
   darkvulkangen.ast.typedef.standard;
 
@@ -612,6 +649,20 @@ end;
 class function TdvTypeDef.Create(Name: string; Kind: TdvTypeKind): IdvTypeDef;
 begin
   Result := darkvulkangen.ast.typedef.standard.TdvTypeDef.Create( Name, Kind );
+end;
+
+{ TdvVariable }
+
+class function TdvVariable.Create(Name, TypeKind: string): IdvVariable;
+begin
+  Result := darkvulkangen.ast.variable.standard.TdvVariable.Create( Name, TypeKind );
+end;
+
+{ TdvVariables }
+
+class function TdvVariables.Create: IdvVariables;
+begin
+  Result := darkvulkangen.ast.variables.standard.TdvVariables.Create;
 end;
 
 end.

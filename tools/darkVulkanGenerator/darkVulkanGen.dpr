@@ -33,7 +33,9 @@ uses
   darkvulkangen.ast.constant.standard in 'implementation\darkvulkangen.ast.constant.standard.pas',
   darkvulkangen.ast.constants.standard in 'implementation\darkvulkangen.ast.constants.standard.pas',
   darkvulkangen.ast.typedefs.standard in 'implementation\darkvulkangen.ast.typedefs.standard.pas',
-  darkvulkangen.ast.typedef.standard in 'implementation\darkvulkangen.ast.typedef.standard.pas';
+  darkvulkangen.ast.typedef.standard in 'implementation\darkvulkangen.ast.typedef.standard.pas',
+  darkvulkangen.ast.variable.standard in 'implementation\darkvulkangen.ast.variable.standard.pas',
+  darkvulkangen.ast.variables.standard in 'implementation\darkvulkangen.ast.variables.standard.pas';
 
 var
   Generator: IdvHeaderGenerator;

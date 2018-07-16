@@ -35,6 +35,8 @@ uses
 type
   TdvFunctionHeader = class( TdvASTNode, IdvFunctionHeader )
   private
+    fisVariable: boolean;
+    fIsFunction: boolean;
     fName: string;
     fReturnType: string;
   private //- IdvFunctionHeader -//
@@ -42,6 +44,8 @@ type
     procedure setReturnType( value: string );
     function getName: string;
     procedure setName( value: string );
+    function getIsVariable: boolean;
+    procedure setIsVariable( value: boolean );
   protected
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
   public
@@ -57,8 +61,14 @@ uses
 constructor TdvFunctionHeader.Create(name: string);
 begin
   inherited Create;
+  fisVariable := False;
   setReturnType('');
   setName(Name);
+end;
+
+function TdvFunctionHeader.getIsVariable: boolean;
+begin
+  Result := fIsVariable;
 end;
 
 function TdvFunctionHeader.getName: string;
@@ -68,11 +78,16 @@ end;
 
 function TdvFunctionHeader.getReturnType: string;
 begin
-  if fReturnType='' then begin
-    Result := 'void';
-  end else begin
+  if fIsFunction then begin
     Result := fReturnType;
+  end else begin
+    Result := '';
   end;
+end;
+
+procedure TdvFunctionHeader.setIsVariable(value: boolean);
+begin
+  fIsVariable := Value;
 end;
 
 procedure TdvFunctionHeader.setName(value: string);
@@ -82,11 +97,14 @@ end;
 
 procedure TdvFunctionHeader.setReturnType(value: string);
 begin
+  fIsFunction := True;
   if Uppercase(Trim(Value))='VOID' then begin
-    fReturnType := '';
-  end else begin
-    fReturnType := Value;
+    fIsFunction := False;
   end;
+  if Value='' then begin
+    fIsFunction := False;
+  end;
+  fReturnType := Value;
 end;
 
 function TdvFunctionHeader.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
@@ -99,10 +117,18 @@ begin
     exit;
   end;
   //- Write the keyword.
-  if getReturnType='' then begin
-    Stream.WriteString(getIndentation(Indentation)+'procedure '+fName,UnicodeFormat);
+  if fIsFunction then begin
+    if fIsVariable then begin
+      Stream.WriteString(getIndentation(Indentation)+fName+': function ',UnicodeFormat);
+    end else begin
+      Stream.WriteString(getIndentation(Indentation)+'function '+fName,UnicodeFormat);
+    end;
   end else begin
-    Stream.WriteString(getIndentation(Indentation)+'function '+fName,UnicodeFormat);
+    if fIsVariable then begin
+      Stream.WriteString(getIndentation(Indentation)+fName+': procedure ',UnicodeFormat);
+    end else begin
+      Stream.WriteString(getIndentation(Indentation)+'procedure '+fName,UnicodeFormat);
+    end;
   end;
   //- Write the parameters ( children ).
   if getChildCount>0 then begin
@@ -118,7 +144,7 @@ begin
     Stream.WriteString(' )',UnicodeFormat);
   end;
   //- Write the keyword.
-  if fReturnType<>'' then begin
+  if fIsFunction then begin
     Stream.WriteString(': '+fReturnType,UnicodeFormat);
   end;
   //- Write the semi and after node

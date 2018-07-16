@@ -188,6 +188,8 @@
         <DCCReference Include="implementation\darkvulkangen.ast.constants.standard.pas"/>
         <DCCReference Include="implementation\darkvulkangen.ast.typedefs.standard.pas"/>
         <DCCReference Include="implementation\darkvulkangen.ast.typedef.standard.pas"/>
+        <DCCReference Include="implementation\darkvulkangen.ast.variable.standard.pas"/>
+        <DCCReference Include="implementation\darkvulkangen.ast.variables.standard.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -221,7 +223,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\out\bin\Win64\Debug\darkVulkanGen.rsm" Configuration="Debug" Class="DebugSymbols">
+                <DeployFile LocalName="..\..\out\bin\Win64\Debug\tools\darkVulkanGen.rsm" Configuration="Debug" Class="DebugSymbols">
                     <Platform Name="Win64">
                         <RemoteName>darkVulkanGen.rsm</RemoteName>
                         <Overwrite>true</Overwrite>
@@ -242,7 +244,7 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\out\bin\Win64\Debug\darkVulkanGen.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\out\bin\Win64\Debug\tools\darkVulkanGen.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
                         <RemoteName>darkVulkanGen.exe</RemoteName>
                         <Overwrite>true</Overwrite>

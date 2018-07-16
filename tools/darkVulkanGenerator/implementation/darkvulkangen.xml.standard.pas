@@ -54,7 +54,7 @@ type
     function ParseDocument( ParentASTNode: IdvASTNode ): boolean;
     function ParseXMLNode( XMLNode: IXMLNode ): boolean;
     function ParseRegistryNode( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
-    function ParseRegistryCommands( XMLNode: IXMLNode; ASTNode: IdvASTNode  ): boolean;
+    function ParseRegistryCommands( XMLNode: IXMLNode; UnitNode: IdvASTUnit  ): boolean;
     function ParseRegistryComment( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
     function ParseCommentToASTNode(XMLNode: IXMLNode; TargetNode: IdvASTNode ): boolean;
     function ParseRegistryEnums( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
@@ -84,6 +84,10 @@ type
     function ParseConstantDefineNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseEnumValue( Enum: IdvASTNode; XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseUnionTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
+    function CountMemberPtr(XMLNode: IXMLNode): uint32;
+    function ParseCommand(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
+    function ParseCommandPrototype(XMLNode: IXMLNode; UnitNode: IdvASTUnit): IdvFunctionHeader;
+    function ParseParam(XMLNode: IXMLNode; FunctionHeader: IdvFunctionHeader; UnitNode: IdvASTUnit): boolean;
 
   public
     constructor Create( Filename: string ); reintroduce;
@@ -1063,9 +1067,96 @@ begin
   Result := True;
 end;
 
-function TdvXMLParser.ParseStructTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
+function TdvXMLParser.CountMemberPtr( XMLNode: IXMLNode ): uint32;
+var
+  idx: uint32;
+  WorkStr: string;
 begin
-  Log.Insert(ESkippedNode,TLogSeverity.lsError,[LogBind('nodetype',XMLNode.NodeName),LogBind('because','not yet implemented.')]);
+  Result := 0;
+  if XMLNode.ChildNodes.Count=0 then begin
+    exit;
+  end;
+  WorkStr := '';
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    if Uppercase(Trim(XMLNode.ChildNodes[idx].nodename))='COMMENT' then begin
+      continue;
+    end;
+    WorkStr := WorkStr + XMLNode.ChildNodes[idx].Text;
+  end;
+  {$ifdef NEXTGEN}
+  for idx := 0 to pred(Length(WorkStr)) do begin
+  {$else}
+  for idx := 1 to Length(WorkStr) do begin
+  {$endif}
+    if WorkStr[idx]='*' then begin
+      inc(Result,1);
+    end;
+  end;
+end;
+
+function TdvXMLParser.ParseStructTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
+var
+  idx: uint32;
+  ChildNode: IXMLNode;
+  TempNode: IXMLNode;
+  RecordNode: IdvTypeDef;
+  PointerType: IdvTypeDef;
+  Member: IdvTypeDef;
+  TypeStr: string;
+  NameStr: string;
+  PtrCount: uint32;
+begin
+  Result := False;
+  //- Insert the record node.
+  RecordNode := TdvTypeDef.Create(XMLNode.Attributes['name'],TdvTypeKind.tkRecord);
+  //- Loop through the members.
+  if XMLNode.ChildNodes.Count=0 then begin
+    Result := True;
+    exit;
+  end;
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    ChildNode := XMLNode.ChildNodes[idx];
+    if not (Uppercase(Trim(ChildNode.NodeName))='MEMBER') then begin
+      Log.Insert(ESkippedNode,TLogSeverity.lsWarning,[LogBind('nodetype',ChildNode.NodeName),LogBind('because','node type not expected here.')]);
+      continue;
+    end;
+    //- The node should have two children
+    if ChildNode.ChildNodes.Count<2 then begin
+      Log.Insert(ESkippedNode,TLogSeverity.lsWarning,[LogBind('nodetype','member'),LogBind('because','member node has insufficient child nodes.')]);
+      continue;
+    end;
+    TempNode := ChildNode.ChildNodes.FindNode('type');
+    if not assigned(TempNode) then begin
+      Log.Insert(ESkippedNode,TLogSeverity.lsWarning,[LogBind('nodetype','member'),LogBind('because','no type node found.')]);
+      continue;
+    end;
+    TypeStr := TempNode.Text;
+    TempNode := ChildNode.ChildNodes.FindNode('name');
+    if not assigned(TempNode) then begin
+      Log.Insert(ESkippedNode,TLogSeverity.lsWarning,[LogBind('nodetype','member'),LogBind('because','no name node found.')]);
+      continue;
+    end;
+    NameStr := TempNode.Text;
+    //- Get the pointer count for the member.
+    PtrCount := CountMemberPtr(ChildNode);
+    //- If PtrCount=1 and type=void.
+    if (Uppercase(Trim(TypeStr))='VOID') and (PtrCount=1) then begin
+      Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkPointer);
+    end else if (Uppercase(Trim(TypeStr))='CHAR') and (PtrCount=1) then begin
+      Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
+      Member.InsertChild(TdvTypeDef.Create('pchar',TdvTypeKind.tkUserDefined));
+    end else if (PtrCount>1) then begin
+      PointerType := GeneratePointerType( NameStr, TypeStr, PtrCount, UnitNode );
+      Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
+      Member.InsertChild(TdvTypeDef.Create(PointerType.Name,TdvTypeKind.tkUserDefined));
+    end else begin
+      Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
+      Member.InsertChild(TdvTypeDef.Create(TypeStr,TdvTypeKind.tkUserDefined));
+    end;
+    RecordNode.InsertChild(Member);
+  end;
+  //- Done
+  UnitNode.InterfaceSection.Types.InsertChild(RecordNode);
   Result := True;
 end;
 
@@ -1265,10 +1356,211 @@ begin
   Result := True;
 end;
 
-function TdvXMLParser.ParseRegistryCommands( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
+function TdvXMLParser.ParseCommandPrototype( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): IdvFunctionHeader;
+var
+  idx: uint32;
+  TypeNode: IXMLNode;
+  Identifier: string;
+  PtrCount: uint32;
+  ReturnType: IdvTypeDef;
+  ReturnTypeStr: string;
+  utTypeNode: string;
 begin
+  Result := nil;
+  //- Check that the node is valid.
+  if XMLNode.ChildNodes.Count=0 then begin
+    Log.Insert(ESkippedNode,TLogSeverity.lsError,[LogBind('nodetype','<command><proto></proto></command>'),LogBind('because','proto node has no children.')]);
+    exit;
+  end;
+  //- Get the data-type
+  TypeNode := XMLNode.ChildNodes.FindNode('type');
+  if not assigned(TypeNode) then begin
+    Log.Insert(ESkippedNode,TLogSeverity.lsError,[LogBind('nodetype','<command><proto></proto></command>'),LogBind('because','proto node has no type node.')]);
+    exit;
+  end;
+  //- Collect the identifier
+  Identifier := '';
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    if XMLNode.ChildNodes[idx]=TypeNode then begin
+      continue;
+    end;
+    Identifier := Identifier + XMLNode.ChildNodes[idx].Text;
+  end;
+  Identifier := GetIdentifier(Identifier,PtrCount);
+  //- Prepare the function return type.
+  utTypeNode := Uppercase(Trim(TypeNode.Text));
+  ReturnTypeStr := '';
+  if PtrCount=0 then begin
+    ReturnTypeStr := TypeNode.Text;
+  end else if PtrCount=1 then begin
+    if utTypeNode='VOID' then begin
+      ReturnTypeStr := 'pointer';
+    end else if utTypeNode='CHAR' then begin
+      ReturnTypeStr := 'pchar';
+    end else begin
+      ReturnType := GeneratePointerType( Identifier, XMLNode.Text, PtrCount, UnitNode );
+      UnitNode.InterfaceSection.Types.InsertChild(ReturnType);
+      ReturnTypeStr := ReturnType.Name;
+    end;
+  end else begin
+    ReturnType := GeneratePointerType( Identifier, XMLNode.Text, PtrCount, UnitNode );
+    UnitNode.InterfaceSection.Types.InsertChild(ReturnType);
+    ReturnTypeStr := ReturnType.Name;
+  end;
+  //- Generate function header
+  Result := TdvFunctionHeader.Create(Identifier);
+  Result.IsVariable := True;
+  Result.ReturnType := ReturnTypeStr;
+end;
+
+function TdvXMLParser.ParseParam( XMLNode: IXMLNode; FunctionHeader: IdvFunctionHeader; UnitNode: IdvASTUnit ): boolean;
+var
+  utProtection: string;
+  Parameter: IdvParameter;
+  TypeNode: IXMLNode;
+  ProtectionNode: IXMLNode;
+  idx: int32;
+  Identifier: string;
+  PtrCount: uint32;
+  utTypeStr: string;
+  PointerType: IdvTypeDef;
+begin
+  Result := False;
+  ProtectionNode := nil;
+  TypeNode := nil;
+  //- If there are no children, we have a problem.
+  if XMLNode.ChildNodes.Count=0 then begin
+    Log.Insert(ESkippedNode,TLogSeverity.lsError,[LogBind('nodetype','param'),LogBind('becuse','node has no children')]);
+    exit;
+  end;
+  //- Create the parameters
+  Parameter := TdvParameter.Create('','',TParameterProtection.ppNone);
+  //- If the first node is a text node, it may be a protection modifier.
+  utProtection := Uppercase(Trim(XMLNode.ChildNodes[0].Text));
+  if utProtection='CONST' then begin
+    ProtectionNode := XMLNode.ChildNodes[0];
+    Parameter.Protection := TParameterProtection.ppIn;
+  end;
+  //- Get the type node.
+  TypeNode := XMLNode.ChildNodes.FindNode('type');
+  if not assigned(TypeNode) then begin
+    Log.Insert(ESkippedNode,TLogSeverity.lsError,[LogBind('nodetype','param'),LogBind('becuse','node has no type')]);
+    exit;
+  end;
+  utTypeStr := Uppercase(Trim(TypeNode.Text));
+  //- Get the identifier.
+  Identifier := '';
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    if (XMLNode.ChildNodes[idx]<>ProtectionNode) and (XMLNode.ChildNodes[idx]<>TypeNode) then begin
+      Identifier := Identifier + XMLNode.ChildNodes[idx].Text;
+    end;
+  end;
+  Identifier := GetIdentifier(Identifier,PtrCount);
+  //- What do we do with a drunken parameter....
+   Parameter.TypedSymbol.Name := Identifier;
+  if PtrCount=0 then begin
+    Parameter.TypedSymbol.TypeKind := TypeNode.Text;
+  end else if PtrCount=1 then begin
+    if utTypeStr='VOID' then begin
+      Parameter.TypedSymbol.TypeKind := 'pointer';
+    end else if utTypeStr='CHAR' then begin
+      Parameter.TypedSymbol.TypeKind := 'pchar';
+    end else begin
+      if Parameter.Protection=TParameterProtection.ppNone then begin
+        Parameter.TypedSymbol.TypeKind := TypeNode.Text;
+        Parameter.Protection := TParameterProtection.ppVar;
+      end else begin
+        PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode );
+        Parameter.TypedSymbol.TypeKind := PointerType.Name;
+      end;
+    end;
+  end else begin
+    //- Gen a new pointer type.
+    PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode );
+    Parameter.TypedSymbol.TypeKind := PointerType.Name;
+  end;
+  //- Now add the parameter to the function
+  FunctionHeader.InsertChild(Parameter);
+  //- We're done here.
   Result := True;
-  Log.Insert(ESkippedNode,TLogSeverity.lsWarning,[LogBind('nodetype','commands'),LogBind('because','feature not yet implemented.')]);
+end;
+
+function TdvXMLParser.ParseCommand( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
+var
+  idx: int32;
+  ProtoNode: IXMLNode;
+  CommandPrototype: IdvFunctionHeader;
+begin
+  Result := False;
+  //-
+  ProtoNode := XMLNode.ChildNodes.FindNode('proto');
+  if not assigned(ProtoNode) then begin
+    Log.Insert(ESkippedNode,TLogSeverity.lsError,[LogBind('nodetype','command'),LogBind('because','command has no prototype.')]);
+    exit;
+  end;
+
+  //- Command Prototype
+  CommandPrototype := ParseCommandPrototype( ProtoNode, UnitNode );
+  if not assigned(CommandPrototype) then begin
+    exit;
+  end;
+
+  //- Process Param tags.
+  if XMLNode.ChildNodes.Count=1 then begin
+    Result := True;
+    exit;
+  end;
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    if (XMLNode.ChildNodes[idx]=ProtoNode) then begin
+      continue;
+    end;
+    if (Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName))<>'PARAM') then begin
+      if Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName))='COMMENT' then begin
+        if not ParseCommentToASTNode(XMLNode.ChildNodes[idx],CommandPrototype) then begin
+          exit;
+        end;
+      end else begin
+        Log.Insert(ESkippedNode,TLogSeverity.lsWarning,[LogBind('nodetype',XMLNode.ChildNodes[idx].NodeName),LogBind('because','node type not expected here.')]);
+        continue;
+      end;
+    end;
+    if not ParseParam(XMLNode.ChildNodes[idx],CommandPrototype,UnitNode) then begin
+      exit;
+    end;
+  end;
+
+  UnitNode.InterfaceSection.Variables.InsertChild(CommandPrototype);
+
+  //- All done.
+  Result := True;
+end;
+
+function TdvXMLParser.ParseRegistryCommands( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
+var
+  idx: int32;
+  ChildNode: IXMLNode;
+begin
+  Result := False;
+  if XMLNode.ChildNodes.Count=0 then begin
+    Log.Insert(ESkippedNode,TLogSeverity.lsError,[LogBind('nodetype','commands'),LogBind('because','There are no commands.')]);
+    exit;
+  end;
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    ChildNode := XMLNode.ChildNodes[idx];
+    if Uppercase(Trim(ChildNode.NodeName))='COMMENT' then begin
+      if not ParseCommentToASTNode(ChildNode,UnitNode.InterfaceSection) then begin
+        exit;
+       end;
+    end else if Uppercase(Trim(ChildNode.NodeName))='COMMAND' then begin
+      if not ParseCommand(ChildNode,UnitNode) then begin
+        exit;
+      end;
+    end else begin
+      Log.Insert(ESkippedNode,TLogSeverity.lsWarning,[LogBind('nodetype',ChildNode.NodeName),LogBind('because','this node type not expected within <commands/>')]);
+      exit;
+    end;
+  end;
+  Result := True;
 end;
 
 function TdvXMLParser.ParseRegistryFeature( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;

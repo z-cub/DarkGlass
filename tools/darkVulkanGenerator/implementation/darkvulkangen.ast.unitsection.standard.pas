@@ -42,6 +42,7 @@ type
     function getUsesList: IdvUsesList;
     function getConstants: IdvConstants;
     function getTypes: IdvTypeDefs;
+    function getVariables: IdvVariables;
   protected
     function WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean; override;
   public
@@ -107,6 +108,17 @@ end;
 function TdvASTUnitSection.getUsesList: IdvUsesList;
 begin
   Result := fUsesList;
+end;
+
+function TdvASTUnitSection.getVariables: IdvVariables;
+begin
+  if getChildCount>0 then begin
+    if Supports(getChild(pred(getChildCount)),IdvVariables) then begin
+      Result := getChild(pred(getChildCount)) as IdvVariables;
+      exit;
+    end;
+  end;
+  Result := InsertChild(TdvVariables.Create) as IdvVariables;
 end;
 
 function TdvASTUnitSection.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
