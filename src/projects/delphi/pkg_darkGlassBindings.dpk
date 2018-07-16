@@ -1,4 +1,4 @@
-package pkg_darkGlass;
+package pkg_darkGlassBindings;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -30,4 +30,10 @@ package pkg_darkGlass;
 requires
   rtl;
 
+contains
+  darkglass.dynamic in '..\..\bindings\darkglass.dynamic.pas',
+  darkglass in '..\..\bindings\darkglass.pas',
+  darkglass.static in '..\..\bindings\darkglass.static.pas';
+
 end.
+

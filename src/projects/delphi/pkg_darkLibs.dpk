@@ -1,0 +1,77 @@
+package pkg_darkLibs;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darkcollections.ringbuffer in '..\..\libs\darkCollections\api\darkcollections.ringbuffer.pas',
+  darkcollections.stack in '..\..\libs\darkCollections\api\darkcollections.stack.pas',
+  darkcollections.types in '..\..\libs\darkCollections\api\darkcollections.types.pas',
+  darkcollections.utils in '..\..\libs\darkCollections\api\darkcollections.utils.pas',
+  darkcollections.dictionary in '..\..\libs\darkCollections\api\darkcollections.dictionary.pas',
+  darkcollections.list in '..\..\libs\darkCollections\api\darkcollections.list.pas',
+  darkDynlib in '..\..\libs\darkDynlib\api\darkDynlib.pas',
+  darkdynlib.dynlib.posix in '..\..\libs\darkDynlib\implementation\posix\darkdynlib.dynlib.posix.pas',
+  darkdynlib.dynlib.windows in '..\..\libs\darkDynlib\implementation\windows\darkdynlib.dynlib.windows.pas',
+  darkio.streams in '..\..\libs\darkIO\api\darkio.streams.pas',
+  darkio.buffers in '..\..\libs\darkIO\api\darkio.buffers.pas',
+  darkio.filestream.standard in '..\..\libs\darkIO\implementation\darkio.filestream.standard.pas',
+  darkio.memorystream.standard in '..\..\libs\darkIO\implementation\darkio.memorystream.standard.pas',
+  darkio.stream.custom in '..\..\libs\darkIO\implementation\darkio.stream.custom.pas',
+  darkio.unicodestream.custom in '..\..\libs\darkIO\implementation\darkio.unicodestream.custom.pas',
+  darkio.buffer.standard in '..\..\libs\darkIO\implementation\darkio.buffer.standard.pas',
+  darkio.cyclicbuffer.standard in '..\..\libs\darkIO\implementation\darkio.cyclicbuffer.standard.pas',
+  darklog.logtarget.stream in '..\..\libs\darkLog\api\darklog.logtarget.stream.pas',
+  darklog in '..\..\libs\darkLog\api\darklog.pas',
+  darklog.logtarget.console in '..\..\libs\darkLog\api\darklog.logtarget.console.pas',
+  darklog.logtarget.logfile in '..\..\libs\darkLog\api\darklog.logtarget.logfile.pas',
+  darklog.logtarget.stream.standard in '..\..\libs\darkLog\implementation\darklog.logtarget.stream.standard.pas',
+  darklog.tokenizer.standard in '..\..\libs\darkLog\implementation\darklog.tokenizer.standard.pas',
+  darklog.log.standard in '..\..\libs\darkLog\implementation\darklog.log.standard.pas',
+  darklog.logtarget.console.standard in '..\..\libs\darkLog\implementation\darklog.logtarget.console.standard.pas',
+  darklog.logtarget.logfile.standard in '..\..\libs\darkLog\implementation\darklog.logtarget.logfile.standard.pas',
+  darkThreading in '..\..\libs\darkThreading\api\darkThreading.pas',
+  darkthreading.threadmethod.posix in '..\..\libs\darkThreading\implementation\posix\darkthreading.threadmethod.posix.pas',
+  darkthreading.criticalsection.posix in '..\..\libs\darkThreading\implementation\posix\darkthreading.criticalsection.posix.pas',
+  darkthreading.signaledcriticalsection.posix in '..\..\libs\darkThreading\implementation\posix\darkthreading.signaledcriticalsection.posix.pas',
+  darkThreading.messagechannel.standard in '..\..\libs\darkThreading\implementation\standard\darkThreading.messagechannel.standard.pas',
+  darkThreading.messagepipe.standard in '..\..\libs\darkThreading\implementation\standard\darkThreading.messagepipe.standard.pas',
+  darkThreading.threadpool.standard in '..\..\libs\darkThreading\implementation\standard\darkThreading.threadpool.standard.pas',
+  darkThreading.threadsystem.standard in '..\..\libs\darkThreading\implementation\standard\darkThreading.threadsystem.standard.pas',
+  darkThgreading.messaging.internal in '..\..\libs\darkThreading\implementation\standard\darkThgreading.messaging.internal.pas',
+  darkThreading.messagebus.standard in '..\..\libs\darkThreading\implementation\standard\darkThreading.messagebus.standard.pas',
+  darkthreading.threadmethod.windows in '..\..\libs\darkThreading\implementation\windows\darkthreading.threadmethod.windows.pas',
+  darkthreading.criticalsection.windows in '..\..\libs\darkThreading\implementation\windows\darkthreading.criticalsection.windows.pas',
+  darkThreading.signaledcriticalsection.windows in '..\..\libs\darkThreading\implementation\windows\darkThreading.signaledcriticalsection.windows.pas',
+  darkunicode in '..\..\libs\darkUnicode\api\darkunicode.pas',
+  darkunicode.codec.standard in '..\..\libs\darkUnicode\implementation\darkunicode.codec.standard.pas',
+  darkHandles in '..\..\libs\darkHandles\api\darkHandles.pas';
+
+end.
