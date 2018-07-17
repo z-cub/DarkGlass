@@ -190,6 +190,7 @@ type
     tkString,       //- Delphi string.
     tkAnsiString,   //- Ansi string
     tkRecord,       //- Members will be children in the AST
+    tkUnion,        //- Same as tkRecord, but each child is a case of the union.
     tkFuncPointer   //- Child is a function header, but will be rendered as function pointer.
   );
 

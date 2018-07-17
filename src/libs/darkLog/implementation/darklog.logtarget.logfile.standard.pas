@@ -56,7 +56,7 @@ begin
   fFileStream := TFileStream.Create(fFilename,False);
   try
     fFileStream.setPosition(fFileStream.getSize);
-    fFileStream.WriteString(MessageText+sLineBreak, fFormat);
+    fFileStream.WriteString(MessageText, fFormat);
   finally
     fFileStream := nil;
   end;

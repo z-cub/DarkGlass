@@ -75,7 +75,7 @@ type
     function ParseFuncPointerTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseHandleTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseIncludeTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
-    function ParseStructTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
+    function ParseStructTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit; IsUnion: boolean = FALSE): boolean;
     function VerifyDefineHandle(XMLNode: IXMLNode): boolean;
     function VerifyMakeVersion(XMLNode: IXMLNode): boolean;
     function VerifyVersionMajor(XMLNode: IXMLNode): boolean;
@@ -92,13 +92,11 @@ type
     function ParseCommand(XMLNode: IXMLNode; UnitNode: IdvASTUnit; ParameterVars: IdvASTNode ): boolean;
     function ParseCommandPrototype(XMLNode: IXMLNode; UnitNode: IdvASTUnit): IdvFunctionHeader;
     function ParseParam(XMLNode: IXMLNode; FunctionHeader: IdvFunctionHeader; UnitNode: IdvASTUnit): boolean;
-    function HandleCommandAlias(XMLNode: IXMLNode;
-      ParameterVars: IdvASTNode): boolean;
+    function HandleCommandAlias(XMLNode: IXMLNode; ParameterVars: IdvASTNode): boolean;
     function ParseExtension(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
-    function ParseExtensionRequire(XMLNode: IXMLNode; ExtNo: int32;
-      UnitNode: IdvASTUnit): boolean;
-    function ParseExtensionEnum(XMLNode: IXMLNode; ExtNo: int32;
-      UnitNode: IdvASTUnit): boolean;
+    function ParseExtensionRequire(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit): boolean;
+    function ParseExtensionEnum(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit): boolean;
+    function ParseStructMember(XMLNode: IXMLNode; RecordNode: IdvTypeDef; UnitNode: IdvASTUnit): boolean;
 
 
   public
@@ -127,7 +125,6 @@ type
   EExpectedNode = class(ELogEntry);
   EMissingAttribute = class(ELogEntry);
   EUnhandledAttribute = class(ELogEntry);
-  EPlatformNotSupported = class(ELogEntry);
   ESkippedNode = class(ELogEntry);
   EMacroChanged = class(ELogEntry);
   EUnknownXMLFormat = class(ELogEntry);
@@ -173,25 +170,26 @@ begin
 end;
 
 function TdvXMLParser.ParseXMLNode( XMLNode: IXMLNode ): boolean;
-var
-  value: string;
+//var
+//  value: string;
 begin
-  if not XMLNode.HasAttribute('encoding') then begin
-    Log.Insert(EExpectedEncoding,lsHint);
-  end else begin
-    Value := XMLNode.Attributes['encoding'];
-    if Uppercase(Trim(Value))<>'UTF-8' then begin
-      Log.Insert(EUnexpectedEncodingType,TLogSeverity.lsHint,[LogBind('enctype',Value)]);
-    end;
-  end;
-  if not XMLNode.HasAttribute('version') then begin
-    Log.Insert(EExpectedXMLVersion,lsHint);
-  end else begin
-    Value := XMLNode.Attributes['version'];
-    if Uppercase(Trim(Value))<>'1.0' then begin
-      Log.Insert(EUnexpectedVersion,TLogSeverity.lsHint,[LogBind('version',Value)]);
-    end;
-  end;
+// Weirdness in attribute handling, no checking done, just return true.
+//  if not XMLNode.HasAttribute('encoding') then begin
+//    Log.Insert(EExpectedEncoding,lsHint);
+//  end else begin
+//    Value := XMLNode.Attributes['encoding'];
+//    if Uppercase(Trim(Value))<>'UTF-8' then begin
+//      Log.Insert(EUnexpectedEncodingType,TLogSeverity.lsHint,[LogBind('enctype',Value)]);
+//    end;
+//  end;
+//  if not XMLNode.HasAttribute('version') then begin
+//    Log.Insert(EExpectedXMLVersion,lsHint);
+//  end else begin
+//    Value := XMLNode.Attributes['version'];
+//    if Uppercase(Trim(Value))<>'1.0' then begin
+//      Log.Insert(EUnexpectedVersion,TLogSeverity.lsHint,[LogBind('version',Value)]);
+//    end;
+//  end;
   Result := True;
 end;
 
@@ -280,7 +278,7 @@ begin
   IfDef := nil;
   IfNDef := nil;
   Define := nil;
-  if not MatchAttributes( XMLNode, ['name', 'protect', 'comment'], 'platform' ) then begin
+  if not MatchAttributes( XMLNode, ['name', 'protect', 'comment'], XMLNode.XML ) then begin
     exit;
   end;
   //- We have all the attribtues we need, so lets use them :-)
@@ -324,8 +322,6 @@ begin
     IfDef.Defined.InsertChild(IfNDef);
     Define := TdvDefine.Create(utProtect);
     IfNDef.UnDefined.InsertChild( Define );
-  end else begin
-    Log.Insert(EPlatformNotSupported,TLogSeverity.lsWarning,[LogBind('platform',XMLNode.Attributes['name'])]);
   end;
   if assigned(IfDef) then begin
     if LastPlatform then begin
@@ -364,7 +360,6 @@ end;
 function TdvXMLParser.ParseRegistryTags( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
 begin
   Result := True; //- skip tags, what else is there to do with them?
-  SkipNode('tags','tags not required for generator');
 end;
 
 function TdvXMLParser.VerifyMakeVersion( XMLNode: IXMLNode ): boolean;
@@ -696,7 +691,12 @@ begin
   text := Uppercase(Trim(RemoveComments(XMLNode.ChildNodes[0].Text)));
   if text<>'#DEFINE' then begin
     if text='STRUCT' then begin
-      SkipNode('type','node contains "struct <name>...</name>;" not needed?');
+      NameNode := XMLNode.ChildNodes.FindNode('name');
+      if not assigned(NameNode) then begin
+        SkipNode('type','node contains "struct <name>...</name>;" not needed?');
+      end else begin
+        UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(NameNode.Text,TdvTypeKind.tkRecord));
+      end;
       Result := True;
       exit;
     end;
@@ -744,7 +744,7 @@ begin
   end;
 
   //- Is this the node for 'VK_DEFINE_NON_DISPATCHABLE_HANDLE' ?
-  if MatchAttributes( XMLNode, ['category','name'], 'type', FALSE ) then begin
+  if MatchAttributes( XMLNode, ['category','name'], XMLNode.XML, FALSE ) then begin
     utAttribute := Uppercase(Trim(XMLNode.Attributes['name']));
     if utAttribute = 'VK_DEFINE_NON_DISPATCHABLE_HANDLE' then begin
       if not VerifyIAintParsingThat( XMLNode ) then begin
@@ -888,7 +888,7 @@ begin
   NameNode := XMLNode.ChildNodes.FindNode('name');
   TypeNode := XMLNode.ChildNodes.FindNode('type');
   if not (assigned(NameNode) and assigned(TypeNode)) then begin
-    if MatchAttributes( XMLNode, ['name','alias'], '', FALSE) then begin
+    if MatchAttributes( XMLNode, ['name','alias'], XMLNode.XML, FALSE) then begin
       Name := XMLNode.Attributes['name'];
       TypeKind := XMLNode.Attributes['alias'];
     end else begin
@@ -942,7 +942,13 @@ var
   NameStr: string;
 begin
   // Ensure we have an enum.
-  if not MatchAttributes(XMLNode,['name','category'],'type category=enum') then begin
+  if (XMLNode.HasAttribute('alias')) and (XMLNode.HasAttribute('name')) then begin
+    //- This enum is an alias, so handle as such.
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create(XMLNode.Attributes['name'],TdvTypeKind.tkAlias)).InsertChild( TdvTypeDef.Create(XMLNode.Attributes['alias'],TdvTypeKind.tkUserDefined) );
+    Result := True;
+    Exit;
+  end;
+  if not MatchAttributes(XMLNode,['name','category'], XMLNode.XML) then begin
     exit;
   end;
   NameStr := XMLNode.Attributes['name'];
@@ -1115,66 +1121,106 @@ begin
   end;
 end;
 
-function TdvXMLParser.ParseStructTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
+function TdvXMLParser.ParseStructMember( XMLNode: IXMLNode; RecordNode: IdvTypeDef; UnitNode: IdvASTUnit ): boolean;
 var
-  idx: uint32;
-  ChildNode: IXMLNode;
-  TempNode: IXMLNode;
-  RecordNode: IdvTypeDef;
-  PointerType: IdvTypeDef;
-  Member: IdvTypeDef;
+  utNodeName: string;
+  TypeNode: IXMLNode;
+  NameNode: IXMLNode;
+  CommentNode: IXMLNode;
   TypeStr: string;
   NameStr: string;
+  CommentStr: string;
   PtrCount: uint32;
+  Member: IdvTypeDef;
+  PointerType: IdvTypeDef;
+begin
+  Result := False;
+  utNodeName := Uppercase(Trim(XMLNode.NodeName));
+  //- Ensure the node is actualy a member node.
+  if utNodeName<>'MEMBER' then begin
+    //- We handle comments as subsequent nodes.
+    if utNodeName='COMMENT' then begin
+        Result := True;
+        exit;
+    end;
+    //- Comments within the XML <!-- ugh, why?!?
+    if utNodeName='#COMMENT' then begin
+      Result := True;
+      exit;
+    end;
+    SkipNode(XMLNode.NodeName,'node type not expected here.');
+    Result := True;
+    exit;
+  end;
+  //- The node should have two children
+  if XMLNode.ChildNodes.Count<2 then begin
+    SkipNode('member','member node has insufficient child nodes.');
+    exit;
+  end;
+  TypeNode := XMLNode.ChildNodes.FindNode('type');
+  if not assigned(TypeNode) then begin
+    SkipNode('member','no type node found.');
+    exit;
+  end;
+  TypeStr := TypeNode.Text;
+  NameNode := XMLNode.ChildNodes.FindNode('name');
+  if not assigned(NameNode) then begin
+    SkipNode('member','no name node found.');
+    exit;
+  end;
+  NameStr := NameNode.Text;
+  //- Is there a comment?
+  CommentNode := XMLNode.ChildNodes.FindNode('comment');
+  if assigned(CommentNode) then begin
+    CommentStr := CommentNode.Text;
+  end else begin
+    CommentStr := '';
+  end;
+  //- Get the pointer count for the member.
+  PtrCount := CountMemberPtr(XMLNode);
+  //- If PtrCount=1 and type=void.
+  if (Uppercase(Trim(TypeStr))='VOID') and (PtrCount=1) then begin
+    Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkPointer);
+  end else if (Uppercase(Trim(TypeStr))='CHAR') and (PtrCount=1) then begin
+    Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
+    Member.InsertChild(TdvTypeDef.Create('pchar',TdvTypeKind.tkUserDefined));
+  end else if (PtrCount>1) then begin
+    PointerType := GeneratePointerType( NameStr, TypeStr, PtrCount, UnitNode );
+    Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
+    Member.InsertChild(TdvTypeDef.Create(PointerType.Name,TdvTypeKind.tkUserDefined));
+  end else begin
+    Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
+    Member.InsertChild(TdvTypeDef.Create(TypeStr,TdvTypeKind.tkUserDefined));
+  end;
+  //- Insert the member into the record, and add a comment if necessart.
+  RecordNode.InsertChild(Member);
+  if CommentStr<>'' then begin
+    RecordNode.InsertChild(TdvASTComment.Create(CommentStr));
+  end;
+  Result := True;
+end;
+
+function TdvXMLParser.ParseStructTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit; IsUnion: boolean = FALSE ): boolean;
+var
+  idx: uint32;
+  RecordNode: IdvTypeDef;
 begin
   Result := False;
   //- Insert the record node.
-  RecordNode := TdvTypeDef.Create(XMLNode.Attributes['name'],TdvTypeKind.tkRecord);
+  if IsUnion then begin
+    RecordNode := TdvTypeDef.Create(XMLNode.Attributes['name'],TdvTypeKind.tkUnion);
+  end else begin
+    RecordNode := TdvTypeDef.Create(XMLNode.Attributes['name'],TdvTypeKind.tkRecord);
+  end;
   //- Loop through the members.
   if XMLNode.ChildNodes.Count=0 then begin
     Result := True;
     exit;
   end;
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
-    ChildNode := XMLNode.ChildNodes[idx];
-    if not (Uppercase(Trim(ChildNode.NodeName))='MEMBER') then begin
-      SkipNode(ChildNode.NodeName,'node type not expected here.');
-      continue;
+    if not ParseStructMember( XMLNode.ChildNodes[idx], RecordNode, UnitNode ) then begin
+      exit;
     end;
-    //- The node should have two children
-    if ChildNode.ChildNodes.Count<2 then begin
-      SkipNode('member','member node has insufficient child nodes.');
-      continue;
-    end;
-    TempNode := ChildNode.ChildNodes.FindNode('type');
-    if not assigned(TempNode) then begin
-      SkipNode('member','no type node found.');
-      continue;
-    end;
-    TypeStr := TempNode.Text;
-    TempNode := ChildNode.ChildNodes.FindNode('name');
-    if not assigned(TempNode) then begin
-      SkipNode('member','no name node found.');
-      continue;
-    end;
-    NameStr := TempNode.Text;
-    //- Get the pointer count for the member.
-    PtrCount := CountMemberPtr(ChildNode);
-    //- If PtrCount=1 and type=void.
-    if (Uppercase(Trim(TypeStr))='VOID') and (PtrCount=1) then begin
-      Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkPointer);
-    end else if (Uppercase(Trim(TypeStr))='CHAR') and (PtrCount=1) then begin
-      Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
-      Member.InsertChild(TdvTypeDef.Create('pchar',TdvTypeKind.tkUserDefined));
-    end else if (PtrCount>1) then begin
-      PointerType := GeneratePointerType( NameStr, TypeStr, PtrCount, UnitNode );
-      Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
-      Member.InsertChild(TdvTypeDef.Create(PointerType.Name,TdvTypeKind.tkUserDefined));
-    end else begin
-      Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
-      Member.InsertChild(TdvTypeDef.Create(TypeStr,TdvTypeKind.tkUserDefined));
-    end;
-    RecordNode.InsertChild(Member);
   end;
   //- Done
   UnitNode.InterfaceSection.Types.InsertChild(RecordNode);
@@ -1183,18 +1229,17 @@ end;
 
 function TdvXMLParser.ParseUnionTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
 begin
-  SkipNode(XMLNode.NodeName,'not yet implemented.',TRUE);
-  Result := True;
+  Result := ParseStructTypeNode( XMLNode, UnitNode, TRUE );
 end;
 
 function TdvXMLParser.ParseIncludeTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
 begin
   Result := False;
-  if not MatchAttributes(XMLNode,['name','category'],'type') then begin
+  //- Check to see if anything changed.
+  if not MatchAttributes(XMLNode,['name','category'], XMLNode.XML) then begin
     exit;
   end;
-  //- Simply skip include nodes, we're building all includes in!
-  SkipNode('type',XMLNode.Attributes['name']+' is included in main unit unit');
+  //- Otherwise, simply skip include nodes, we're building all includes in!
   Result := True;
 end;
 
@@ -1219,13 +1264,12 @@ var
 begin
   Result := False;
   //- Handle those nodes
-  if not MatchAttributes(XMLNode,['category'],'type',FALSE) then begin
+  if not MatchAttributes(XMLNode,['category'], XMLNode.XML,FALSE) then begin
     if (
-         MatchAttributes(XMLNode,['requires','name'],'type',FALSE) or
-         MatchAttributes(XMLNode,['requires'],'type',FALSE) or
-         MatchAttributes(XMLNode,['name'],'type',FALSE)
+         MatchAttributes(XMLNode,['requires','name'], XMLNode.XML,FALSE) or
+         MatchAttributes(XMLNode,['requires'], XMLNode.XML,FALSE) or
+         MatchAttributes(XMLNode,['name'], XMLNode.XML,FALSE)
        ) then begin
-       SkipNode('type','unused node');
       Result := True; // processing can continue, these are un-required nodes.
     end else begin
       SkipNode('type','no category attribute');
@@ -1297,18 +1341,18 @@ var
 begin
   Result := False;
   //- Check attributes
-  if ( MatchAttributes(XMLNode,['name','value'],'',FALSE) or
-       MatchAttributes(XMLNode,['name','alias'],'',FALSE) or
-       MatchAttributes(XMLNode,['name','value','comment'],'',FALSE) or
-       MatchAttributes(XMLNode,['name','alias','comment'],'',FALSE)) then begin
+  if ( MatchAttributes(XMLNode,['name','value'], XMLNode.XML,FALSE) or
+       MatchAttributes(XMLNode,['name','alias'], XMLNode.XML,FALSE) or
+       MatchAttributes(XMLNode,['name','value','comment'], XMLNode.XML,FALSE) or
+       MatchAttributes(XMLNode,['name','alias','comment'], XMLNode.XML,FALSE)) then begin
     NameStr := XMLNode.Attributes['name'];
     if XMLNode.HasAttribute('value') then begin
       ValueStr := XMLNode.Attributes['value'];
     end else begin
       ValueStr := XMLNode.Attributes['alias'];
     end;
-  end else if ( MatchAttributes(XMLNode,['name','bitpos'],'',FALSE) or
-                MatchAttributes(XMLNode,['name','bitpos','comment'],'',FALSE)) then begin
+  end else if ( MatchAttributes(XMLNode,['name','bitpos'], XMLNode.XML,FALSE) or
+                MatchAttributes(XMLNode,['name','bitpos','comment'], XMLNode.XML,FALSE)) then begin
     NameStr := XMLNode.Attributes['name'];
     ValueStr := trim(XMLNode.Attributes['bitpos']);
     if ValueStr<>'0' then begin
@@ -1336,17 +1380,12 @@ var
   utNodeName: string;
 begin
   Result := False;
-  if XMLNode.ChildNodes.Count=0 then begin
-    SkipNode('enums','enum node was empty');
-    Result := True;
-    exit;
-  end;
   //- Check that the parent node has a name attribute.
   if not (
-           MatchAttributes(XMLNode,['name','comment'],'',FALSE) or
-           MatchAttributes(XMLNode,['name'],'',FALSE) or
-           MatchAttributes(XMLNode,['name','type'],'',FALSE) or
-           MatchAttributes(XMLNode,['name','type','comment'],'',FALSE)
+           MatchAttributes(XMLNode,['name','comment'], XMLNode.XML,FALSE) or
+           MatchAttributes(XMLNode,['name'], XMLNode.XML,FALSE) or
+           MatchAttributes(XMLNode,['name','type'], XMLNode.XML,FALSE) or
+           MatchAttributes(XMLNode,['name','type','comment'], XMLNode.XML,FALSE)
          ) then begin
     SkipNode('enums','enum node has no valid combination of attribute.',TRUE);
     exit;
@@ -1356,7 +1395,12 @@ begin
   if not assigned(Enum) then begin
     Enum := UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create( XMLNode.Attributes['name'], TdvTypeKind.tkEnum ) );
   end;
-  //- Loop through child nodes.
+  //- Node may be empty
+  if XMLNode.ChildNodes.Count=0 then begin
+    Result := True;
+    exit;
+  end;
+  //-  Loop through child nodes.
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
     ChildNode := XMLNode.ChildNodes[idx];
     utNodeName := Uppercase(Trim(ChildNode.NodeName));
@@ -1365,7 +1409,6 @@ begin
         exit;
       end;
     end else if utNodeName = 'UNUSED' then begin
-      SkipNode('unused','it''s not used.');
       continue;
     end else begin
       //- Parse the enum value
@@ -1534,6 +1577,7 @@ var
   ProtoNode: IXMLNode;
   CommandPrototype: IdvFunctionHeader;
   AliasStr: string;
+  utNodeName: string;
 begin
   Result := False;
   //-
@@ -1569,11 +1613,14 @@ begin
     if (XMLNode.ChildNodes[idx]=ProtoNode) then begin
       continue;
     end;
-    if (Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName))<>'PARAM') then begin
-      if Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName))='COMMENT' then begin
+    utNodeName := Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName));
+    if utNodeName<>'PARAM' then begin
+      if utNodeName='COMMENT' then begin
         if not ParseCommentToASTNode(XMLNode.ChildNodes[idx],CommandPrototype) then begin
           exit;
         end;
+      end else if utNodeName='IMPLICITEXTERNSYNCPARAMS' then begin
+        continue; //- I have no idea what this tag is or does, but it does not seem to alter the output required here.
       end else begin
         SkipNode(XMLNode.ChildNodes[idx].NodeName,'node type not expected here.');
         continue;
@@ -1628,8 +1675,8 @@ end;
 
 function TdvXMLParser.ParseRegistryFeature( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
 begin
+  //- We simply ignore registry feature (just a bunch of requires nodes)
   Result := True;
-  SkipNode('feature','feature not yet implemented.');
 end;
 
 function TdvXMLParser.ParseExtensionEnum( XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit ): boolean;
@@ -1906,7 +1953,6 @@ initialization
   Log.Register( EExpectedNode, 'Expected node type "(%nodetype%)" but got "(%unknowntype%)" in "(%parenttype%)."');
   Log.Register( EMissingAttribute, 'Expected attribtue "(%attribute%)" in "(%parentnode%)."');
   Log.Register( EUnhandledAttribute, 'Attribtue "(%attribute%)" found in "(%parentnode%)" but was not expected.');
-  Log.Register( EPlatformNotSupported, 'Platform not supported "(%Platform%)."');
   Log.Register( ESkippedNode, 'Node of type "(%nodetype%)" skipped because "(%because%)".');
   Log.Register( EMacroChanged,'The macro "(%macro%)" has changed since darkVulkanGen was written, do not know how to process this.');
   Log.Register( EUnknownXMLFormat, 'Unknown tag or un-expected data. The format of the xml file may have changed since darkVulkanGen was written.' );

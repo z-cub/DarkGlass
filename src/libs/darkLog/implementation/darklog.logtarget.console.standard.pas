@@ -40,7 +40,7 @@ implementation
 
 procedure TConsoleLogTarget.Insert( MessageClass: string; MessageVariables: array of TLogBindParameter; MessageText: string );
 begin
-  Writeln( MessageText );
+  Write( MessageText );
 end;
 
 end.

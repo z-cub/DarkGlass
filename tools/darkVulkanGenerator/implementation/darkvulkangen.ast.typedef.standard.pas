@@ -87,6 +87,7 @@ function TdvTypeDef.getTypeString(Indentation: uint32): string;
 var
   idx: uint32;
   WorkStr: string;
+  UnionCounter: uint32;
 begin
   Result := '';
   case fKind of
@@ -156,20 +157,39 @@ begin
     tkNativeUInt: Result := 'nativeuint';
      tkNativeInt: Result := 'nativeint';
 
+    tkUnion,
     tkRecord: begin
       setLineBreaks(2);
       Result := 'record' + sLineBreak;
-        if getChildCount>0 then begin
-          for idx := 0 to pred(getChildCount) do begin
-            if Supports(getChild(idx),IdvTypeDef) then begin
-              Result := Result +
-                getIndentation(Indentation+cIndentationStep) +
-                (getChild(idx) as IdvTypeDef).Name + ': ' + (getChild(idx) as IdvTypeDef).getTypeString( Indentation ) + ';'+sLineBreak;
-            end else begin
+      if fKind=tkUnion then begin
+        Result := Result + getIndentation(Indentation+cIndentationStep) + 'case uint32 of' + sLineBreak;
+      end;
+      if getChildCount>0 then begin
+        UnionCounter := 0;
+        for idx := 0 to pred(getChildCount) do begin
+          if Supports(getChild(idx),IdvTypeDef) then begin
+            Result := Result + getIndentation(Indentation+cIndentationStep);
+            if fKind=tkUnion then begin
+              Result := Result + IntToStr(UnionCounter) + ':(';
+            end;
+            Result := Result + (getChild(idx) as IdvTypeDef).Name + ': ' + (getChild(idx) as IdvTypeDef).getTypeString( Indentation ) + ';';
+            if fKind=tkUnion then begin
+              Result := Result + ');';
+            end;
+            inc(UnionCounter);
+            if idx<pred(getChildCount) then begin
+              if Supports(getChild(succ(idx)),IdvASTComment) then begin
+                Result := Result + ' // ' + (getChild(succ(idx)) as IdvASTComment).CommentString;
+              end;
+            end;
+            Result := Result + sLineBreak;
+          end else begin
+            if not Supports(getChild(idx),IdvASTComment) then begin
               Result := Result + '## Unsupported child node in AST! ##';
             end;
           end;
         end;
+      end;
       Result := Result + getIndentation(Indentation) + 'end';
     end;
 

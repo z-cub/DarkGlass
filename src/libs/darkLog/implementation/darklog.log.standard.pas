@@ -91,7 +91,6 @@ const
   CR = #13;
   LF = #10;
   TAB = #9;
-  CRLF: string = CR + LF;
 
 procedure TLog.ClearLogTargets;
 begin
@@ -205,7 +204,7 @@ begin
       lsDebug:   MessageText := '[DEBUG] '+MessageText;
     end;
     //- Prefix a timestamp
-    MessageText := '('+ string(FormatDateTime('YYYY-MM-DD HH:nn:SS:ssss',Now)) +') ' + MessageText + CR + LF;
+    MessageText := '('+ string(FormatDateTime('YYYY-MM-DD HH:nn:SS:ssss',Now)) +') ' + MessageText + sLineBreak;
     Result := MessageText;
     //- Insert the message into as many LogTargets as are registered.
     if fLogTargets.Count>0 then begin
