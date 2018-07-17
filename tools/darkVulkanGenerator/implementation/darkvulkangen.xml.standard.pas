@@ -1640,6 +1640,7 @@ var
   Extends: string;
   OffsetValue: int32;
   Enum: IdvTypeDef;
+  Negate: boolean;
 begin
   Result := False;
   //- Get the attributes.
@@ -1659,6 +1660,13 @@ begin
   if XMLNode.HasAttribute('extends') then begin
     Extends := Trim(XMLNode.Attributes['extends']);
   end;
+  if XMLNode.HasAttribute('dir') then begin
+    if XMLNode.Attributes['dir']='-' then begin
+      Negate := True;
+     end else begin
+      Negate := False;
+     end;
+  end;
   if Extends='' then begin
     //- This value does not extend an existing enum, and is therefore a constant.
     UnitNode.InterfaceSection.Constants.InsertChild(TdvConstant.Create(Name,Value));
@@ -1675,11 +1683,18 @@ begin
         SkipNode('<enum> for Ext='+IntToStr(ExtNo),'extends another enum without an offset.',TRUE);
         exit;
       end;
-      OffsetValue := cOffsetBase + (pred(ExtNo)*1000)+StrToInt(Offset);;
+      OffsetValue := cOffsetBase + (pred(ExtNo)*1000)+StrToInt(Offset);
+      if Negate then begin
+        OffsetValue := 0-OffsetValue;
+      end;
       Enum.InsertChild(TdvConstant.Create(Name,IntToStr(OffsetValue)));
     end else begin
       //- This is a straight value.
-      Enum.InsertChild(TdvConstant.Create(Name,Value));
+      if Negate then begin
+        Enum.InsertChild(TdvConstant.Create(Name,'-'+Value));
+      end else begin
+        Enum.InsertChild(TdvConstant.Create(Name,Value));
+      end;
     end;
   end;
   Result := True;
