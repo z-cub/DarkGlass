@@ -1638,6 +1638,7 @@ var
   Offset: string;
   Name: string;
   Extends: string;
+  BitPos: string;
   OffsetValue: int32;
   Enum: IdvTypeDef;
   Negate: boolean;
@@ -1648,6 +1649,7 @@ begin
   Offset := '';
   Extends := '';
   Name := '';
+  BitPos := '';
   if XMLNode.HasAttribute('value') then begin
     Value := Trim(XMLNode.Attributes['value']);
   end;
@@ -1659,6 +1661,12 @@ begin
   end;
   if XMLNode.HasAttribute('extends') then begin
     Extends := Trim(XMLNode.Attributes['extends']);
+  end;
+  if XMLNode.HasAttribute('bitpos') then begin
+    BitPos := Trim(XMLNode.Attributes['bitpos']);
+  end;
+  if (XMLNode.HasAttribute('alias')) and (Value='') then begin
+    Value := Trim(XMLNode.Attributes['alias']);
   end;
   if XMLNode.HasAttribute('dir') then begin
     if XMLNode.Attributes['dir']='-' then begin
@@ -1678,16 +1686,24 @@ begin
     end;
     //- This value extends an existing enum, so find the enum to extend.
     if Value='' then begin
+
       //- This is offset based.
       if Offset='' then begin
-        SkipNode('<enum> for Ext='+IntToStr(ExtNo),'extends another enum without an offset.',TRUE);
-        exit;
+        if BitPos='' then begin
+          SkipNode('<enum> for Ext='+IntToStr(ExtNo),'extends another enum without an offset.',TRUE);
+          exit;
+        end;
       end;
-      OffsetValue := cOffsetBase + (pred(ExtNo)*1000)+StrToInt(Offset);
-      if Negate then begin
-        OffsetValue := 0-OffsetValue;
+
+      if BitPos='' then begin
+        OffsetValue := cOffsetBase + (pred(ExtNo)*1000)+StrToInt(Offset);
+        if Negate then begin
+          OffsetValue := 0-OffsetValue;
+        end;
+        Enum.InsertChild(TdvConstant.Create(Name,IntToStr(OffsetValue)));
+      end else begin
+        Enum.InsertChild(TdvConstant.Create(Name,'1 shl '+BitPos));
       end;
-      Enum.InsertChild(TdvConstant.Create(Name,IntToStr(OffsetValue)));
     end else begin
       //- This is a straight value.
       if Negate then begin
