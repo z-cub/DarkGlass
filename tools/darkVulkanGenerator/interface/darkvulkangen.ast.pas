@@ -381,8 +381,24 @@ type
     procedure setIsVariable( value: boolean );
 
     //- Pascal Only, properties.
+    property Name: string read getName write setName;
     property IsVariable: boolean read getIsVariable write setIsVariable;
     property ReturnType: string read getReturnType write setReturnType;
+  end;
+
+  ///  <summary>
+  ///    Aliases another function header node.
+  ///  </summary>
+  IdvFunctionHeaderAlias = interface( IdvASTNode )
+    ['{DB837E02-B642-4206-B3A1-EFDBB9DB5885}']
+    function getName: string;
+    procedure setName( value: string );
+    function getTargetNode: IdvFunctionHeader;
+    procedure setTargetNode( value: IdvFunctionHeader );
+
+    //- Pascal Only, Properties -//
+    property Name: string read getName write setName;
+    property TargetNode: IdvFunctionHeader read getTargetNode write setTargetNode;
   end;
 
   ///  <summary>
@@ -464,6 +480,10 @@ type
     class function Create( name: string ): IdvFunctionHeader;
   end;
 
+  TdvFunctionHeaderAlias = class
+    class function Create( name: string; TargetNode: IdvFunctionHeader ): IdvFunctionHeaderAlias;
+  end;
+
   TdvParameter = class
     class function Create( Name: string; DataType: string; Protection: TParameterProtection = TParameterProtection.ppNone ): IdvParameter;
   end;
@@ -514,6 +534,7 @@ uses
   darkvulkangen.ast._function.standard,
   darkvulkangen.ast.compoundstatement.standard,
   darkvulkangen.ast.functionheader.standard,
+  darkvulkangen.ast.functionheaderalias.standard,
   darkvulkangen.ast.parameter.standard,
   darkvulkangen.ast.typedsymbol.standard,
   darkvulkangen.ast.constant.standard,
@@ -663,6 +684,13 @@ end;
 class function TdvVariables.Create: IdvVariables;
 begin
   Result := darkvulkangen.ast.variables.standard.TdvVariables.Create;
+end;
+
+{ TdvFunctionHeaderAlias }
+
+class function TdvFunctionHeaderAlias.Create(name: string; TargetNode: IdvFunctionHeader): IdvFunctionHeaderAlias;
+begin
+  Result := darkvulkangen.ast.functionheaderalias.standard.TdvFunctionHeaderAlias.Create(Name,TargetNode);
 end;
 
 end.
