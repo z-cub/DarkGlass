@@ -109,7 +109,7 @@ end;
 
 function TdvFunctionHeader.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
 var
-  idx: uint32;
+  idx: nativeuint;
 begin
   Result := False;
   // Write the before node

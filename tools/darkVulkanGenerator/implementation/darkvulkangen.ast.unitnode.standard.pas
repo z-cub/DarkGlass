@@ -77,7 +77,7 @@ end;
 
 function TdvASTUnit.RecursiveSearchEnum( StartNode: IdvASTNode; name: string ): IdvTypeDef;
 var
-  idx: uint32;
+  idx: nativeuint;
   ChildNode: IdvASTNode;
 begin
   Result := nil;
@@ -130,7 +130,7 @@ end;
 
 function TdvASTUnit.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
 var
-  idx: uint32;
+  idx: nativeuint;
 begin
   Result := False;
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin

@@ -71,7 +71,7 @@ end;
 
 procedure TdvUsesList.SetDelimiters( Node: IdvASTNode; LastInParent: boolean );
 var
-  idx: uint32;
+  idx: nativeuint;
 begin
   if LastInParent then begin
     if Node.ChildCount=0 then begin
@@ -108,7 +108,7 @@ end;
 
 function TdvUsesList.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
 var
-  idx: uint32;
+  idx: nativeuint;
 begin
   Result := False;
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin

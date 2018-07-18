@@ -52,8 +52,8 @@ type
     function getAfterNode: IdvASTNode;
     function getLineBreaks: uint32;
     procedure setLineBreaks( value: uint32 );
-    function getChildCount: uint32;
-    function getChild( idx: uint32 ): IdvASTNode;
+    function getChildCount: nativeuint;
+    function getChild( idx: nativeuint ): IdvASTNode;
     function LineBreaks: string;
     function WriteBeforeNode( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean;
     function WriteAfterNode( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean;
@@ -107,12 +107,12 @@ begin
   Result := fBeforeNode;
 end;
 
-function TdvASTNode.getChild(idx: uint32): IdvASTNode;
+function TdvASTNode.getChild(idx: nativeuint): IdvASTNode;
 begin
   Result := IASTNodeList(fChildren).Items[idx];
 end;
 
-function TdvASTNode.getChildCount: uint32;
+function TdvASTNode.getChildCount: nativeuint;
 begin
   Result := IASTNodeList(fChildren).Count;
 end;
@@ -178,7 +178,7 @@ end;
 
 function TdvASTNode.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
 var
-  idx: uint32;
+  idx: nativeuint;
 begin
   Result := False;
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin

@@ -66,12 +66,12 @@ type
     ///  <summary>
     ///    Returns the number of nodes which are children to this one.
     ///  </summary>
-    function getChildCount: uint32;
+    function getChildCount: nativeuint;
 
     ///  <summary>
     ///    Returns a child node of this one as specified by index.
     ///  </summary>
-    function getChild( idx: uint32 ): IdvASTNode;
+    function getChild( idx: nativeuint ): IdvASTNode;
 
     ///  <summary>
     ///    Inserts a child node into this one.
@@ -86,8 +86,8 @@ type
 
     //- Pascal Only, properties -//
     property LineBreaks: uint32 read getLineBreaks write setLineBreaks;
-    property ChildCount: uint32 read getChildCount;
-    property Children[ idx: uint32 ]: IdvASTNode read getChild;
+    property ChildCount: nativeuint read getChildCount;
+    property Children[ idx: nativeuint ]: IdvASTNode read getChild;
     property BeforeNode: IdvASTNode read getBeforeNode;
     property AfterNode: IdvASTNode read getAfterNode;
   end;

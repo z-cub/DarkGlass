@@ -45,6 +45,7 @@ type
     procedure setTypeKind( value: TdvTypeKind );
     function getTypeString(Indentation: uint32): string;
   protected
+    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
   public
     constructor Create( Name: string; Kind: TdvTypeKind ); reintroduce;
@@ -59,8 +60,8 @@ uses
 constructor TdvTypeDef.Create(Name: string; Kind: TdvTypeKind);
 begin
   inherited Create;
-  fName := Name;
-  fKind := Kind;
+  setName(Name);
+  setTypeKind(Kind);
 end;
 
 function TdvTypeDef.getName: string;
@@ -74,8 +75,15 @@ begin
 end;
 
 procedure TdvTypeDef.setName(value: string);
+var
+  utName: string;
 begin
   fName := Value;
+  utName := Uppercase(Trim(fName));
+  if (utName='OBJECT') or
+     (utName='TYPE') then begin
+    fName := '_'+fName;
+  end;
 end;
 
 procedure TdvTypeDef.setTypeKind(value: TdvTypeKind);
@@ -85,7 +93,7 @@ end;
 
 function TdvTypeDef.getTypeString(Indentation: uint32): string;
 var
-  idx: uint32;
+  idx: nativeuint;
   WorkStr: string;
   UnionCounter: uint32;
 begin
@@ -244,6 +252,35 @@ begin
   end;
 end;
 
+function TdvTypeDef.InsertChild(node: IdvASTNode): IdvASTNode;
+var
+  idx: nativeuint;
+  NewConstant: IdvConstant;
+  ExistingConstant: IdvConstant;
+begin
+  if Supports(node,IdvConstant) then begin
+    NewConstant := node as IdvConstant;
+    // Check the new constant against each existing constant.
+    if getchildCount=0 then begin
+      Result := inherited InsertChild(node);
+      exit;
+    end;
+    for idx := 0 to pred(getChildCount) do begin
+      if supports(getChild(idx),IdvConstant) then begin
+        ExistingConstant := getChild(idx) as IdvConstant;
+        if (ExistingConstant.Name=NewConstant.Name) then begin
+          if ExistingConstant.Value=NewConstant.Value then begin
+            Result := ExistingConstant;
+            exit;
+          end else begin
+            raise Exception.Create('Attempt to insert two constants with same name and value into enumeration.');
+          end;
+        end;
+      end;
+    end;
+  end;
+  Result := inherited InsertChild(node);
+end;
 
 function TdvTypeDef.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
 begin

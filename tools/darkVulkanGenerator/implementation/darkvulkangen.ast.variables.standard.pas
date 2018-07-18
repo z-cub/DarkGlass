@@ -45,7 +45,7 @@ implementation
 
 function TdvVariables.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
 var
-  idx: uint32;
+  idx: nativeuint;
 begin
   Result := False;
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin

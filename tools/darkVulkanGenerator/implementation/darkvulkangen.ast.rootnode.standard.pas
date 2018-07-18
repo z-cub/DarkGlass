@@ -71,7 +71,7 @@ end;
 
 function TdvASTRootNode.WriteToDirectory(Directory: string; Indentation: uint32): boolean;
 var
-  idx: uint32;
+  idx: nativeuint;
   Filename: string;
   FS: IUnicodeStream;
   UnicodeFormat: TUnicodeFormat;

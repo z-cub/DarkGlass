@@ -52,6 +52,7 @@ type
 
 implementation
 uses
+  sysutils,
   darkLog;
 
 { TdvTypedSymbol }
@@ -64,8 +65,8 @@ end;
 constructor TdvTypedSymbol.Create( Name, DataType: string);
 begin
   inherited Create;
-  fName := Name;
-  fType := DataType;
+  setName(Name);
+  setType(DataType);
 end;
 
 function TdvTypedSymbol.getName: string;
@@ -85,8 +86,15 @@ begin
 end;
 
 procedure TdvTypedSymbol.setName(value: string);
+var
+  utName: string;
 begin
   fName := value;
+  utName := Uppercase(Trim(fName));
+  if (utName='OBJECT') or
+     (utName='TYPE') then begin
+    fName := '_'+fName;
+  end;
 end;
 
 procedure TdvTypedSymbol.setType(value: string);

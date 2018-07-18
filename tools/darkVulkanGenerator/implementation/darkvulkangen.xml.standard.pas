@@ -63,7 +63,7 @@ type
     function ParseCommentToASTNode(XMLNode: IXMLNode; TargetNode: IdvASTNode ): boolean;
     function ParseRegistryEnums( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
     function ParseRegistryExtensions( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
-    function ParseRegistryFeature( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
+    function ParseRegistryFeature( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
     function ParseRegistryPlatforms( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
     function ParseRegistryTags( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
     function ParseRegistryTypes( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
@@ -1673,9 +1673,25 @@ begin
   Result := True;
 end;
 
-function TdvXMLParser.ParseRegistryFeature( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
+function TdvXMLParser.ParseRegistryFeature( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
+var
+  idx: uint32;
+  utNodeName: string;
 begin
-  //- We simply ignore registry feature (just a bunch of requires nodes)
+  Result := False;
+  //- We actually DO parse features!
+  if XMLNode.ChildNodes.Count=0 then begin
+    SkipNode('feature','has no children',TRUE);
+    exit;
+  end;
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    utNodeName := Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName));
+    if utNodeName='REQUIRE' then begin
+      if not ParseExtensionRequire(XMLNode.ChildNodes[idx],-2,UnitNode) then begin
+        exit;
+      end;
+    end;
+  end;
   Result := True;
 end;
 
@@ -1721,6 +1737,9 @@ begin
      end else begin
       Negate := False;
      end;
+  end;
+  if XMLNode.HasAttribute('extnumber') then begin
+    ExtNo := StrToInt(XMLNode.Attributes['extnumber']);
   end;
   if Extends='' then begin
     //- This value does not extend an existing enum, and is therefore a constant.
@@ -1770,7 +1789,7 @@ var
 begin
   Result := False;
   if XMLNode.ChildNodes.Count=0 then begin
-    SkipNode('<require> for extension '+IntToStr(ExtNo),'has no children');
+    Result := True;
     exit;
   end;
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
@@ -1828,8 +1847,13 @@ function TdvXMLParser.CreateVulkanUnit( ASTNode: IdvASTNode ): IdvASTUnit;
 begin
   Result := ASTNode.InsertChild( TdvASTUnit.Create('vulkan') ) as IdvASTUnit;
   Result.InterfaceSection.InsertChild( TdvASTComment.Create('Aliases for c-types') );
+  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint8_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint8));
   Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint32_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint32));
   Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint64_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint64));
+  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int8_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint8));
+  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int32_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint32));
+  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int64_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint64));
+  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('float',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkSingle));
 end;
 
 function TdvXMLParser.ParseRegistryNode( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
