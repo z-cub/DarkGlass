@@ -36,7 +36,8 @@ uses
   darkvulkangen.ast.typedef.standard in 'implementation\darkvulkangen.ast.typedef.standard.pas',
   darkvulkangen.ast.variable.standard in 'implementation\darkvulkangen.ast.variable.standard.pas',
   darkvulkangen.ast.variables.standard in 'implementation\darkvulkangen.ast.variables.standard.pas',
-  darkvulkangen.ast.functionheaderalias.standard in 'implementation\darkvulkangen.ast.functionheaderalias.standard.pas';
+  darkvulkangen.ast.functionheaderalias.standard in 'implementation\darkvulkangen.ast.functionheaderalias.standard.pas',
+  darkvulkangen.ast.plaintext.standard in 'implementation\darkvulkangen.ast.plaintext.standard.pas';
 
 var
   Generator: IdvHeaderGenerator;

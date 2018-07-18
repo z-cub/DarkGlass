@@ -1145,8 +1145,8 @@ begin
       //- void pointer parameter
       FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pointer'));
     end else if (PtrCount=1) and (uppercase(trim(TypeStr))='CHAR') then begin
-      //- pchar
-      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pChar'));
+      //- pcharpAnsiChar
+      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pAnsiChar'));
     end else begin
       ParamType := GeneratePointerType( ParameterStr, TypeStr, PtrCount, Parent );
       FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,ParamType.Name));
@@ -1230,7 +1230,7 @@ begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkPointer);
   end else if (Uppercase(Trim(TypeStr))='CHAR') and (PtrCount=1) then begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
-    Member.InsertChild(TdvTypeDef.Create('pchar',TdvTypeKind.tkUserDefined));
+    Member.InsertChild(TdvTypeDef.Create('pAnsiChar',TdvTypeKind.tkUserDefined));
   end else if (PtrCount>1) then begin
     PointerType := GeneratePointerType( NameStr, TypeStr, PtrCount, Parent );
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
@@ -1582,7 +1582,7 @@ begin
     if utTypeNode='VOID' then begin
       ReturnTypeStr := 'pointer';
     end else if utTypeNode='CHAR' then begin
-      ReturnTypeStr := 'pchar';
+      ReturnTypeStr := 'pAnsiChar';
     end else begin
       ReturnType := GeneratePointerType( Identifier, XMLNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
       UnitNode.InterfaceSection.Types.InsertChild(ReturnType);
@@ -1650,7 +1650,7 @@ begin
     if utTypeStr='VOID' then begin
       Parameter.TypedSymbol.TypeKind := 'pointer';
     end else if utTypeStr='CHAR' then begin
-      Parameter.TypedSymbol.TypeKind := 'uint8';
+      Parameter.TypedSymbol.TypeKind := 'pAnsiChar';
     end else begin
       if Parameter.Protection=TParameterProtection.ppNone then begin
         Parameter.TypedSymbol.TypeKind := TypeOverrides(TypeNode.Text);
@@ -1705,29 +1705,53 @@ begin
   if fExternalNames.Count=0 then begin
     exit;
   end;
-  UnitNode.ImplementationSection.Variables.InsertChild(TdvVariable.Create('dynLib','IDynLib','nil'));
-  FunctionHeader := UnitNode.InterfaceSection.InsertChild(TdvFunctionHeader.Create('Initialize')) as IdvFunctionHeader;
-  FunctionHeader.ReturnType := '';
-  aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('Initialize')) as IdvFunction;
+  //- Insert initialization and finalization, and the dynlib variable
+  UnitNode.InitializationSection.InsertChild(TdvASTPlainText.Create('  LoadPointers(0,FALSE);'));
+  UnitNode.FinalizationSection.InsertChild(TdvASTPlainText.Create('  dynLib := nil; '));
+  UnitNode.ImplementationSection.InsertChild(TdvASTPlainText.Create('const'+sLineBreak+'  cLibName = {$ifdef Windows}''vulkan-1.dll''{$else}''libvulkan.so''{$endif};'+sLineBreak+sLineBreak));
+  UnitNode.ImplementationSection.Variables.InsertChild(TdvVariable.Create('dynlib','IDynLib','nil'));
+  //- Insert the function for initially loading pointers.
+  FunctionHeader := UnitNode.InterfaceSection.InsertChild(TdvFunctionHeader.Create('LoadPointers')) as IdvFunctionHeader;
+  FunctionHeader.InsertChild(TdvParameter.Create('Instance','vkInstance',TParameterProtection.ppIn));
+  FunctionHeader.InsertChild(TdvParameter.Create('UseInstance','boolean = true',TParameterProtection.ppNone));
+  aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('LoadPointers')) as IdvFunction;
+  aFunction.Header.InsertChild(TdvParameter.Create('Instance','vkInstance',TParameterProtection.ppIn));
+  aFunction.Header.InsertChild(TdvParameter.Create('UseInstance','boolean = true',TParameterProtection.ppNone));
   aFunction.Header.ReturnType := '';
-  aFunction.Body.Content :=
-  '  dynLib := TDynLib.Create; '+sLineBreak;
-  //- Insert the functions
+  //- Insert the function body
+  aFunction.Body.Content := 'if not assigned(dynLib) then begin'+sLineBreak;
+  aFunction.Body.Content := aFunction.Body.Content + '    dynLib := TDynLib.Create; '+sLineBreak;
+  aFunction.Body.Content := aFunction.Body.Content + '    if not dynLib.LoadLibrary(cLibName) then begin'+sLineBreak;
+  aFunction.Body.Content := aFunction.Body.Content + '      dynLib := nil; '+sLineBreak;
+  aFunction.Body.Content := aFunction.Body.Content + '      exit; '+sLineBreak;
+  aFunction.Body.Content := aFunction.Body.Content + '    end; '+sLineBreak;
+  aFunction.Body.Content := aFunction.Body.Content + '  end; '+sLineBreak;
+
+  //- Insert the functions for loading
   for idx := 0 to pred(fExternalNames.Count) do begin
     Name := fExternalNames.Names[idx];
+    //- Skip this if it comes up, we may not need to use it.
     Value := fExternalNames.Values[Name];
     aFunction.Body.Content := aFunction.Body.Content + '  ';
     if Value<>'NONE' then begin
       aFunction.Body.Content := aFunction.Body.Content + '{$ifdef '+Value+'}';
     end;
     //-
-    aFunction.Body.Content := aFunction.Body.Content + Name + ' := dynLib.GetProcAddress('''+Name+''');';
+    aFunction.Body.Content := aFunction.Body.Content + 'if UseInstance then ' + Name +' := vkGetInstanceProcAddr( Instance, '''+Name+''' ) else '+ Name + ' := dynLib.GetProcAddress('''+Name+''');';
     //-
     if Value<>'NONE' then begin
       aFunction.Body.Content := aFunction.Body.Content + '{$endif}';
     end;
     aFunction.Body.Content := aFunction.Body.Content + sLineBreak;
   end;
+
+  //- Now insert the function for testing to see if Vulkan is loaded (just the dll)
+  FunctionHeader := UnitNode.InterfaceSection.InsertChild(TdvFunctionHeader.Create('VulkanAvailable')) as IdvFunctionHeader;
+  FunctionHeader.ReturnType := 'boolean';
+  aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('VulkanAvailable')) as IdvFunction;
+  aFunction.Header.ReturnType := 'boolean';
+  aFunction.Body.Content := 'Result := assigned(dynLib)';
+
 end;
 
 function TdvXMLParser.ParseCommand( XMLNode: IXMLNode; UnitNode: IdvASTUnit; ParameterVars: IdvASTNode ): boolean;

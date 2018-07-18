@@ -48,8 +48,7 @@ type
     fAfterNode: IdvASTNode;
     fChildren: ICollection;
     fLineBreaks: uint32;
-    function FindNode(SearchNode: IdvASTNode;
-      var FoundIndex: nativeuint): boolean;
+    function FindNode(SearchNode: IdvASTNode; var FoundIndex: nativeuint): boolean;
   protected
     function TestReservedWord( Src: string ): string;
   protected //- IdvASTNode -//

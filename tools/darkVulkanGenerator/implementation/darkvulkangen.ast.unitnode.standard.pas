@@ -38,6 +38,8 @@ type
     fUnitName: string;
     fInterfaceSection: IdvASTUnitSection;
     fImplementationSection: IdvASTUnitSection;
+    fInitializationSection: IdvASTUnitSection;
+    fFinalizationSection: IdvASTUnitSection;
   private
     function RecursiveSearchEnum(StartNode: IdvASTNode; name: string): IdvTypeDef;
     function RecursiveSearchType(StartNode: IdvASTNode; name: string): IdvTypeDef;
@@ -47,6 +49,8 @@ type
     procedure setName( value: string );
     function getInterfaceSection: IdvASTUnitSection;
     function getImplementationSection: IdvASTUnitSection;
+    function getInitializationSection: IdvASTUnitSection;
+    function getFinalizationSection: IdvASTUnitSection;
     function findEnumByName( name: string ): IdvTypeDef;
     function findTypeByName( name: string ): IdvTypeDef;
     function findFunctionHeaderByName( name: string ): IdvFunctionHeader;
@@ -69,6 +73,8 @@ begin
   fUnitName := unitName;
   fInterfaceSection := InsertChild(TdvASTUnitSection.Create(TASTUnitSectionKind.usInterface)) as IdvASTUnitSection;
   fImplementationSection := InsertChild(TdvASTUnitSection.Create(TASTUnitSectionKind.usImplementation)) as IdvASTUnitSection;
+  fInitializationSection := InsertChild(TdvASTUnitSection.Create(TASTUnitSectionKind.usInitialization)) as IdvASTUnitSection;
+  fFinalizationSection := InsertChild(TdvASTUnitSection.Create(TASTUnitSectionKind.usFinalization)) as IdvASTUnitSection;
   SetLineBreaks(2);
 end;
 
@@ -76,6 +82,8 @@ destructor TdvASTUnit.Destroy;
 begin
   fInterfaceSection := nil;
   fImplementationSection := nil;
+  fInitializationSection := nil;
+  fFinalizationSection := nil;
   inherited Destroy;
 end;
 
@@ -175,9 +183,19 @@ begin
   Result := RecursiveSearchType( Self, Name );
 end;
 
+function TdvASTUnit.getFinalizationSection: IdvASTUnitSection;
+begin
+  Result := fFinalizationSection;
+end;
+
 function TdvASTUnit.getImplementationSection: IdvASTUnitSection;
 begin
   Result := fImplementationSection;
+end;
+
+function TdvASTUnit.getInitializationSection: IdvASTUnitSection;
+begin
+  Result := fInitializationSection;
 end;
 
 function TdvASTUnit.getInterfaceSection: IdvASTUnitSection;

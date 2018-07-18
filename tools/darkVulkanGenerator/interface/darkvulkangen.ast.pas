@@ -311,6 +311,8 @@ type
     procedure setName( value: string );
     function getInterfaceSection: IdvASTUnitSection;
     function getImplementationSection: IdvASTUnitSection;
+    function getInitializationSection: IdvASTUnitSection;
+    function getFinalizationSection: IdvASTUnitSection;
     function findEnumByName( name: string ): IdvTypeDef;
     function findTypeByName( name: string ): IdvTypeDef;
     function findFunctionHeaderByName( name: string ): IdvFunctionHeader;
@@ -319,6 +321,8 @@ type
     property Name: string read getName write setName;
     property InterfaceSection: IdvASTUnitSection read getInterfaceSection;
     property ImplementationSection: IdvASTUnitSection read getImplementationSection;
+    property InitializationSection: IdvASTUnitSection read getInitializationSection;
+    property FinalizationSection: IdvASTUnitSection read getFinalizationSection;
   end;
 
   ///  <summary>
@@ -451,6 +455,15 @@ type
     property Body: IdvCompoundStatement read getBodySection;
   end;
 
+  IdvASTPlainText = interface( IdvASTNode )
+    ['{80C23647-A1BF-4A16-8437-D42DC67BBF4D}']
+    function getText: string;
+    procedure setText( value: string );
+
+    //- Pascal Only, Properties -//
+    property Text: string read getText write setText;
+  end;
+
 
 //------------------------------------------------------------------------------
 // Factories.
@@ -541,6 +554,10 @@ type
     class function Create( Name: string; Kind: TdvTypeKind ): IdvTypeDef;
   end;
 
+  TdvASTPlainText = class
+    class function Create( Text: string ): IdvASTPlainText;
+  end;
+
 
 
 implementation
@@ -566,7 +583,8 @@ uses
   darkvulkangen.ast.variable.standard,
   darkvulkangen.ast.variables.standard,
   darkvulkangen.ast.typedefs.standard,
-  darkvulkangen.ast.typedef.standard;
+  darkvulkangen.ast.typedef.standard,
+  darkvulkangen.ast.plaintext.standard;
 
 
 { TdvASTRoot }
@@ -715,6 +733,13 @@ end;
 class function TdvFunctionHeaderAlias.Create(name: string; TargetNode: IdvFunctionHeader): IdvFunctionHeaderAlias;
 begin
   Result := darkvulkangen.ast.functionheaderalias.standard.TdvFunctionHeaderAlias.Create(Name,TargetNode);
+end;
+
+{ TdvASTPlainText }
+
+class function TdvASTPlainText.Create(Text: string): IdvASTPlainText;
+begin
+  Result := darkvulkangen.ast.plaintext.standard.TdvASTPainText.Create(Text);
 end;
 
 end.
