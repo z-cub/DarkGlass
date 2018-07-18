@@ -36,6 +36,7 @@ uses
 
 const
   cOffsetBase = $3B9ACA00;
+  cCallingConvention = '{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}';
 
 type
   TArrayOfString = array of string;
@@ -1120,6 +1121,8 @@ begin
       FuncTypeDef.InsertChild(TdvTypeDef.Create(ReturnTypeNode.Name,TdvTypeKind.tkUserDefined));
     end;
   end;
+  FuncTypeDef.AfterNode.InsertChild(TdvASTPlainText.Create(cCallingConvention));
+  FuncTypeDef.LineBreaks := 0;
 
   //- Now it's time to handle parameters to the function.
   if XMLNode.ChildNodes.Count=3 then begin
@@ -1787,6 +1790,9 @@ begin
     exit;
   end;
   fExternalNames.Add(CommandPrototype.Name+'=NONE');
+  CommandPrototype.AfterNode.InsertChild(TdvASTPlainText.Create(cCallingConvention)).LineBreaks:=1;
+  CommandPrototype.LineBreaks := 0;
+
 
   //- Process Param tags.
   if XMLNode.ChildNodes.Count=1 then begin
@@ -2055,6 +2061,9 @@ begin
     end else if utNodeType='COMMAND' then begin
       ConditionalEntity := UnitNode.findFunctionHeaderByName(Name);
       ConditionalEntity.LineBreaks := 0;
+      if ConditionalEntity.AfterNode.ChildCount>0 then begin
+        ConditionalEntity.AfterNode.Children[pred(ConditionalEntity.AfterNode.ChildCount)].LineBreaks := 0;
+      end;
       OneLine := True;
     end;
     if assigned(ConditionalEntity) then begin
