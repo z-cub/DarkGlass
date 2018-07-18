@@ -156,8 +156,6 @@ begin
   end;
 end;
 
-
-
 procedure TdvTypeDefs.OrderStructs;
 type
   TypeDefRecord = record

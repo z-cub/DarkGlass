@@ -991,10 +991,10 @@ begin
   //- Add pointers to the return type node.
   Ps := '';
   for idx := 0 to pred(PtrCount) do begin
-    Ps := Ps + 'P';
-    ReturnTypeNode := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(Ps+NewTypeName,tkTypedPointer)) as IdvTypeDef;
+    Ps := Ps + 'p';
+    ReturnTypeNode := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(Ps+PreviousName,tkTypedPointer)) as IdvTypeDef;
     ReturnTypeNode.InsertChild(TdvTypeDef.Create(PreviousName,tkUserDefined));
-    PreviousName := 'P'+PreviousName;
+    PreviousName := 'p'+PreviousName;
   end;
   Result := ReturnTypeNode;
 end;
