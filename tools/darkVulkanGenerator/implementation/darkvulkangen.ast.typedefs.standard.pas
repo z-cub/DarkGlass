@@ -306,7 +306,6 @@ begin
         continue;
       end;
       //- Otherwise, reinsert this node.
-      Log.Insert(ETypeDefReinsertion,TLogSeverity.lsInfo,[LogBind('name',CurrentDef.Name)]);
       InsertChild(CurrentDef);
       inc(InsertedCount);
       ArrayOfTypeDefs[idx].Reinserted := True;

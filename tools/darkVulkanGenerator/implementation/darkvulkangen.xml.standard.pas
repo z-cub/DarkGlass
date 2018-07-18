@@ -114,8 +114,8 @@ type
     function ParseExtensionRequire(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit ): boolean;
     function ParseExtensionEnum(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit): boolean;
     function ParseStructMember(XMLNode: IXMLNode; RecordNode: IdvTypeDef; Parent: IdvASTNode ): boolean;
-    function ParseAPIConstants(XMLNode: IXMLNode;
-      UnitNode: IdvASTUnit): boolean;
+    function ParseAPIConstants(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
+    function MyStringListFind(SL: TStringList; SearchString: string; var FoundIdx: int32): boolean;
 
 
   public
@@ -1575,6 +1575,9 @@ begin
   ReturnTypeStr := '';
   if PtrCount=0 then begin
     ReturnTypeStr := TypeNode.Text;
+    if ReturnTypeStr='PFN_vkVoidFunction' then begin
+      ReturnTypeStr := 'pointer';
+    end;
   end else if PtrCount=1 then begin
     if utTypeNode='VOID' then begin
       ReturnTypeStr := 'pointer';
@@ -1683,7 +1686,7 @@ begin
     if Supports(ParameterVars.Children[idx],IdvFunctionHeader) then begin
       if (ParameterVars.Children[idx] as IdvFunctionHeader).getName=AliasStr then begin
         ParameterVars.InsertChild(TdvFunctionHeaderAlias.Create(NameStr, ParameterVars.Children[idx] as IdvFunctionHeader));
-        fExternalNames.Add(NameStr);
+        fExternalNames.Add(NameStr+'=NONE');
         Result := True;
         exit;
       end;
@@ -1695,14 +1698,36 @@ procedure TdvXMLParser.InsertLoader(UnitNode: IdvASTUnit);
 var
   FunctionHeader: IdvFunctionHeader;
   aFunction: IdvFunction;
+  idx: uint32;
+  Name: string;
+  Value: string;
 begin
+  if fExternalNames.Count=0 then begin
+    exit;
+  end;
   UnitNode.ImplementationSection.Variables.InsertChild(TdvVariable.Create('dynLib','IDynLib','nil'));
   FunctionHeader := UnitNode.InterfaceSection.InsertChild(TdvFunctionHeader.Create('Initialize')) as IdvFunctionHeader;
   FunctionHeader.ReturnType := '';
   aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('Initialize')) as IdvFunction;
   aFunction.Header.ReturnType := '';
   aFunction.Body.Content :=
-  '  dynLib := TDynLib.Create; '
+  '  dynLib := TDynLib.Create; '+sLineBreak;
+  //- Insert the functions
+  for idx := 0 to pred(fExternalNames.Count) do begin
+    Name := fExternalNames.Names[idx];
+    Value := fExternalNames.Values[Name];
+    aFunction.Body.Content := aFunction.Body.Content + '  ';
+    if Value<>'NONE' then begin
+      aFunction.Body.Content := aFunction.Body.Content + '{$ifdef '+Value+'}';
+    end;
+    //-
+    aFunction.Body.Content := aFunction.Body.Content + Name + ' := dynLib.GetProcAddress('''+Name+''');';
+    //-
+    if Value<>'NONE' then begin
+      aFunction.Body.Content := aFunction.Body.Content + '{$endif}';
+    end;
+    aFunction.Body.Content := aFunction.Body.Content + sLineBreak;
+  end;
 end;
 
 function TdvXMLParser.ParseCommand( XMLNode: IXMLNode; UnitNode: IdvASTUnit; ParameterVars: IdvASTNode ): boolean;
@@ -1737,7 +1762,7 @@ begin
   if not assigned(CommandPrototype) then begin
     exit;
   end;
-  fExternalNames.Add(CommandPrototype.Name);
+  fExternalNames.Add(CommandPrototype.Name+'=NONE');
 
   //- Process Param tags.
   if XMLNode.ChildNodes.Count=1 then begin
@@ -1952,6 +1977,25 @@ begin
   end;
 end;
 
+function TdvXMLParser.MyStringListFind( SL: TStringList; SearchString: string; var FoundIdx: int32 ): boolean;
+var
+  idx: uint32;
+  utSearchString: string;
+begin
+  Result := False;
+  if SL.Count=0 then begin
+    exit;
+  end;
+  utSearchString := Uppercase(Trim(SearchString));
+  for idx := 0 to pred(SL.Count) do begin
+    if Uppercase(Trim(SL[idx]))=utSearchString then begin
+      FoundIdx := idx;
+      Result := True;
+      exit;
+    end;
+  end;
+end;
+
 procedure TdvXMLParser.SetConditionals( XMLNode: IXMLNode; UnitNode: IdvASTUnit; aPlatform: string );
 var
   idx: uint32;
@@ -1963,6 +2007,7 @@ var
   Condition: IdvIfDef;
   DefineStr: string;
   OneLine: boolean;
+  FoundIdx: int32;
 begin
   if XMLNode.ChildNodes.Count=0 then begin
     exit;
@@ -1992,7 +2037,11 @@ begin
       DefineStr := '';
       DefineStr := fDefines.Values[utPlatform];
       if DefineStr<>'' then begin
-        // Create an ifdef for xlib
+        // Check to see if an external needs updating
+        if MyStringListFind(fExternalNames, Name+'=NONE',FoundIdx) then begin
+          fExternalNames[FoundIdx] := Name + '=' + DefineStr;
+        end;
+        // Create an ifdef
         Condition := TdvIfDef.Create(DefineStr);
         Condition.OnOneLine := OneLine;
         ConditionalEntity.Parent.ReplaceNode( ConditionalEntity, Condition );
