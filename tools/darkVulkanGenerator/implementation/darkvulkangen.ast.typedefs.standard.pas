@@ -36,11 +36,11 @@ uses
 type
   TdvTypeDefs = class( TdvASTNode, IdvTypeDefs )
   private
-    procedure CheckRecordOrder( TypeUnderInspection: IdvTypeDef; CurrentIdx: nativeuint; var Reordered: boolean );
-    procedure DoOrderStructs( var Reordered: boolean );
     function FindTypeByName(TypeName: string; var FoundIdx: nativeuint): boolean;
-    procedure Reorder(TypeIdx, DependsOn: nativeuint; var Reordered: boolean);
+  private
+    function CheckRecordDependsOn( RecordDef: IdvTypeDef; TypeName: string ): boolean;
     procedure OrderStructs;
+    function CheckAliasDependsOn(AliasDef: IdvTypeDef; TypeName: string): boolean;
   protected
     function InsertChild( node: IdvASTNode ): IdvASTNode; override;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
@@ -50,22 +50,8 @@ implementation
 uses
   sysutils;
 
-procedure TdvTypeDefs.Reorder( TypeIdx: nativeuint; DependsOn: nativeuint; var Reordered: boolean );
-var
-  DependedOn: IdvTypeDef;
-  CurrentNode: IdvTypeDef;
-begin
-  if DependsOn<=TypeIdx then begin
-    exit;
-  end;
-  DependedOn := getChild(DependsOn) as IdvTypeDef;
-  CurrentNode := getChild(TypeIdx) as IdvTypeDef;
-  RemoveNode( DependsOn );
-  RemoveNode( TypeIdx );
-  InsertChild(DependedOn);
-  InsertChild(CurrentNode);
-  Reordered := True;
-end;
+type
+  ETypeDefReinsertion = class( ELogEntry );
 
 function TdvTypeDefs.FindTypeByName( TypeName: string; var FoundIdx: nativeuint ): boolean;
 var
@@ -104,74 +90,197 @@ begin
   Result := inherited InsertChild(node);
 end;
 
-procedure TdvTypeDefs.CheckRecordOrder(TypeUnderInspection: IdvTypeDef; CurrentIdx: nativeuint; var Reordered: boolean);
+function TdvTypeDefs.CheckRecordDependsOn( RecordDef: IdvTypeDef; TypeName: string ): boolean;
 var
   idx: nativeuint;
   Child: IdvTypeDef;
   TypeString: string;
   TypeIdx: nativeuint;
 begin
-  //- Get the name of the type being referenced.
-  if TypeUnderInspection.ChildCount=0 then begin
-    exit; // do nothing
+  Result := False;
+  if RecordDef.ChildCount=0 then begin
+    exit;
   end;
-  for idx := 0 to pred(TypeUnderInspection.ChildCount) do begin
-    if not supports(TypeUnderInspection.Children[idx],IdvTypeDef) then begin
+  for idx := 0 to pred(RecordDef.ChildCount) do begin
+    if not supports(RecordDef.Children[idx],IdvTypeDef) then begin
       continue;
     end;
-    Child := TypeUnderInspection.Children[idx] as IdvTypeDef;
+    Child := RecordDef.Children[idx] as IdvTypeDef;
     if not assigned(Child) then begin
-      exit;
+      continue;
     end;
     if Child.ChildCount<>1 then begin
-      exit;
-    end;
-    if not Supports(Child.Children[0],IdvTypeDef) then begin
-      exit;
-    end;
-    TypeString := (Child.Children[0] as IdvTypeDef).Name;
-    if TypeString=TypeUnderInspection.Name then begin
       continue;
     end;
-    //- Find the target type
+    if not Supports(Child.Children[0],IdvTypeDef) then begin
+      continue;
+    end;
+    TypeString := (Child.Children[0] as IdvTypeDef).Name;
     TypeString := StringReplace(TypeString,'^','',[rfReplaceAll]);
-    if FindTypeByName( TypeString, TypeIdx ) then begin
-      Reorder( CurrentIdx, TypeIdx, Reordered );
+    if TypeString=TypeName then begin
+      Result := True;
+      exit;
     end;
   end;
 end;
 
+function TdvTypeDefs.CheckAliasDependsOn( AliasDef: IdvTypeDef; TypeName: string ): boolean;
+var
+  Child: IdvTypeDef;
+  TypeString: string;
+  TypeIdx: nativeuint;
+begin
+  Result := False;
+  if AliasDef.ChildCount<>1 then begin
+    exit;
+  end;
+  if not supports(AliasDef.Children[0],IdvTypeDef) then begin
+    exit;
+  end;
+  Child := AliasDef.Children[0] as IdvTypeDef;
+  if not assigned(Child) then begin
+    exit;
+  end;
+  //- The child is now the type
+  if not Supports(Child,IdvTypeDef) then begin
+    exit;
+  end;
+  if Child.TypeKind<>tkUserDefined then begin
+    exit;
+  end;
+  TypeString := Child.Name;
+  TypeString := StringReplace(TypeString,'^','',[rfReplaceAll]);
+  if TypeString=TypeName then begin
+    Result := True;
+    exit;
+  end;
+end;
 
-{ TdvTypeDefs }
-procedure TdvTypeDefs.DoOrderStructs( var Reordered: boolean );
+
+
+procedure TdvTypeDefs.OrderStructs;
+type
+  TypeDefRecord = record
+    TypeDef: IdvASTNode;
+    Reinserted: boolean;
+  end;
 var
   idx: nativeuint;
-  TypeUnderInspection: IdvTypeDef;
+  idy: nativeuint;
+  InsertedCount: nativeuint;
+  HasDependency: Boolean;
+  ArrayOfTypeDefs: array of TypeDefRecord;
+  CurrentDef: IdvTypeDef;
+  TestDef: IdvTypeDef;
+  TestType: string;
 begin
   if getChildCount=0 then begin
     exit;
   end;
-  //- Loop through all types.
+  //- Copy all type definitions into the local array.
+  SetLength(ArrayOfTypeDefs,getChildCount);
   for idx := 0 to pred(getChildCount) do begin
-    if Supports(getChild(idx),IdvTypeDef) then begin
-      TypeUnderInspection := getChild(idx) as IdvTypedef;
-      //- Is this type a record or alias?
-      case TypeUnderInspection.TypeKind of
-        tkRecord,
-        tkUnion: CheckRecordOrder( TypeUnderInspection, idx, Reordered );
-      end;
-    end;
+    ArrayOfTypeDefs[idx].TypeDef := getChild(idx);
+    ArrayOfTypeDefs[idx].Reinserted := False;
   end;
-end;
-
-procedure TdvTypeDefs.OrderStructs;
-var
-  Reordered: boolean;
-begin
+  //- Clear all type-defs from this node.
+  Clear;
+  //- Begin re-inserting.
+  InsertedCount := 0; //- Only when InsertedCount = Length(ArrayOfTypeDefs) are we done re-ordering.
   repeat
-    Reordered := False;
-    DoOrderStructs(Reordered);
-  until not Reordered;
+    for idx := 0 to pred(Length(ArrayOfTypeDefs)) do begin
+
+      //- No point testing something that's already been reinserted.
+      if ArrayOfTypeDefs[idx].Reinserted then begin
+        continue;
+      end;
+
+      //- Any node which is not a type def, just gets reinserted.
+      if not Supports(ArrayOfTypeDefs[idx].TypeDef,IdvTypeDef) then begin
+        InsertChild(ArrayOfTypeDefs[idx].TypeDef);
+        inc(InsertedCount);
+        ArrayOfTypeDefs[idx].Reinserted := True;
+        continue;
+      end;
+
+      //- Now with our type-def, do we depend on some other type def in our list,
+      //- which has not already been inserteD?
+      CurrentDef := ArrayOfTypeDefs[idx].TypeDef as IdvTypeDef;
+
+      HasDependency := False;
+      for idy := 0 to pred(Length(ArrayOfTypeDefs)) do begin
+
+        //- Save checking all other methods.
+        if HasDependency then begin
+          continue;
+        end;
+
+        if (idx=idy) then begin
+          continue;
+        end;
+
+        if (ArrayOfTypeDefs[idy].Reinserted) then begin
+          continue;
+        end;
+
+        if not Supports(ArrayOfTypeDefs[idy].TypeDef,IdvTypeDef) then begin
+          continue;
+        end;
+
+        TestDef := ArrayOfTypeDefs[idy].TypeDef as IdvTypeDef;
+        TestType := TestDef.Name;
+        TestType := StringReplace(TestType,'^','',[rfReplaceAll]);
+         //- Does CurrentDef depend on TestDef?
+        case CurrentDef.TypeKind of
+//          tkVoid: ;
+//          tkUserDefined: ;
+//          tkEnum: ;
+//          tkPointer: ;
+            tkTypedPointer,
+            tkAlias: begin
+              if CheckAliasDependsOn( CurrentDef, TestType ) then begin
+                Hasdependency := True;
+                continue;
+              end;
+            end;
+//          tkuint8: ;
+//          tkint8: ;
+//          tkuint16: ;
+//          tkint16: ;
+//          tkuint32: ;
+//          tkint32: ;
+//          tkuint64: ;
+//          tkint64: ;
+//          tkNativeUInt: ;
+//          tkNativeInt: ;
+//          tkSingle: ;
+//          tkDouble: ;
+//          tkAnsiChar: ;
+//          tkChar: ;
+//          tkString: ;
+//          tkAnsiString: ;
+          tkRecord,
+          tkUnion: begin
+            if CheckRecordDependsOn( CurrentDef, TestType ) then begin
+              HasDependency := True;
+              continue;
+            end;
+          end;
+//          tkFuncPointer: ;
+        end; // case
+      end; // for idy
+      //- If a depenency was found, we can't insert this yet.
+      if HasDependency then begin
+        continue;
+      end;
+      //- Otherwise, reinsert this node.
+      Log.Insert(ETypeDefReinsertion,TLogSeverity.lsInfo,[LogBind('name',CurrentDef.Name)]);
+      InsertChild(CurrentDef);
+      inc(InsertedCount);
+      ArrayOfTypeDefs[idx].Reinserted := True;
+    end; // for idx
+  until InsertedCount = Length(ArrayOfTypeDefs);
+  SetLength(ArrayOfTypeDefs,0);
 end;
 
 
@@ -180,7 +289,6 @@ var
   idx: nativeuint;
 begin
   OrderStructs;
-  //-
   Result := False;
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin
     exit;
@@ -202,5 +310,7 @@ begin
   Result := True;
 end;
 
+initialization
+  Log.Register(ETypeDefReinsertion,'Reinserting type-def: (%name%)');
 end.
 

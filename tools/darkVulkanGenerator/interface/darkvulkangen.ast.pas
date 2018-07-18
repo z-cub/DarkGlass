@@ -214,10 +214,6 @@ type
   /// or descendent;
   IdvTypeDefs = interface( IdvASTNode )
     ['{3BA9D84D-00EF-4D07-9DBC-C8F5294E3DEF}']
-    ///  <summary>
-    ///    Reorders records based on the types they depend on.
-    ///  </summary>
-    procedure OrderStructs;
 
   end;
 

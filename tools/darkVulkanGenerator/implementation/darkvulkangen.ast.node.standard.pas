@@ -48,6 +48,7 @@ type
     fChildren: ICollection;
     fLineBreaks: uint32;
   protected //- IdvASTNode -//
+    procedure Clear;
     function getBeforeNode: IdvASTNode;
     function getAfterNode: IdvASTNode;
     function getLineBreaks: uint32;
@@ -75,6 +76,11 @@ type
   TASTNodeList = {$ifdef fpc} specialize {$endif} TList<IdvASTNode>;
 
 { TdvASTNode }
+
+procedure TdvASTNode.Clear;
+begin
+  IASTNodeList(fChildren).Clear;
+end;
 
 constructor TdvASTNode.Create( IsSpecialNode: boolean );
 begin

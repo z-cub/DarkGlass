@@ -43,7 +43,6 @@ type
     function getConstants: IdvConstants;
     function getTypes: IdvTypeDefs;
     function getVariables: IdvVariables;
-    function FindPreviousTypeNode: IdvTypeDefs;
   protected
     function WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean; override;
   public
@@ -94,31 +93,15 @@ begin
   Result := fSectionKind;
 end;
 
-function TdvASTUnitSection.FindPreviousTypeNode: IdvTypeDefs;
-var
-  idx: nativeuint;
-begin
-  Result := nil;
-  if getChildCount=0 then begin
-    exit;
-  end;
-  for idx := pred(getChildCount) downto 0 do begin
-    if Supports(getChild(idx),IdvTypeDefs) then begin
-      Result := getChild(idx) as IdvTypeDefs;
-      exit;
-    end;
-    if not Supports(getChild(idx),IdvASTComment) then begin
-      exit;
-    end;
-  end;
-end;
-
 function TdvASTUnitSection.getTypes: IdvTypeDefs;
 begin
-  Result := FindPreviousTypeNode;
-  if not assigned(Result) then begin
-    Result := InsertChild(TdvTypeDefs.Create) as IdvTypeDefs;
+  if getChildCount>0 then begin
+    if Supports(getChild(pred(getChildCount)),IdvTypeDefs) then begin
+      Result := getChild(pred(getChildCount)) as IdvTypeDefs;
+      exit;
+    end;
   end;
+  Result := InsertChild(TdvTypeDefs.Create) as IdvTypeDefs;
 end;
 
 function TdvASTUnitSection.getUsesList: IdvUsesList;
