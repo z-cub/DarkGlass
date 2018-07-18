@@ -42,6 +42,7 @@ type
 
   TdvXMLParser = class( TInterfacedObject, IdvXMLParser )
   private
+    fHardCodedTypes: boolean;
     fCollectComments: boolean;
     fFilename: string;
     fXMLDocument: IXMLDocument;
@@ -143,6 +144,7 @@ end;
 constructor TdvXMLParser.Create(Filename: string);
 begin
   inherited Create;
+  fHardCodedTypes := False;
   fFilename := Filename;
   fXMLDocument := nil;
 end;
@@ -864,6 +866,19 @@ var
   TypeKind: string;
 begin
   Result := False;
+  //- Ensure the hard coded types are in.
+  if not fHardCodedTypes then begin
+    fHardCodedTypes := True;
+    //- Insert hard-coded types
+    UnitNode.InterfaceSection.InsertChild( TdvASTComment.Create('Aliases for c-types') );
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint8_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint8));
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint32_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint32));
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint64_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint64));
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int8_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint8));
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int32_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint32));
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int64_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint64));
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('float',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkSingle));
+  end;
   //- Simple Aliases, should have a type and a name.
   NameNode := XMLNode.ChildNodes.FindNode('name');
   TypeNode := XMLNode.ChildNodes.FindNode('type');
@@ -1276,7 +1291,7 @@ begin
     Log.Insert(EMissingTypes,TLogSeverity.lsWarning);
     exit;
   end;
-  //- Loop the child ndoes
+  //- Loop the child nodes
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
     //- Make sure we have a matching node type. (or comment)
     if MatchNode(XMLNode.ChildNodes[idx],'comment','types',FALSE) then begin
@@ -1811,14 +1826,6 @@ end;
 function TdvXMLParser.CreateVulkanUnit( ASTNode: IdvASTNode ): IdvASTUnit;
 begin
   Result := ASTNode.InsertChild( TdvASTUnit.Create('vulkan') ) as IdvASTUnit;
-  Result.InterfaceSection.InsertChild( TdvASTComment.Create('Aliases for c-types') );
-  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint8_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint8));
-  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint32_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint32));
-  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint64_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint64));
-  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int8_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint8));
-  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int32_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint32));
-  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int64_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint64));
-  Result.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('float',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkSingle));
 end;
 
 function TdvXMLParser.ParseRegistryNode( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
