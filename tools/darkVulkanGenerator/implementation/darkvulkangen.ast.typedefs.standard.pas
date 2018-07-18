@@ -36,12 +36,13 @@ uses
 type
   TdvTypeDefs = class( TdvASTNode, IdvTypeDefs )
   private
-    procedure CheckAliasOrder(TypeUnderInspection: IdvTypeDef; CurrentIdx: nativeuint);
-    procedure CheckRecordOrProcedureOrder(TypeUnderInspection: IdvTypeDef; CurrentIdx: nativeuint);
-    procedure OrderStructs;
+    procedure CheckRecordOrder( TypeUnderInspection: IdvTypeDef; CurrentIdx: nativeuint; var Reordered: boolean );
+    procedure DoOrderStructs( var Reordered: boolean );
     function FindTypeByName(TypeName: string; var FoundIdx: nativeuint): boolean;
-    procedure Reorder(TypeIdx, DependsOn: nativeuint);
+    procedure Reorder(TypeIdx, DependsOn: nativeuint; var Reordered: boolean);
+    procedure OrderStructs;
   protected
+    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
   end;
 
@@ -49,14 +50,21 @@ implementation
 uses
   sysutils;
 
-procedure TdvTypeDefs.Reorder( TypeIdx: nativeuint; DependsOn: nativeuint );
+procedure TdvTypeDefs.Reorder( TypeIdx: nativeuint; DependsOn: nativeuint; var Reordered: boolean );
 var
   DependedOn: IdvTypeDef;
+  CurrentNode: IdvTypeDef;
 begin
   if DependsOn<=TypeIdx then begin
     exit;
   end;
   DependedOn := getChild(DependsOn) as IdvTypeDef;
+  CurrentNode := getChild(TypeIdx) as IdvTypeDef;
+  RemoveNode( DependsOn );
+  RemoveNode( TypeIdx );
+  InsertChild(DependedOn);
+  InsertChild(CurrentNode);
+  Reordered := True;
 end;
 
 function TdvTypeDefs.FindTypeByName( TypeName: string; var FoundIdx: nativeuint ): boolean;
@@ -81,31 +89,22 @@ begin
   end;
 end;
 
-procedure TdvTypeDefs.CheckAliasOrder( TypeUnderInspection: IdvTypeDef; CurrentIdx: nativeuint );
+function TdvTypeDefs.InsertChild(node: IdvASTNode): IdvASTNode;
 var
-  Child: IdvTypeDef;
-  TypeString: string;
-  TypeIdx: nativeuint;
+  FoundIdx: nativeuint;
+  TypeName: string;
 begin
-  //- Get the name of the type being referenced.
-  if TypeUnderInspection.ChildCount=0 then begin
-    exit; // do nothing
+  if Supports(node,IdvTypeDef) then begin
+    TypeName := (node as IdvTypeDef).Name;
+    if FindTypeByName(TypeName,FoundIdx) then begin
+      Result := getChild(FoundIdx);
+      exit;
+    end;
   end;
-  if not supports(TypeUnderInspection.Children[0],IdvTypeDef) then begin
-    exit;
-  end;
-  Child := TypeUnderInspection.Children[0] as IdvTypeDef;
-  TypeString := Child.Name;
-  if TypeString=TypeUnderInspection.Name then begin
-    exit;
-  end;
-  //- Find the target type
-  if FindTypeByName( TypeString, TypeIdx ) then begin
-    Reorder( CurrentIdx, TypeIdx );
-  end;
+  Result := inherited InsertChild(node);
 end;
 
-procedure TdvTypeDefs.CheckRecordOrProcedureOrder(TypeUnderInspection: IdvTypeDef; CurrentIdx: nativeuint);
+procedure TdvTypeDefs.CheckRecordOrder(TypeUnderInspection: IdvTypeDef; CurrentIdx: nativeuint; var Reordered: boolean);
 var
   idx: nativeuint;
   Child: IdvTypeDef;
@@ -135,15 +134,16 @@ begin
       continue;
     end;
     //- Find the target type
+    TypeString := StringReplace(TypeString,'^','',[rfReplaceAll]);
     if FindTypeByName( TypeString, TypeIdx ) then begin
-      Reorder( CurrentIdx, TypeIdx );
+      Reorder( CurrentIdx, TypeIdx, Reordered );
     end;
   end;
 end;
 
 
 { TdvTypeDefs }
-procedure TdvTypeDefs.OrderStructs;
+procedure TdvTypeDefs.DoOrderStructs( var Reordered: boolean );
 var
   idx: nativeuint;
   TypeUnderInspection: IdvTypeDef;
@@ -157,14 +157,21 @@ begin
       TypeUnderInspection := getChild(idx) as IdvTypedef;
       //- Is this type a record or alias?
       case TypeUnderInspection.TypeKind of
-        tkTypedPointer,
-        tkAlias: CheckAliasOrder( TypeUnderInspection, idx );
-        tkFuncPointer,
         tkRecord,
-        tkUnion: CheckRecordOrProcedureOrder( TypeUnderInspection, idx );
+        tkUnion: CheckRecordOrder( TypeUnderInspection, idx, Reordered );
       end;
     end;
   end;
+end;
+
+procedure TdvTypeDefs.OrderStructs;
+var
+  Reordered: boolean;
+begin
+  repeat
+    Reordered := False;
+    DoOrderStructs(Reordered);
+  until not Reordered;
 end;
 
 
@@ -173,6 +180,7 @@ var
   idx: nativeuint;
 begin
   OrderStructs;
+  //-
   Result := False;
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin
     exit;

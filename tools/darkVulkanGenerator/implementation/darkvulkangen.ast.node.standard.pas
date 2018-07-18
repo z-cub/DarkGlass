@@ -57,6 +57,7 @@ type
     function LineBreaks: string;
     function WriteBeforeNode( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean;
     function WriteAfterNode( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean;
+    procedure RemoveNode( idx: nativeuint );
     function InsertChild( node: IdvASTNode ): IdvASTNode; virtual;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; virtual;
     function getIndentation( Indentation: uint32 ): string;
@@ -158,6 +159,11 @@ begin
       Result := Result + sLineBreak;
     end;
   end;
+end;
+
+procedure TdvASTNode.RemoveNode(idx: nativeuint);
+begin
+  IASTNodeList(fChildren).RemoveItem(idx);
 end;
 
 function TdvASTNode.WriteAfterNode(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
