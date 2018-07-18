@@ -86,15 +86,8 @@ begin
 end;
 
 procedure TdvTypedSymbol.setName(value: string);
-var
-  utName: string;
 begin
-  fName := value;
-  utName := Uppercase(Trim(fName));
-  if (utName='OBJECT') or
-     (utName='TYPE') then begin
-    fName := '_'+fName;
-  end;
+  fName := TestReservedWord(Value);
 end;
 
 procedure TdvTypedSymbol.setType(value: string);

@@ -43,6 +43,7 @@ type
     procedure setName( value: string );
     function getValue: string;
     procedure setValue( value: string );
+    function ReQuote(src: string): string;
   protected
     function InsertChild( node: IdvASTNode ): IdvASTNode; override;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
@@ -79,14 +80,19 @@ begin
   Log.Insert(ENoChildren,TLogSeverity.lsError);
 end;
 
+function TdvConstant.ReQuote( src: string ): string;
+begin
+  Result := StringReplace(src,'"','''',[rfReplaceAll]);
+end;
+
 procedure TdvConstant.setName(value: string);
 begin
-  fName := value;
+  fName := Value;
 end;
 
 procedure TdvConstant.setValue(value: string);
 begin
-  fValue := Value;
+  fValue := ReQuote(Value);
   //- Convert binary.
   if Pos('0x',fValue)=1 then begin
     Delete(fValue,1,2);

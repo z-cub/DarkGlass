@@ -42,13 +42,15 @@ type
 
   TdvXMLParser = class( TInterfacedObject, IdvXMLParser )
   private
+    fStructsNode: IdvTypeDefs;
     fHardCodedTypes: boolean;
     fCollectComments: boolean;
     fFilename: string;
     fXMLDocument: IXMLDocument;
   private
+    function TypeOverrides( src: string ): string;
     procedure SkipNode(NodeType, Because: string; IsError: boolean = False);
-    function GeneratePointerType(NewTypeName, TargetType: string; PtrCount: uint32; UnitNode: IdvASTUnit): IdvTypeDef;
+    function GeneratePointerType(NewTypeName, TargetType: string; PtrCount: uint32; Parent: IdvASTNode): IdvTypeDef;
     class procedure Explode(cDelimiter, sValue: string; var Results: TArrayOfString; iCount: uint32 = 0); static;
     function GetIdentifier(SourceStr: string; var PtrCount: uint32): string;
     function CreateVulkanUnit(ASTNode: IdvASTNode): IdvASTUnit;
@@ -73,10 +75,10 @@ type
     function ParseAliasNodeType(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseDefineTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseEnumTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
-    function ParseFuncPointerTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
+    function ParseFuncPointerTypeNode(XMLNode: IXMLNode; Parent: IdvTypeDefs): boolean;
     function ParseHandleTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseIncludeTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
-    function ParseStructTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit; IsUnion: boolean = FALSE): boolean;
+    function ParseStructTypeNode(XMLNode: IXMLNode; Parent: IdvASTNode; IsUnion: boolean = FALSE): boolean;
     function VerifyDefineHandle(XMLNode: IXMLNode): boolean;
     function VerifyMakeVersion(XMLNode: IXMLNode): boolean;
     function VerifyVersionMajor(XMLNode: IXMLNode): boolean;
@@ -96,7 +98,7 @@ type
     function ParseExtension(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseExtensionRequire(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit): boolean;
     function ParseExtensionEnum(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit): boolean;
-    function ParseStructMember(XMLNode: IXMLNode; RecordNode: IdvTypeDef; UnitNode: IdvASTUnit): boolean;
+    function ParseStructMember(XMLNode: IXMLNode; RecordNode: IdvTypeDef; Parent: IdvASTNode ): boolean;
 
 
   public
@@ -141,9 +143,25 @@ begin
   end;
 end;
 
+function TdvXMLParser.TypeOverrides(src: string): string;
+var
+  utSrc: string;
+begin
+  Result := Src;
+  utSrc := Uppercase(Trim(Src));
+  if utSrc='HANDLE' then begin
+    Result := 'THandle';
+  end else if utSrc='HINSTANCE' then begin
+    Result := 'nativeuint';
+  end else if utSrc='INT' then begin
+    Result := 'integer';
+  end;
+end;
+
 constructor TdvXMLParser.Create(Filename: string);
 begin
   inherited Create;
+  fStructsNode := nil;
   fHardCodedTypes := False;
   fFilename := Filename;
   fXMLDocument := nil;
@@ -871,6 +889,7 @@ begin
     fHardCodedTypes := True;
     //- Insert hard-coded types
     UnitNode.InterfaceSection.InsertChild( TdvASTComment.Create('Aliases for c-types') );
+//    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint8));
     UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint8_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint8));
     UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint32_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint32));
     UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('uint64_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint64));
@@ -978,28 +997,41 @@ begin
   end;
 end;
 
-function TdvXMLParser.GeneratePointerType( NewTypeName: string; TargetType: string; PtrCount: uint32; UnitNode: IdvASTUnit ): IdvTypeDef;
+function TdvXMLParser.GeneratePointerType( NewTypeName: string; TargetType: string; PtrCount: uint32; Parent: IdvASTNode ): IdvTypeDef;
 var
   PS: string;
   PreviousName: string;
   ReturnTypeNode: IdvTypeDef;
   idx: uint32;
 begin
+  //- Sanity check for ***Void
+  if Uppercase(Trim(NewTypeName))='VOID' then begin
+    PreviousName := 'pointer';
+    Ps := 'p';
+    for idx := 0 to pred(pred(PtrCount)) do begin
+      ReturnTypeNode := Parent.InsertChild(TdvTypeDef.Create(Ps+PreviousName,tkTypedPointer)) as IdvTypeDef;
+      ReturnTypeNode.InsertChild(TdvTypeDef.Create(PreviousName,tkUserDefined));
+      PreviousName := 'p'+PreviousName;
+    end;
+    Result := ReturnTypeNode;
+    exit;
+  end;
+  //- else..
   PreviousName := 'T'+NewTypeName;
-  ReturnTypeNode := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(PreviousName,tkAlias)) as IdvTypeDef;
+  ReturnTypeNode := Parent.InsertChild(TdvTypeDef.Create(PreviousName,tkAlias)) as IdvTypeDef;
   ReturnTypeNode.InsertChild(TdvTypeDef.Create(TargetType,TdvTypeKind.tkUserDefined));
   //- Add pointers to the return type node.
   Ps := '';
   for idx := 0 to pred(PtrCount) do begin
     Ps := Ps + 'p';
-    ReturnTypeNode := UnitNode.InterfaceSection.Types.InsertChild(TdvTypeDef.Create(Ps+PreviousName,tkTypedPointer)) as IdvTypeDef;
+    ReturnTypeNode := Parent.InsertChild(TdvTypeDef.Create(Ps+PreviousName,tkTypedPointer)) as IdvTypeDef;
     ReturnTypeNode.InsertChild(TdvTypeDef.Create(PreviousName,tkUserDefined));
     PreviousName := 'p'+PreviousName;
   end;
   Result := ReturnTypeNode;
 end;
 
-function TdvXMLParser.ParseFuncPointerTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
+function TdvXMLParser.ParseFuncPointerTypeNode( XMLNode: IXMLNode; Parent: IdvTypeDefs ): boolean;
 var
   FunctionName: string;
   ReplaceString: string;
@@ -1047,7 +1079,7 @@ begin
       FuncTypeDef.InsertChild(TdvTypeDef.Create(ReturnType,TdvTypeKind.tkUserDefined));
     end else begin
       //- Generate the return type.
-      ReturnTypeNode := GeneratePointerType( FunctionName+'Result', ReturnType, PtrCount, UnitNode );
+      ReturnTypeNode := GeneratePointerType( FunctionName+'Result', ReturnType, PtrCount, Parent );
       FuncTypeDef.InsertChild(TdvTypeDef.Create(ReturnTypeNode.Name,TdvTypeKind.tkUserDefined));
     end;
   end;
@@ -1071,25 +1103,25 @@ begin
     ParameterStr := GetIdentifier(ParameterStr,PtrCount);
     if (PtrCount=0) then begin
       //- Straight named parameter.
-      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,TypeStr));
+      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr, TypeOverrides(TypeStr) ));
     end else if (PtrCount=1) and (uppercase(trim(TypeStr))='VOID') then begin
       //- void pointer parameter
       FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pointer'));
     end else if (PtrCount=1) and (uppercase(trim(TypeStr))='CHAR') then begin
       //- pchar
-      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pAnsiChar'));
+      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pChar'));
     end else begin
-      ParamType := GeneratePointerType( ParameterStr, TypeStr, PtrCount, UnitNode );
+      ParamType := GeneratePointerType( ParameterStr, TypeStr, PtrCount, Parent );
       FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,ParamType.Name));
     end;
   end;
   //- Insert the func def.
-  UnitNode.InterfaceSection.Types.InsertChild(FuncTypeDef);
+  Parent.InsertChild(FuncTypeDef);
   //- Are we done yet?
   Result := True;
 end;
 
-function TdvXMLParser.ParseStructMember( XMLNode: IXMLNode; RecordNode: IdvTypeDef; UnitNode: IdvASTUnit ): boolean;
+function TdvXMLParser.ParseStructMember( XMLNode: IXMLNode; RecordNode: IdvTypeDef; Parent: IdvASTNode ): boolean;
 var
   utNodeName: string;
   TypeNode: IXMLNode;
@@ -1101,6 +1133,7 @@ var
   Member: IdvTypeDef;
   PointerType: IdvTypeDef;
   TempStr: string;
+  utTypeStr: string;
   idx: uint32;
 begin
   Result := False;
@@ -1162,13 +1195,15 @@ begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
     Member.InsertChild(TdvTypeDef.Create('pchar',TdvTypeKind.tkUserDefined));
   end else if (PtrCount>1) then begin
-    PointerType := GeneratePointerType( NameStr, TypeStr, PtrCount, UnitNode );
+    PointerType := GeneratePointerType( NameStr, TypeStr, PtrCount, Parent );
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
     Member.InsertChild(TdvTypeDef.Create(PointerType.Name,TdvTypeKind.tkUserDefined));
   end else if (PtrCount=1) then begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
     Member.InsertChild(TdvTypeDef.Create('^'+TypeStr,TdvTypeKind.tkUserDefined));
   end else begin
+    //- some hard-coded type overrides for windows.
+    TypeStr := TypeOverrides( TypeStr );
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
     Member.InsertChild(TdvTypeDef.Create(TypeStr,TdvTypeKind.tkUserDefined));
   end;
@@ -1180,7 +1215,7 @@ begin
   Result := True;
 end;
 
-function TdvXMLParser.ParseStructTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit; IsUnion: boolean = FALSE ): boolean;
+function TdvXMLParser.ParseStructTypeNode( XMLNode: IXMLNode; Parent: IdvASTNode; IsUnion: boolean = FALSE ): boolean;
 var
   idx: uint32;
   RecordNode: IdvTypeDef;
@@ -1198,18 +1233,21 @@ begin
     exit;
   end;
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
-    if not ParseStructMember( XMLNode.ChildNodes[idx], RecordNode, UnitNode ) then begin
+    if not ParseStructMember( XMLNode.ChildNodes[idx], RecordNode, Parent ) then begin
       exit;
     end;
   end;
   //- Done
-  UnitNode.InterfaceSection.Types.InsertChild(RecordNode);
+  Parent.InsertChild(RecordNode);
   Result := True;
 end;
 
 function TdvXMLParser.ParseUnionTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
 begin
-  Result := ParseStructTypeNode( XMLNode, UnitNode, TRUE );
+  if not assigned(fStructsNode) then begin
+    fStructsNode := TdvTypeDefs.Create;
+  end;
+  Result := ParseStructTypeNode( XMLNode, fStructsNode, TRUE );
 end;
 
 function TdvXMLParser.ParseIncludeTypeNode( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
@@ -1269,9 +1307,15 @@ begin
   end else if utCategory='ENUM' then begin
     Result := ParseEnumTypeNode(XMLNode,UnitNode);
   end else if utCategory='FUNCPOINTER' then begin
-    Result := ParseFuncPointerTypeNode(XMLNode,UnitNode);
+    if not assigned(fStructsNode) then begin
+      fStructsNode := TdvTypeDefs.Create;
+    end;
+    Result := ParseFuncPointerTypeNode(XMLNode,fStructsNode);
   end else if utCategory='STRUCT' then begin
-    Result := ParseStructTypeNode(XMLNode,UnitNode);
+    if not assigned(fStructsNode) then begin
+      fStructsNode := TdvTypeDefs.Create;
+    end;
+    Result := ParseStructTypeNode(XMLNode,fStructsNode);
   end else if utCategory='INCLUDE' then begin
     Result := ParseIncludeTypeNode(XMLNode,UnitNode);
   end else if utCategory='UNION' then begin
@@ -1295,9 +1339,6 @@ begin
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
     //- Make sure we have a matching node type. (or comment)
     if MatchNode(XMLNode.ChildNodes[idx],'comment','types',FALSE) then begin
-      if not ParseCommentToASTNode(XMLNode.ChildNodes[idx],UnitNode.InterfaceSection) then begin
-        exit;
-      end;
       continue;
     end;
     if not MatchNode(XMLNode.ChildNodes[idx],'type','types') then begin
@@ -1315,9 +1356,6 @@ function TdvXMLParser.ParseEnumValue( Enum: IdvASTNode; XMLNode: IXMLNode; UnitN
 var
   NameStr: string;
   ValueStr: string;
-
-//  idx: uint32;
-//  Attrib: string;
 begin
   Result := False;
   //- Check attributes
@@ -1340,11 +1378,6 @@ begin
     end;
   end else begin
     SkipNode('enum','enum has no valid combination of attribuets.',TRUE);
-
-//    for idx := 0 to pred(XMLNode.AttributeNodes.Count) do begin
-//      Attrib := XMLNode.AttributeNodes[idx].nodename;
-//    end;
-
     exit;
   end;
   //- If we made it here, we're valid.
@@ -1442,12 +1475,12 @@ begin
     end else if utTypeNode='CHAR' then begin
       ReturnTypeStr := 'pchar';
     end else begin
-      ReturnType := GeneratePointerType( Identifier, XMLNode.Text, PtrCount, UnitNode );
+      ReturnType := GeneratePointerType( Identifier, XMLNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
       UnitNode.InterfaceSection.Types.InsertChild(ReturnType);
       ReturnTypeStr := ReturnType.Name;
     end;
   end else begin
-    ReturnType := GeneratePointerType( Identifier, XMLNode.Text, PtrCount, UnitNode );
+    ReturnType := GeneratePointerType( Identifier, XMLNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
     UnitNode.InterfaceSection.Types.InsertChild(ReturnType);
     ReturnTypeStr := ReturnType.Name;
   end;
@@ -1503,24 +1536,24 @@ begin
   //- What do we do with a drunken parameter....
    Parameter.TypedSymbol.Name := Identifier;
   if PtrCount=0 then begin
-    Parameter.TypedSymbol.TypeKind := TypeNode.Text;
+    Parameter.TypedSymbol.TypeKind := TypeOverrides(TypeNode.Text);
   end else if PtrCount=1 then begin
     if utTypeStr='VOID' then begin
       Parameter.TypedSymbol.TypeKind := 'pointer';
     end else if utTypeStr='CHAR' then begin
-      Parameter.TypedSymbol.TypeKind := 'pchar';
+      Parameter.TypedSymbol.TypeKind := 'uint8';
     end else begin
       if Parameter.Protection=TParameterProtection.ppNone then begin
-        Parameter.TypedSymbol.TypeKind := TypeNode.Text;
+        Parameter.TypedSymbol.TypeKind := TypeOverrides(TypeNode.Text);
         Parameter.Protection := TParameterProtection.ppVar;
       end else begin
-        PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode );
+        PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
         Parameter.TypedSymbol.TypeKind := PointerType.Name;
       end;
     end;
   end else begin
     //- Gen a new pointer type.
-    PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode );
+    PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
     Parameter.TypedSymbol.TypeKind := PointerType.Name;
   end;
   //- Now add the parameter to the function
@@ -1628,6 +1661,11 @@ begin
     SkipNode('commands','There are no commands.',TRUE);
     exit;
   end;
+  //- Inject function pointers
+  if assigned(fStructsNode) then begin
+    UnitNode.InterfaceSection.InsertChild(fStructsNode);
+    fStructsNode := nil;
+  end;
   //- Add a variable section for the commands.
   CommandVars := TdvVariables.Create;
   //- Create a new type defs section for the parameter data types.
@@ -1723,6 +1761,10 @@ begin
   end;
   if Extends='' then begin
     //- This value does not extend an existing enum, and is therefore a constant.
+    if Trim(Value)='' then begin
+      Result := True;
+      Exit;
+    end;
     UnitNode.InterfaceSection.Constants.InsertChild(TdvConstant.Create(Name,Value));
   end else begin
     Enum := UnitNode.findEnumByName(Extends);

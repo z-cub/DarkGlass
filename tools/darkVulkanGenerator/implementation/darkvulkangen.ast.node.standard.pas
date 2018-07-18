@@ -47,6 +47,8 @@ type
     fAfterNode: IdvASTNode;
     fChildren: ICollection;
     fLineBreaks: uint32;
+  protected
+    function TestReservedWord( Src: string ): string;
   protected //- IdvASTNode -//
     procedure Clear;
     function getBeforeNode: IdvASTNode;
@@ -69,6 +71,7 @@ type
 
 implementation
 uses
+  SysUtils,
   darkCollections.list;
 
 type
@@ -151,6 +154,19 @@ end;
 procedure TdvASTNode.setLineBreaks(value: uint32);
 begin
   fLineBreaks := value;
+end;
+
+function TdvASTNode.TestReservedWord(Src: string): string;
+var
+  utStr: string;
+begin
+  Result := Src;
+  utStr := Uppercase(Trim(src));
+  if (utStr='OBJECT') or
+     (utStr='TYPE') or
+     (utStr='SET') then begin
+    Result := '_'+Src;
+  end;
 end;
 
 function TdvASTNode.LineBreaks: string;

@@ -75,15 +75,8 @@ begin
 end;
 
 procedure TdvTypeDef.setName(value: string);
-var
-  utName: string;
 begin
-  fName := Value;
-  utName := Uppercase(Trim(fName));
-  if (utName='OBJECT') or
-     (utName='TYPE') then begin
-    fName := '_'+fName;
-  end;
+  fName := TestReservedWord(Value);
 end;
 
 procedure TdvTypeDef.setTypeKind(value: TdvTypeKind);

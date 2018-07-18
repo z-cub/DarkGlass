@@ -41,6 +41,7 @@ type
     function CheckRecordDependsOn( RecordDef: IdvTypeDef; TypeName: string ): boolean;
     procedure OrderStructs;
     function CheckAliasDependsOn(AliasDef: IdvTypeDef; TypeName: string): boolean;
+    function CheckFunctionDependsOn(FuncPointerDef: IdvTypeDef; TypeName: string): boolean;
   protected
     function InsertChild( node: IdvASTNode ): IdvASTNode; override;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
@@ -116,6 +117,33 @@ begin
       continue;
     end;
     TypeString := (Child.Children[0] as IdvTypeDef).Name;
+    TypeString := StringReplace(TypeString,'^','',[rfReplaceAll]);
+    if TypeString=TypeName then begin
+      Result := True;
+      exit;
+    end;
+  end;
+end;
+
+function TdvTypeDefs.CheckFunctionDependsOn( FuncPointerDef: IdvTypeDef; TypeName: string ): boolean;
+var
+  idx: nativeuint;
+  TypeString: string;
+  TypeIdx: nativeuint;
+  Parameter: IdvParameter;
+begin
+  Result := False;
+  //- There should be one child, and it should support IdvFunctionHeader.
+  if FuncPointerDef.ChildCount=0 then begin
+    exit;
+  end;
+  //- Loop the parameters
+  for idx := 0 to pred(FuncPointerDef.ChildCount) do begin
+    if not supports(FuncPointerDef.Children[idx],IdvParameter) then begin
+      continue;
+    end;
+    Parameter := FuncPointerDef.Children[idx] as IdvParameter;
+    TypeString := Parameter.TypedSymbol.TypeKind;
     TypeString := StringReplace(TypeString,'^','',[rfReplaceAll]);
     if TypeString=TypeName then begin
       Result := True;
@@ -264,7 +292,13 @@ begin
               continue;
             end;
           end;
-//          tkFuncPointer: ;
+
+          tkFuncPointer: begin
+            if CheckFunctionDependsOn( CurrentDef, TestType ) then begin
+              HasDependency := True;
+              continue;
+            end;
+          end;
         end; // case
       end; // for idy
       //- If a depenency was found, we can't insert this yet.
