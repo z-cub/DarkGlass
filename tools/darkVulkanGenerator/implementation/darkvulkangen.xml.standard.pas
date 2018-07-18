@@ -1213,7 +1213,7 @@ begin
   //- Get the pointer count for the member.
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
     utNodeName := Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName));
-    if utNodeName<>'TYPE' then begin
+    if (utNodeName<>'TYPE') and (utNodeName<>'COMMENT') then begin
       if utNodeName='NAME' then begin
         NameStr := NameStr + XMLNode.ChildNodes[idx].Text;
       end else begin
