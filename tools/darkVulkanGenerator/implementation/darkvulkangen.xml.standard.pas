@@ -88,7 +88,6 @@ type
     function ParseConstantDefineNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseEnumValue( Enum: IdvASTNode; XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function ParseUnionTypeNode(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
-    function CountMemberPtr(XMLNode: IXMLNode): uint32;
     function ParseCommand(XMLNode: IXMLNode; UnitNode: IdvASTUnit; ParameterVars: IdvASTNode ): boolean;
     function ParseCommandPrototype(XMLNode: IXMLNode; UnitNode: IdvASTUnit): IdvFunctionHeader;
     function ParseParam(XMLNode: IXMLNode; FunctionHeader: IdvFunctionHeader; UnitNode: IdvASTUnit): boolean;
@@ -170,26 +169,7 @@ begin
 end;
 
 function TdvXMLParser.ParseXMLNode( XMLNode: IXMLNode ): boolean;
-//var
-//  value: string;
 begin
-// Weirdness in attribute handling, no checking done, just return true.
-//  if not XMLNode.HasAttribute('encoding') then begin
-//    Log.Insert(EExpectedEncoding,lsHint);
-//  end else begin
-//    Value := XMLNode.Attributes['encoding'];
-//    if Uppercase(Trim(Value))<>'UTF-8' then begin
-//      Log.Insert(EUnexpectedEncodingType,TLogSeverity.lsHint,[LogBind('enctype',Value)]);
-//    end;
-//  end;
-//  if not XMLNode.HasAttribute('version') then begin
-//    Log.Insert(EExpectedXMLVersion,lsHint);
-//  end else begin
-//    Value := XMLNode.Attributes['version'];
-//    if Uppercase(Trim(Value))<>'1.0' then begin
-//      Log.Insert(EUnexpectedVersion,TLogSeverity.lsHint,[LogBind('version',Value)]);
-//    end;
-//  end;
   Result := True;
 end;
 
@@ -1094,38 +1074,10 @@ begin
   Result := True;
 end;
 
-function TdvXMLParser.CountMemberPtr( XMLNode: IXMLNode ): uint32;
-var
-  idx: uint32;
-  WorkStr: string;
-begin
-  Result := 0;
-  if XMLNode.ChildNodes.Count=0 then begin
-    exit;
-  end;
-  WorkStr := '';
-  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
-    if Uppercase(Trim(XMLNode.ChildNodes[idx].nodename))='COMMENT' then begin
-      continue;
-    end;
-    WorkStr := WorkStr + XMLNode.ChildNodes[idx].Text;
-  end;
-  {$ifdef NEXTGEN}
-  for idx := 0 to pred(Length(WorkStr)) do begin
-  {$else}
-  for idx := 1 to Length(WorkStr) do begin
-  {$endif}
-    if WorkStr[idx]='*' then begin
-      inc(Result,1);
-    end;
-  end;
-end;
-
 function TdvXMLParser.ParseStructMember( XMLNode: IXMLNode; RecordNode: IdvTypeDef; UnitNode: IdvASTUnit ): boolean;
 var
   utNodeName: string;
   TypeNode: IXMLNode;
-  NameNode: IXMLNode;
   CommentNode: IXMLNode;
   TypeStr: string;
   NameStr: string;
@@ -1133,6 +1085,8 @@ var
   PtrCount: uint32;
   Member: IdvTypeDef;
   PointerType: IdvTypeDef;
+  TempStr: string;
+  idx: uint32;
 begin
   Result := False;
   utNodeName := Uppercase(Trim(XMLNode.NodeName));
@@ -1163,12 +1117,6 @@ begin
     exit;
   end;
   TypeStr := TypeNode.Text;
-  NameNode := XMLNode.ChildNodes.FindNode('name');
-  if not assigned(NameNode) then begin
-    SkipNode('member','no name node found.');
-    exit;
-  end;
-  NameStr := NameNode.Text;
   //- Is there a comment?
   CommentNode := XMLNode.ChildNodes.FindNode('comment');
   if assigned(CommentNode) then begin
@@ -1176,8 +1124,22 @@ begin
   end else begin
     CommentStr := '';
   end;
+  NameStr := '';
   //- Get the pointer count for the member.
-  PtrCount := CountMemberPtr(XMLNode);
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    utNodeName := XMLNode.ChildNodes[idx].NodeName;
+    if utNodeName<>'TYPE' then begin
+      if utNodeName='NAME' then begin
+        NameStr := NameStr + XMLNode.ChildNodes[idx].Text;
+      end else begin
+        TempStr := XMLNode.ChildNodes[idx].Text;
+        TempStr := StringReplace(TempStr,'struct','',[rfIgnoreCase,rfReplaceAll]);
+        TempStr := StringReplace(TempStr,'const','',[rfIgnoreCase,rfReplaceAll]);
+        NameStr := NameStr + TempStr;
+      end;
+    end;
+  end;
+  NameStr := GetIdentifier(NameStr,PtrCount);
   //- If PtrCount=1 and type=void.
   if (Uppercase(Trim(TypeStr))='VOID') and (PtrCount=1) then begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkPointer);
@@ -1188,6 +1150,9 @@ begin
     PointerType := GeneratePointerType( NameStr, TypeStr, PtrCount, UnitNode );
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
     Member.InsertChild(TdvTypeDef.Create(PointerType.Name,TdvTypeKind.tkUserDefined));
+  end else if (PtrCount=1) then begin
+    Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
+    Member.InsertChild(TdvTypeDef.Create('^'+TypeStr,TdvTypeKind.tkUserDefined));
   end else begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
     Member.InsertChild(TdvTypeDef.Create(TypeStr,TdvTypeKind.tkUserDefined));
