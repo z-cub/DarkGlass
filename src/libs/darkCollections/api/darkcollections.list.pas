@@ -69,6 +69,11 @@ type
     /// </returns>
     function getItem( idx: nativeuint ): T;
 
+    ///  <summary>
+    ///    Replaces the item at idx with the new item.
+    ///  </summary>
+    procedure setItem( idx: nativeuint; item: T );
+
     /// <summary>
     ///   Removes an item from the list as specified by it's index.
     /// </summary>
@@ -79,7 +84,7 @@ type
 
     //- Pascal only properties -//
     property Count: nativeuint read getCount;
-    property Items[ idx: nativeuint ]: T read getItem; default;
+    property Items[ idx: nativeuint ]: T read getItem write setItem; default;
 
   end;
 
@@ -102,6 +107,7 @@ type
     function Add( Item: T ): nativeuint;
     function getCount: nativeuint;
     function getItem( idx: nativeuint ): T;
+    procedure setItem( idx: nativeuint; item: T );
     function RemoveItem( idx: nativeuint ): boolean;
   private
     function OrderedRemoveItem(idx: nativeuint): boolean;
@@ -324,6 +330,11 @@ begin
   if fPruned then begin
     PruneCapacity;
   end;
+end;
+
+procedure TList<T>.setItem(idx: nativeuint; item: T);
+begin
+  fItems[idx] := item;
 end;
 
 end.

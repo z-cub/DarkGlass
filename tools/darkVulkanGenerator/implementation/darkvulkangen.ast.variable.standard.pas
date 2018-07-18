@@ -38,6 +38,7 @@ type
   private
     fName: string;
     fTypeKind: string;
+    fInitialize: string;
   private //- IdvConstant -//
     function getName: string;
     procedure setName( value: string );
@@ -47,7 +48,7 @@ type
     function InsertChild( node: IdvASTNode ): IdvASTNode; override;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
   public
-    constructor Create( Name: string; TypeKind: string ); reintroduce;
+    constructor Create( Name: string; TypeKind: string; Initialize: string = '' ); reintroduce;
   end;
 
 implementation
@@ -56,11 +57,12 @@ uses
 
 { TdvVariable }
 
-constructor TdvVariable.Create(Name, TypeKind: string);
+constructor TdvVariable.Create(Name, TypeKind: string; Initialize: string = '');
 begin
   inherited Create;
   SetName(Name);
-  SetTypeKind(TypeKind)
+  SetTypeKind(TypeKind);
+  fInitialize := Initialize;
 end;
 
 function TdvVariable.getName: string;
@@ -90,12 +92,19 @@ begin
 end;
 
 function TdvVariable.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
+var
+  InitStr: string;
 begin
   Result := False;
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin
     exit;
   end;
-  Stream.WriteString(getIndentation(Indentation)+fName+': '+fTypeKind+';'+sLineBreak,UnicodeFormat);
+  if fInitialize<>'' then begin
+    InitStr := ' = '+fInitialize;
+  end else begin
+    InitStr := '';
+  end;
+  Stream.WriteString(getIndentation(Indentation)+fName+': '+fTypeKind+InitStr+';'+sLineBreak,UnicodeFormat);
   if not WriteAfterNode(Stream,UnicodeFormat,Indentation) then begin
     exit;
   end;

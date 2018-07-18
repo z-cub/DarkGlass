@@ -40,6 +40,24 @@ type
     ['{DAAD3BC3-F117-4311-B116-CD7DEE2A3F11}']
 
     ///  <summary>
+    ///    Removes the existing node from this node's children,
+    ///    and replaces it with the new node.
+    ///  </summary>
+    procedure ReplaceNode( ExistingNode: IdvASTNode; NewNode: IdvASTNode );
+
+    ///  <summary>
+    ///    The parent entity (initially nil) is a weak reference which is
+    ///    automatically updated by InsertChild().
+    ///  </summary>
+    function getParent: IdvASTNode;
+
+    ///  <summary>
+    ///    The parent entity (initially nil) is a weak reference which is
+    ///    automatically updated by InsertChild().
+    ///  </summary>
+    procedure setParent( value: IdvASTNode );
+
+    ///  <summary>
     ///    A node which comes before this one in the source code, but is not
     ///    suitable to be a child node.
     ///  </summary>
@@ -85,6 +103,7 @@ type
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean;
 
     //- Pascal Only, properties -//
+    property Parent: IdvASTNode read getParent write setParent;
     property LineBreaks: uint32 read getLineBreaks write setLineBreaks;
     property ChildCount: nativeuint read getChildCount;
     property Children[ idx: nativeuint ]: IdvASTNode read getChild;
@@ -263,6 +282,27 @@ type
   end;
 
   ///  <summary>
+  ///    Generates a function header, with IdvParameter children.
+  ///    //note: if the return type is set to 'void', as is the default, the
+  ///    function header will use the 'procedure' reserved word, else it'll
+  ///    use 'function'
+  ///  </summary>
+  IdvFunctionHeader = interface( IdvASTNode )
+  ['{36EADF3C-6520-485D-9135-643F4EEAB837}']
+    function getReturnType: string;
+    procedure setReturnType( value: string );
+    function getName: string;
+    procedure setName( value: string );
+    function getIsVariable: boolean;
+    procedure setIsVariable( value: boolean );
+
+    //- Pascal Only, properties.
+    property Name: string read getName write setName;
+    property IsVariable: boolean read getIsVariable write setIsVariable;
+    property ReturnType: string read getReturnType write setReturnType;
+  end;
+
+  ///  <summary>
   ///    Represents a source code unit in the output.
   ///  </summary>
   IdvASTUnit = interface( IdvASTNode )
@@ -272,6 +312,8 @@ type
     function getInterfaceSection: IdvASTUnitSection;
     function getImplementationSection: IdvASTUnitSection;
     function findEnumByName( name: string ): IdvTypeDef;
+    function findTypeByName( name: string ): IdvTypeDef;
+    function findFunctionHeaderByName( name: string ): IdvFunctionHeader;
 
     //- Pascal Only, properties -//
     property Name: string read getName write setName;
@@ -367,26 +409,6 @@ type
     property TypedSymbol: IdvTypedSymbol read getTypedSymbol;
   end;
 
-  ///  <summary>
-  ///    Generates a function header, with IdvParameter children.
-  ///    //note: if the return type is set to 'void', as is the default, the
-  ///    function header will use the 'procedure' reserved word, else it'll
-  ///    use 'function'
-  ///  </summary>
-  IdvFunctionHeader = interface( IdvASTNode )
-  ['{36EADF3C-6520-485D-9135-643F4EEAB837}']
-    function getReturnType: string;
-    procedure setReturnType( value: string );
-    function getName: string;
-    procedure setName( value: string );
-    function getIsVariable: boolean;
-    procedure setIsVariable( value: boolean );
-
-    //- Pascal Only, properties.
-    property Name: string read getName write setName;
-    property IsVariable: boolean read getIsVariable write setIsVariable;
-    property ReturnType: string read getReturnType write setReturnType;
-  end;
 
   ///  <summary>
   ///    Aliases another function header node.
@@ -495,7 +517,7 @@ type
   end;
 
   TdvConstant = class
-    class function Create( Name: string; Value: string ): IdvConstant;
+    class function Create( Name: string; Value: string; TypeStr: string = '' ): IdvConstant;
   end;
 
   TdvConstants = class
@@ -503,7 +525,7 @@ type
   end;
 
   TdvVariable = class
-    class function Create( Name: string; TypeKind: string ): IdvVariable;
+    class function Create( Name: string; TypeKind: string; Initialize: string = ''): IdvVariable;
   end;
 
   TdvVariables = class
@@ -648,9 +670,9 @@ end;
 
 { TdvConstant }
 
-class function TdvConstant.Create(Name, Value: string): IdvConstant;
+class function TdvConstant.Create(Name, Value: string; TypeStr: string = ''): IdvConstant;
 begin
-  Result := darkvulkangen.ast.constant.standard.TdvConstant.Create(Name,Value);
+  Result := darkvulkangen.ast.constant.standard.TdvConstant.Create(Name,Value,TypeStr);
 end;
 
 { TdvConstants }
@@ -676,9 +698,9 @@ end;
 
 { TdvVariable }
 
-class function TdvVariable.Create(Name, TypeKind: string): IdvVariable;
+class function TdvVariable.Create(Name, TypeKind: string; Initialize: string = '' ): IdvVariable;
 begin
-  Result := darkvulkangen.ast.variable.standard.TdvVariable.Create( Name, TypeKind );
+  Result := darkvulkangen.ast.variable.standard.TdvVariable.Create( Name, TypeKind, Initialize );
 end;
 
 { TdvVariables }

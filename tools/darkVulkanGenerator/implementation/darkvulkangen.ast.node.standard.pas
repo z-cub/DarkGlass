@@ -43,13 +43,19 @@ const
 type
   TdvASTNode = class( TInterfacedObject, IdvASTNode )
   private
+    {$ifndef fpc} [weak] {$endif} fParent: IdvASTNode;
     fBeforeNode: IdvASTNode;
     fAfterNode: IdvASTNode;
     fChildren: ICollection;
     fLineBreaks: uint32;
+    function FindNode(SearchNode: IdvASTNode;
+      var FoundIndex: nativeuint): boolean;
   protected
     function TestReservedWord( Src: string ): string;
   protected //- IdvASTNode -//
+    procedure ReplaceNode( ExistingNode: IdvASTNode; NewNode: IdvASTNode );
+    function getParent: IdvASTNode;
+    procedure setParent( value: IdvASTNode );
     procedure Clear;
     function getBeforeNode: IdvASTNode;
     function getAfterNode: IdvASTNode;
@@ -95,12 +101,14 @@ begin
     fBeforeNode := nil;
     fAfterNode := nil;
   end;
+  fParent := nil;
   fLineBreaks := 1;
   fChildren := TASTNodeList.Create(128,True,False);
 end;
 
 destructor TdvASTNode.Destroy;
 begin
+  SetParent(nil);
   fBeforeNode := nil;
   fAfterNode := nil;
   fChildren := nil;
@@ -145,15 +153,26 @@ begin
   Result := fLineBreaks;
 end;
 
+function TdvASTNode.getParent: IdvASTNode;
+begin
+  Result := fParent;
+end;
+
 function TdvASTNode.InsertChild(node: IdvASTNode): IdvASTNode;
 begin
   IASTNodeList(fChildren).Add(node);
+  Node.setParent(Self);
   Result := node;
 end;
 
 procedure TdvASTNode.setLineBreaks(value: uint32);
 begin
   fLineBreaks := value;
+end;
+
+procedure TdvASTNode.setParent(value: IdvASTNode);
+begin
+  fParent := Value;
 end;
 
 function TdvASTNode.TestReservedWord(Src: string): string;
@@ -186,6 +205,34 @@ end;
 procedure TdvASTNode.RemoveNode(idx: nativeuint);
 begin
   IASTNodeList(fChildren).RemoveItem(idx);
+end;
+
+function TdvASTNode.FindNode( SearchNode: IdvASTNode; var FoundIndex: nativeuint ): boolean;
+var
+  idx: nativeuint;
+begin
+  Result := False;
+  if getChildCount=0 then begin
+    exit;
+  end;
+  for idx := 0 to pred(getChildCount) do begin
+    if IASTNodeList(fChildren).Items[idx]=SearchNode then begin
+      FoundIndex := idx;
+      Result := True;
+      exit;
+    end;
+  end;
+end;
+
+procedure TdvASTNode.ReplaceNode(ExistingNode, NewNode: IdvASTNode);
+var
+  FoundIdx: nativeuint;
+begin
+  // Locate the existing node
+  if FindNode(ExistingNode,FoundIdx) then begin
+    IASTNodeList(fChildren).Items[FoundIdx].SetParent( nil );
+    IASTNodeList(fChildren).Items[FoundIdx] := NewNode;
+  end;
 end;
 
 function TdvASTNode.WriteAfterNode(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;

@@ -36,6 +36,7 @@ uses
 type
   TdvConstant = class( TdvASTNode, IdvConstant )
   private
+    fTypeStr: string;
     fName: string;
     fValue: string;
   private //- IdvConstant -//
@@ -48,7 +49,7 @@ type
     function InsertChild( node: IdvASTNode ): IdvASTNode; override;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
   public
-    constructor Create( Name: string; Value: string ); reintroduce;
+    constructor Create( Name: string; Value: string; TypeStr: string = '' ); reintroduce;
   end;
 
 implementation
@@ -57,11 +58,12 @@ uses
 
 { TdvConstant }
 
-constructor TdvConstant.Create(Name, Value: string);
+constructor TdvConstant.Create(Name, Value: string; TypeStr: string = '');
 begin
   inherited Create;
   SetName(Name);
-  SetValue(Value)
+  SetValue(Value);
+  fTypeStr := TypeStr;
 end;
 
 function TdvConstant.getName: string;
@@ -107,7 +109,11 @@ begin
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin
     exit;
   end;
-  Stream.WriteString(getIndentation(Indentation)+fName+' = '+fValue+';'+sLineBreak,UnicodeFormat);
+  if fTypeStr<>'' then begin
+    Stream.WriteString(getIndentation(Indentation)+fName+': '+fTypeStr+' = '+fValue+';'+sLineBreak,UnicodeFormat);
+  end else begin
+    Stream.WriteString(getIndentation(Indentation)+fName+' = '+fValue+';'+sLineBreak,UnicodeFormat);
+  end;
   if not WriteAfterNode(Stream,UnicodeFormat,Indentation) then begin
     exit;
   end;

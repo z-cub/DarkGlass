@@ -40,20 +40,35 @@ const
 type
   TArrayOfString = array of string;
 
+  TGeneratedType = record
+    SourceType: string;
+    TypeNode: IdvASTNode;
+  end;
+
+  TArrayOfGeneratedTypes = array of TGeneratedType;
+
   TdvXMLParser = class( TInterfacedObject, IdvXMLParser )
   private
+    fExternalNames: TStringList;
+    fGeneratedTypes: TArrayOfGeneratedTypes;
     fStructsNode: IdvTypeDefs;
     fHardCodedTypes: boolean;
     fCollectComments: boolean;
     fFilename: string;
     fXMLDocument: IXMLDocument;
+    fDefines: TStringList;
   private
     function TypeOverrides( src: string ): string;
     procedure SkipNode(NodeType, Because: string; IsError: boolean = False);
-    function GeneratePointerType(NewTypeName, TargetType: string; PtrCount: uint32; Parent: IdvASTNode): IdvTypeDef;
+    function GeneratePointerType(NewTypeName, TargetType: string; PtrCount: uint32; Parent: IdvASTNode ): IdvTypeDef;
     class procedure Explode(cDelimiter, sValue: string; var Results: TArrayOfString; iCount: uint32 = 0); static;
     function GetIdentifier(SourceStr: string; var PtrCount: uint32): string;
     function CreateVulkanUnit(ASTNode: IdvASTNode): IdvASTUnit;
+    procedure SetConditionals(XMLNode: IXMLNode; UnitNode: IdvASTUnit; aPlatform: string);
+    procedure ParseExtensionConditionals(XMLNode: IXMLNode; UnitNode: IdvASTUnit);
+    procedure AddGeneratedType(TypeName: string; TypeNode: IdvASTNode );
+    procedure ModifyDependentGeneratedTypes(SourceType: string; aPlatform: string);
+    procedure InsertLoader( UnitNode: IdvASTUnit );
   private
     function OpenDocument: boolean;
     function MatchNode(XMLNode: IXMLNode; nodeType, parentnode: string; LogFailures: boolean = TRUE): boolean;
@@ -96,9 +111,11 @@ type
     function ParseParam(XMLNode: IXMLNode; FunctionHeader: IdvFunctionHeader; UnitNode: IdvASTUnit): boolean;
     function HandleCommandAlias(XMLNode: IXMLNode; ParameterVars: IdvASTNode): boolean;
     function ParseExtension(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
-    function ParseExtensionRequire(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit): boolean;
+    function ParseExtensionRequire(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit ): boolean;
     function ParseExtensionEnum(XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit): boolean;
     function ParseStructMember(XMLNode: IXMLNode; RecordNode: IdvTypeDef; Parent: IdvASTNode ): boolean;
+    function ParseAPIConstants(XMLNode: IXMLNode;
+      UnitNode: IdvASTUnit): boolean;
 
 
   public
@@ -165,10 +182,16 @@ begin
   fHardCodedTypes := False;
   fFilename := Filename;
   fXMLDocument := nil;
+  fExternalNames := TStringList.Create;
+  fDefines := TStringList.Create;
+  SetLength(fGeneratedTypes,0);
 end;
 
 destructor TdvXMLParser.Destroy;
 begin
+  SetLength(fGeneratedTypes,0);
+  fExternalNames.DisposeOf;
+  fDefines.DisposeOf;
   fXMLDocument := nil;
   inherited Destroy;
 end;
@@ -284,6 +307,7 @@ begin
   //- We have all the attribtues we need, so lets use them :-)
   utName := Uppercase(Trim(XMLNode.Attributes['name']));
   utProtect := Uppercase(Trim(XMLNode.Attributes['protect']));
+  fDefines.Add(utName+'='+utProtect);
   if utName='XLIB' then begin
     IfDef := TdvIfDef.Create('LINUX');
     UnitNode.InterfaceSection.UsesList.BeforeNode.InsertChild( IfDef );
@@ -997,6 +1021,16 @@ begin
   end;
 end;
 
+procedure TdvXMLParser.AddGeneratedType( TypeName: string; TypeNode: IdvASTNode );
+var
+  idx: uint32;
+begin
+  idx := Length(fGeneratedTypes);
+  SetLength(fGeneratedTypes,succ(idx));
+  fGeneratedTypes[idx].SourceType := TypeName;
+  fGeneratedTypes[idx].TypeNode := TypeNode;
+end;
+
 function TdvXMLParser.GeneratePointerType( NewTypeName: string; TargetType: string; PtrCount: uint32; Parent: IdvASTNode ): IdvTypeDef;
 var
   PS: string;
@@ -1010,6 +1044,7 @@ begin
     Ps := 'p';
     for idx := 0 to pred(pred(PtrCount)) do begin
       ReturnTypeNode := Parent.InsertChild(TdvTypeDef.Create(Ps+PreviousName,tkTypedPointer)) as IdvTypeDef;
+      AddGeneratedType( TargetType, ReturnTypeNode );
       ReturnTypeNode.InsertChild(TdvTypeDef.Create(PreviousName,tkUserDefined));
       PreviousName := 'p'+PreviousName;
     end;
@@ -1019,12 +1054,14 @@ begin
   //- else..
   PreviousName := 'T'+NewTypeName;
   ReturnTypeNode := Parent.InsertChild(TdvTypeDef.Create(PreviousName,tkAlias)) as IdvTypeDef;
+  AddGeneratedType( TargetType, ReturnTypeNode );
   ReturnTypeNode.InsertChild(TdvTypeDef.Create(TargetType,TdvTypeKind.tkUserDefined));
   //- Add pointers to the return type node.
   Ps := '';
   for idx := 0 to pred(PtrCount) do begin
     Ps := Ps + 'p';
     ReturnTypeNode := Parent.InsertChild(TdvTypeDef.Create(Ps+PreviousName,tkTypedPointer)) as IdvTypeDef;
+    AddGeneratedType( TargetType, ReturnTypeNode );
     ReturnTypeNode.InsertChild(TdvTypeDef.Create(PreviousName,tkUserDefined));
     PreviousName := 'p'+PreviousName;
   end;
@@ -1385,11 +1422,72 @@ begin
   Result := True;
 end;
 
+function TdvXMLParser.ParseAPIConstants( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
+var
+  idx: int32;
+  Child: IXMLNode;
+  NameStr: string;
+  ValueStr: string;
+  TypeStr: string;
+begin
+  Result := False;
+  if XMLNode.ChildNodes.Count=0 then begin
+    exit;
+  end;
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+
+    Child := XMLNode.ChildNodes[idx];
+    if not (
+             (Child.HasAttribute('name') and Child.HasAttribute('value')) or
+             (Child.HasAttribute('name') and Child.HasAttribute('alias'))
+            ) then begin
+      continue;
+    end;
+
+    //- Collect values.
+    TypeStr := '';
+    NameStr := Child.Attributes['name'];
+    if Child.HasAttribute('value') then begin
+      ValueStr := Child.Attributes['value'];
+    end else if Child.HasAttribute('alias') then begin
+      ValueStr := Child.Attributes['alias'];
+    end;
+
+    //- Modify ValueStr as required for C type translation
+    if ValueStr='' then begin
+      ValueStr := Child.Attributes['alias'];
+    end else if ValueStr='1000.0f' then begin
+      ValueStr := '1000.0';
+    end else if ValueStr='(~0U)' then begin
+      TypeStr := 'uint32';
+      ValueStr := '(not uint32(0))';
+    end else if ValueStr='(~0U-1)' then begin
+      TypeStr := 'uint32';
+      ValueStr := '(not uint32(0))-1';
+    end else if ValueStr='(~0ULL)' then begin
+      TypeStr := 'uint64';
+      ValueStr := '(not uint64(0))';
+    end else if ValueStr='(~0U-2)' then begin
+      TypeStr := 'uint32';
+      ValueStr := '(not uint32(0))-2';
+    end;
+    if NameStr='VK_QUEUE_FAMILY_EXTERNAL_KHR' then begin
+      TypeStr := 'uint32';
+      ValueStr := '(not uint32(0))-1';
+    end;
+
+    //- Insert constant
+    UnitNode.InterfaceSection.Constants.InsertChild(TdvConstant.Create(NameStr,ValueStr,TypeStr));
+  end;
+  Result := True;
+end;
+
 function TdvXMLParser.ParseRegistryEnums( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
 var
   idx: uint32;
   ChildNode: IXMLNode;
   Enum: IdvASTNode;
+  EnumName: string;
   utNodeName: string;
 begin
   Result := False;
@@ -1404,7 +1502,15 @@ begin
     exit;
   end;
   //- Create / Acqure enum node
-  Enum := UnitNode.findEnumByName(XMLNode.Attributes['name']);
+  EnumName := XMLNode.Attributes['name'];
+  if EnumName='API Constants' then begin
+    if ParseAPIConstants( XMLNode, UnitNode ) then begin
+      Result := True;
+      exit;
+    end;
+  end;
+
+  Enum := UnitNode.findEnumByName(EnumName);
   if not assigned(Enum) then begin
     Enum := UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create( XMLNode.Attributes['name'], TdvTypeKind.tkEnum ) );
   end;
@@ -1577,11 +1683,26 @@ begin
     if Supports(ParameterVars.Children[idx],IdvFunctionHeader) then begin
       if (ParameterVars.Children[idx] as IdvFunctionHeader).getName=AliasStr then begin
         ParameterVars.InsertChild(TdvFunctionHeaderAlias.Create(NameStr, ParameterVars.Children[idx] as IdvFunctionHeader));
+        fExternalNames.Add(NameStr);
         Result := True;
         exit;
       end;
     end;
   end;
+end;
+
+procedure TdvXMLParser.InsertLoader(UnitNode: IdvASTUnit);
+var
+  FunctionHeader: IdvFunctionHeader;
+  aFunction: IdvFunction;
+begin
+  UnitNode.ImplementationSection.Variables.InsertChild(TdvVariable.Create('dynLib','IDynLib','nil'));
+  FunctionHeader := UnitNode.InterfaceSection.InsertChild(TdvFunctionHeader.Create('Initialize')) as IdvFunctionHeader;
+  FunctionHeader.ReturnType := '';
+  aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('Initialize')) as IdvFunction;
+  aFunction.Header.ReturnType := '';
+  aFunction.Body.Content :=
+  '  dynLib := TDynLib.Create; '
 end;
 
 function TdvXMLParser.ParseCommand( XMLNode: IXMLNode; UnitNode: IdvASTUnit; ParameterVars: IdvASTNode ): boolean;
@@ -1616,6 +1737,7 @@ begin
   if not assigned(CommandPrototype) then begin
     exit;
   end;
+  fExternalNames.Add(CommandPrototype.Name);
 
   //- Process Param tags.
   if XMLNode.ChildNodes.Count=1 then begin
@@ -1705,6 +1827,7 @@ begin
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
     utNodeName := Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName));
     if utNodeName='REQUIRE' then begin
+      //- Now parse the extension for additional entities.
       if not ParseExtensionRequire(XMLNode.ChildNodes[idx],-2,UnitNode) then begin
         exit;
       end;
@@ -1804,6 +1927,81 @@ begin
   Result := True;
 end;
 
+procedure TdvXMLParser.ModifyDependentGeneratedTypes( SourceType: string; aPlatform: string );
+var
+  idx: uint32;
+  DefineStr: string;
+  Condition: IdvIfDef;
+begin
+  if Length(fGeneratedTypes)=0 then begin
+    exit;
+  end;
+  for idx := 0 to pred(Length(fGeneratedTypes)) do begin
+    if fGeneratedTypes[idx].SourceType=SourceType then begin
+      DefineStr := '';
+      DefineStr := fDefines.Values[aPlatform];
+      if DefineStr<>'' then begin
+        // Create an ifdef for xlib
+        Condition := TdvIfDef.Create(DefineStr);
+        Condition.OnOneLine := True;
+        fGeneratedTypes[idx].TypeNode.Parent.ReplaceNode( fGeneratedTypes[idx].TypeNode, Condition );
+        Condition.Defined.InsertChild(fGeneratedTypes[idx].TypeNode);
+        fGeneratedTypes[idx].TypeNode.LineBreaks := 0;
+      end;
+    end;
+  end;
+end;
+
+procedure TdvXMLParser.SetConditionals( XMLNode: IXMLNode; UnitNode: IdvASTUnit; aPlatform: string );
+var
+  idx: uint32;
+  utNodeType: string;
+  Name: string;
+  utPlatform: string;
+  ChildNode: IXMLNode;
+  ConditionalEntity: IdvASTNode;
+  Condition: IdvIfDef;
+  DefineStr: string;
+  OneLine: boolean;
+begin
+  if XMLNode.ChildNodes.Count=0 then begin
+    exit;
+  end;
+  utPlatform := Uppercase(Trim(aPlatform));
+  //- Loop through the nodes and pick out the requires that we need to update.
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    ChildNode := XMLNode.ChildNodes[idx];
+    if not ChildNode.HasAttribute('name') then begin
+      continue;
+    end;
+    ConditionalEntity := nil;
+    OneLine := False;
+    utNodeType := Uppercase(Trim(ChildNode.NodeName));
+    Name := ChildNode.Attributes['name'];
+    if utNodeType='ENUM' then begin
+      ConditionalEntity := UnitNode.findEnumByName(Name);
+    end else if utNodeType='TYPE' then begin
+      ConditionalEntity := UnitNode.findTypeByName(Name);
+      ModifyDependentGeneratedTypes( Name, utPlatform );
+    end else if utNodeType='COMMAND' then begin
+      ConditionalEntity := UnitNode.findFunctionHeaderByName(Name);
+      ConditionalEntity.LineBreaks := 0;
+      OneLine := True;
+    end;
+    if assigned(ConditionalEntity) then begin
+      DefineStr := '';
+      DefineStr := fDefines.Values[utPlatform];
+      if DefineStr<>'' then begin
+        // Create an ifdef for xlib
+        Condition := TdvIfDef.Create(DefineStr);
+        Condition.OnOneLine := OneLine;
+        ConditionalEntity.Parent.ReplaceNode( ConditionalEntity, Condition );
+        Condition.Defined.InsertChild(ConditionalEntity);
+      end;
+    end;
+  end;
+end;
+
 function TdvXMLParser.ParseExtensionRequire( XMLNode: IXMLNode; ExtNo: int32; UnitNode: IdvASTUnit ): boolean;
 var
   idx: uint32;
@@ -1822,6 +2020,7 @@ begin
       end;
     end;
   end;
+  //- Now also set the conditionals for the tags.
   Result := True;
 end;
 
@@ -1849,20 +2048,46 @@ begin
   Result := True;
 end;
 
+procedure TdvXMLParser.ParseExtensionConditionals( XMLNode: IXMLNode; UnitNode: IdvASTUnit );
+var
+  idx: uint32;
+  PlatformStr: string;
+  Child: IXMLNode;
+begin
+  //- Does the extension have a platform node?
+  //- Set conditionals first.
+  if XMLNode.HasAttribute('platform') then begin
+    PlatformStr := XMLNode.Attributes['platform'];
+    //- Get the requires nodes.
+    for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+      Child := XMLNode.ChildNodes[idx];
+      if uppercase(trim(Child.NodeName))='REQUIRE' then begin
+        SetConditionals( Child, UnitNode, PlatformStr );
+      end;
+    end;
+  end;
+end;
+
 function TdvXMLParser.ParseRegistryExtensions( XMLNode: IXMLNode; UnitNode: IdvASTUnit ): boolean;
 var
   idx: int32;
 begin
-  Result := False;
+  Result := True;
   if XMLNode.ChildNodes.Count=0 then begin
+    Result := False;
     exit;
   end;
+  //- We need to do this twice, once for extensions, again for conditionals.
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
     if not ParseExtension( XMLNode.ChildNodes[idx], UnitNode ) then begin
-      exit;
+      Result := False;
+      continue;
     end;
   end;
-  Result := True;
+  //- conditionals
+  for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
+    ParseExtensionConditionals( XMLNode.ChildNodes[idx], UnitNode );
+  end;
 end;
 
 function TdvXMLParser.CreateVulkanUnit( ASTNode: IdvASTNode ): IdvASTUnit;
@@ -1930,6 +2155,7 @@ begin
       Log.Insert(EUnrecognizedXMLTag,TLogSeverity.lsWarning,[LogBind('xmltag',ChildXMLNode.NodeName)]);
     end;
   end;
+  InsertLoader( MainUnit );
   Result := True;
 end;
 
