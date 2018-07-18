@@ -1708,7 +1708,7 @@ begin
   //- Insert initialization and finalization, and the dynlib variable
   UnitNode.InitializationSection.InsertChild(TdvASTPlainText.Create('  LoadPointers(0,FALSE);'));
   UnitNode.FinalizationSection.InsertChild(TdvASTPlainText.Create('  dynLib := nil; '));
-  UnitNode.ImplementationSection.InsertChild(TdvASTPlainText.Create('const'+sLineBreak+'  cLibName = {$ifdef Windows}''vulkan-1.dll''{$else}''libvulkan.so''{$endif};'+sLineBreak+sLineBreak));
+  UnitNode.ImplementationSection.InsertChild(TdvASTPlainText.Create('const'+sLineBreak+'  cLibName = {$ifdef MSWINDOWS}''vulkan-1.dll''{$else}''libvulkan.so''{$endif};'+sLineBreak+sLineBreak));
   UnitNode.ImplementationSection.Variables.InsertChild(TdvVariable.Create('dynlib','IDynLib','nil'));
   //- Insert the function for initially loading pointers.
   FunctionHeader := UnitNode.InterfaceSection.InsertChild(TdvFunctionHeader.Create('LoadPointers')) as IdvFunctionHeader;
