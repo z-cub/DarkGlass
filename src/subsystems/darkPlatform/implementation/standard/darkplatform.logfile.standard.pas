@@ -44,6 +44,8 @@ type
   end;
 
 implementation
+uses
+  sysutils;
 
 { TLogFile }
 const
@@ -66,7 +68,7 @@ end;
 
 procedure TLogFile.WriteToLog(LogStr: String);
 begin
-  fFileStream.WriteString(LogStr,cUnicodeFormat);
+  fFileStream.WriteString(FormatDateTime('[yyyy:mm:dd hh:nn:ss:zzz] ',Now)+LogStr+sLineBreak,cUnicodeFormat);
 end;
 
 end.
