@@ -24,37 +24,49 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-program DynamicBinding;
+unit darkplatform.logfile.standard;
+
+interface
 uses
-  darkglass,
-  darkglass.dynamic,
-  darkplatform.messages,
-  sysutils;
+  darkIO.streams,
+  darkplatform.logfile;
 
-function HandleMessage( aMessage: TMessage ): nativeuint;
-var
-  PlatformPipe: THandle;
-  Response: nativeuint;
+type
+  TLogFile = class( TInterfacedObject, ILogFile )
+  private
+    fLogFilename: string;
+    fFileStream: IUnicodeStream;
+  private //- ILogFile -//
+    function getFileName: string;
+    procedure WriteToLog( LogStr: String );
+  public
+    constructor Create( LogFileName: string ); reintroduce;
+  end;
+
+implementation
+
+{ TLogFile }
+const
+  cUnicodeFormat = TUnicodeFormat.utf8;
+
+constructor TLogFile.Create(LogFileName: string);
 begin
-  Result := 0;
-  case aMessage.Value of
-
-    TPlatform.MSG_PLATFORM_INITIALIZED: begin
-      PlatformPipe := dgGetMessagePipe(Pointer(UTF8Encode('platform')));
-      Response := dgSendMessageWait(PlatformPipe, TPlatform.MSG_PLATFORM_CREATE_WINDOW, 100, 100, 0, 0 );
-    end
-
-    else begin
-      Result := 0;
-    end;
+  inherited Create();
+  fLogFileName := LogFileName;
+  fFileStream := TFileStream.Create(fLogFileName,FALSE);
+  if fFileStream.Size>0 then begin
+    fFileStream.WriteBOM(cUnicodeFormat);
   end;
 end;
 
+function TLogFile.getFileName: string;
 begin
-  dgInitialize(HandleMessage);
-  try
-    dgRun;
-  finally
-   dgFinalize;
-  end;
+  Result := fLogFileName;
+end;
+
+procedure TLogFile.WriteToLog(LogStr: String);
+begin
+  fFileStream.WriteString(LogStr,cUnicodeFormat);
+end;
+
 end.

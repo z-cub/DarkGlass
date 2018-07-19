@@ -46,12 +46,11 @@ type
 implementation
 uses
   sysutils,
-  darklog,
   darkThreading.messagechannel.standard,
   darkCollections.dictionary;
 
 type
-  EUniqueChannelName = class(ELogEntry);
+  EUniqueChannelName = class(Exception);
 
 type
   IMessageChannelDictionary = {$ifdef fpc} specialize {$endif} IDictionary<IMessageChannel>;
@@ -75,7 +74,8 @@ begin
   utChannelName := uppercase(trim(ChannelName));
   Dictionary := (fMessageChannels as IMessageChannelDictionary);
   if Dictionary.KeyExists[utChannelName] then begin
-    Log.Insert(EUniqueChannelName,TLogSeverity.lsFatal,[LogBind('channelname',ChannelName)]);
+    raise
+      EUniqueChannelName.Create('Message channel name must be unique. '+ChannelName+' is already in use.');
   end;
   NewChannel := TMessageChannel.Create;
   Dictionary.setValueByKey(utChannelName,NewChannel);
@@ -101,8 +101,5 @@ begin
   end;
   Result := Dictionary.ValueByKey[utChannelName].GetMessagePipe;
 end;
-
-initialization
-  Log.Register(EUniqueChannelName,'Message channel name must be unique, (%channelname%) already exists.');
 
 end.

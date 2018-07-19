@@ -71,6 +71,8 @@ contains
   darkplatform.windowmanager in '..\..\subsystems\darkPlatform\interfaces\darkplatform.windowmanager.pas',
   darkplatform.display in '..\..\subsystems\darkPlatform\interfaces\darkplatform.display.pas',
   darkplatform.displaymanager in '..\..\subsystems\darkPlatform\interfaces\darkplatform.displaymanager.pas',
-  darkplatform.window in '..\..\subsystems\darkPlatform\interfaces\darkplatform.window.pas';
+  darkplatform.window in '..\..\subsystems\darkPlatform\interfaces\darkplatform.window.pas',
+  darkplatform.logfile in '..\..\subsystems\darkPlatform\interfaces\darkplatform.logfile.pas',
+  darkplatform.logfile.standard in '..\..\subsystems\darkPlatform\implementation\standard\darkplatform.logfile.standard.pas';
 
 end.

@@ -28,25 +28,56 @@ unit darkPlatform.messages;
 
 interface
 
-const
-  MSG_PLATFORM_FIRST = $0;
+type
+  TPlatform = class
+  public
 
-  ///  <summary>
-  ///    Message sent by the platform when system has initialized and is
-  ///    ready to begin receiving messages.
-  ///  </summary>
-  MSG_PLATFORM_INITIALIZED = MSG_PLATFORM_FIRST + $1;
+    const MSG_PLATFORM_FIRST = $0;
 
-  /// <summary>
-  ///   Send this message to the platform channel in order to create a new
-  ///   window.
-  /// </summary>
-  /// <param name="ParamA"></param>
-  /// <param name="ParamB"></param>
-  /// <param name="ParamC"></param>
-  /// <param name="ParamD"></param>
-  /// <returns></returns>
-  MSG_PLATFORM_CREATE_WINDOW = MSG_PLATFORM_FIRST + $2;
+    /// <summary>
+    ///   Locates a log file specified by name, and returns a handle to it.
+    ///   If the log file does not exist, it will be created.
+    /// </summary>
+    /// <param name="ParamA"> Cast as pointer, points to a pAnsiChar containing the filepath and name.</param>
+    /// <param name="ParamB"></param>
+    /// <param name="ParamC"></param>
+    /// <param name="ParamD"></param>
+    /// <returns>
+    ///    Responds with a file handle for the selected log file.
+    /// </returns>
+    const MSG_PLATFORM_GET_LOGFILE_HANDLE = MSG_PLATFORM_FIRST + $1;
+
+    /// <summary>
+    ///   Sends a log message to the specified log file.
+    /// </summary>
+    /// <param name="ParamA"> Cast as pointer, points to a pAnsiChar containing the message to be logged. </param>
+    /// <param name="ParamB"> A handle to a log file obtained by sending MSG_PLATFORM_GET_LOGFILE_HANDLE </param>
+    /// <param name="ParamC"></param>
+    /// <param name="ParamD"></param>
+    /// <returns></returns>
+    const MSG_PLATFORM_LOG = MSG_PLATFORM_FIRST + $2;
+
+    ///  <summary>
+    ///    Message sent by the platform when system has initialized and is
+    ///    ready to begin receiving messages.
+    ///  </summary>
+    const MSG_PLATFORM_INITIALIZED = MSG_PLATFORM_FIRST + $4;
+
+    /// <summary>
+    ///   Send this message to the platform channel in order to create a new
+    ///   window.
+    /// </summary>
+    /// <param name="ParamA"></param>
+    /// <param name="ParamB"></param>
+    /// <param name="ParamC"></param>
+    /// <param name="ParamD"></param>
+    /// <returns></returns>
+    const MSG_PLATFORM_CREATE_WINDOW = MSG_PLATFORM_FIRST + $5;
+
+  end;
+
+
+
 
 implementation
 

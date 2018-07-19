@@ -39,10 +39,15 @@ begin
   Result := 0;
   case aMessage.Value of
 
-    MSG_PLATFORM_INITIALIZED: begin
+    TPlatform.MSG_PLATFORM_INITIALIZED: begin
       PlatformPipe := dgGetMessagePipe(Pointer(UTF8Encode('platform')));
-      Response := dgSendMessageWait(PlatformPipe, MSG_PLATFORM_CREATE_WINDOW, 100, 100, 0, 0 );
-    end
+      Response := dgSendMessageWait(PlatformPipe, TPlatform.MSG_PLATFORM_CREATE_WINDOW, 100, 100, 0, 0 );
+
+      // Create a log file and send a message to it.
+      Response := dgSendMessageWait(PlatformPipe, TPlatform.MSG_PLATFORM_GET_LOGFILE_HANDLE, nativeuint(pansichar('darkTest.log')), 0, 0, 0);
+      dgSendMessageWait(PlatformPipe, TPlatform.MSG_PLATFORM_LOG, nativeuint(pansichar('Oh goodness me, logging works!')), Response, 0, 0 );
+
+    end;
 
     else begin
       Result := 0;

@@ -24,37 +24,21 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-program DynamicBinding;
-uses
-  darkglass,
-  darkglass.dynamic,
-  darkplatform.messages,
-  sysutils;
+unit darkplatform.logfile;
 
-function HandleMessage( aMessage: TMessage ): nativeuint;
-var
-  PlatformPipe: THandle;
-  Response: nativeuint;
-begin
-  Result := 0;
-  case aMessage.Value of
+interface
 
-    TPlatform.MSG_PLATFORM_INITIALIZED: begin
-      PlatformPipe := dgGetMessagePipe(Pointer(UTF8Encode('platform')));
-      Response := dgSendMessageWait(PlatformPipe, TPlatform.MSG_PLATFORM_CREATE_WINDOW, 100, 100, 0, 0 );
-    end
+type
+  ILogFile = interface
+    ['{41E8CF0B-034F-45C3-B290-5543ECCB3157}']
 
-    else begin
-      Result := 0;
-    end;
+    function getFileName: string;
+    procedure WriteToLog( LogStr: String );
+
+    //- Pascal Only, Properties -//
+    property Filename: string read getFileName;
   end;
-end;
 
-begin
-  dgInitialize(HandleMessage);
-  try
-    dgRun;
-  finally
-   dgFinalize;
-  end;
+implementation
+
 end.

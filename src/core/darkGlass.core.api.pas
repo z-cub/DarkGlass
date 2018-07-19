@@ -160,7 +160,7 @@ var
   KeepGoing: boolean;
   Pipe: IMessagePipe;
 begin
-  Result := nil;
+  Result := THandles.cNullHandle;
   if not assigned(ThreadSystem) then begin
     raise
       Exception.Create('Did you call dgInitialize()?');
@@ -187,7 +187,7 @@ begin
   if not assigned(Pipe) then begin
     exit;
   end;
-  Result := THandles.CreateHandle(THandleKind.hkMessagePipe,Pipe,nil);
+  Result := THandles.CreateHandle(Pipe);
 end;
 
 procedure dgFreeHandle( Handle: THandle );
@@ -202,7 +202,7 @@ begin
       Exception.Create('Did you call dgInitialize()?');
     exit;
   end;
-  if not THandles.VerifyHandle( PipeHandle, THandleKind.hkMessagePipe ) then begin
+  if not THandles.VerifyHandle( PipeHandle, IMessagePipe ) then begin
     raise
       Exception.Create('Invalid handle for message pipe.');
   end;
@@ -216,7 +216,7 @@ begin
       Exception.Create('Did you call dgInitialize()?');
     exit;
   end;
-  if not THandles.VerifyHandle( PipeHandle, THandleKind.hkMessagePipe ) then begin
+  if not THandles.VerifyHandle( PipeHandle, IMessagePipe ) then begin
     raise
       Exception.Create('Invalid handle for message pipe.');
   end;

@@ -32,20 +32,7 @@ type
   ///  <summary>
   ///    A handle to an object within the darkglass system.
   ///  </summary>
-  THandle = pointer;
-
-  ///  <summary>
-  ///    Indicates the kind of handle to be created with a call to CreateHandle
-  ///  </summary>
-  THandleKind = (
-    hkMessagePipe
-  );
-
-  ///  <summary>
-  ///    A callback method capable of freeing a given handle and it's
-  ///    associated objects.
-  ///  </summary>
-  THandleFreeMethod = procedure( Instance: IInterface ) of object;
+  THandle = nativeuint;
 
   ///  <summary>
   ///    Namespace class for working with handles.
@@ -58,21 +45,21 @@ type
     class function FindHandle( Handle: THandle; var HandleIndex: uint32 ): boolean;
 
   public
+    const
+      cNullHandle: THandle = 0;
+
+  public
     ///  <summary>
     ///    Create a new handle to a darkglass object. (TInterfacedObject)
-    ///    Pass in the handle kind, to indicate which kind of handle is to be
-    ///    created, and also pass in an instance of the object to which the
-    ///    handle refers.
-    ///    The FreeMethod parameter is a callback to a method which is able
-    ///    to free any objects associated with the handle.
+    ///    Pass in an instance of the object to which the handle refers.
     ///  </summary>
-    class function CreateHandle( aKind: THandleKind; anInstance: IInterface; FreeMethod: THandleFreeMethod ): THandle; static;
+    class function CreateHandle( anInstance: IInterface ): THandle; static;
 
 
     ///  <summary>
     ///    Verifies that the handle is of the correct kind.
     ///  </summary>
-    class function VerifyHandle( Handle: THandle; HandleKind: THandleKind ): boolean; static;
+    class function VerifyHandle( Handle: THandle; const anInterface: TGUID ): boolean; static;
 
     ///  <summary>
     ///    Returns the object instance for the object behind the handle.
@@ -87,28 +74,24 @@ type
 
 implementation
 uses
+  SysUtils,
   darkCollections.list;
 
 type
   IHandleRecord = interface
     ['{8FD6CE52-3105-433D-B376-2B4D3D53F424}']
-    function getHandleKind: THandleKind;
     function getInstance: IInterface;
     //- Pascal Only, Properties -//
-    property Kind: THandleKind read getHandleKind;
     property Instance: IInterface read getInstance;
   end;
 
   THandleRecord = class( TInterfacedObject, IHandleRecord )
   private
-    fFreeMethod: THandleFreeMethod;
-    fKind: THandleKind;
     fInstance: IInterface;
   private //- IHandleRecord -//
-    function getHandleKind: THandleKind;
     function getInstance: IInterface;
   public
-    constructor Create( aKind: THandleKind; anInstance: IInterface; FreeMethod: THandleFreeMethod ); reintroduce;
+    constructor Create( anInstance: IInterface ); reintroduce;
     destructor Destroy; override;
   end;
 
@@ -117,14 +100,14 @@ var
 
 { THandles }
 
-class function THandles.CreateHandle( aKind: THandleKind; anInstance: IInterface; FreeMethod: THandleFreeMethod ): THandle;
+class function THandles.CreateHandle( anInstance: IInterface ): THandle;
 var
   HandleRecord: IHandleRecord;
 begin
   if not assigned(Handles) then begin
     Handles := TList<IHandleRecord>.Create(64,False,True);
   end;
-  HandleRecord := THandleRecord.Create( aKind, anInstance, FreeMethod );
+  HandleRecord := THandleRecord.Create( anInstance );
   Result := THandle(HandleRecord);
   Handles.Add(HandleRecord);
 end;
@@ -160,50 +143,31 @@ var
   HandleRecord: IHandleRecord;
 begin
   Result := nil;
-  if not assigned(Handle) then begin
+  if not assigned(pointer(Handle)) then begin
     exit;
   end;
   HandleRecord := IHandleRecord(Handle);
   Result := HandleRecord.Instance;
 end;
 
-class function THandles.VerifyHandle(Handle: THandle; HandleKind: THandleKind): boolean;
-var
-  HandleIndex: uint32;
+
+class function THandles.VerifyHandle(Handle: THandle; const anInterface: TGUID ): boolean;
 begin
-  Result := False;
-  if not assigned(Handles) then begin
-    exit;
-  end;
-  if FindHandle( Handle, HandleIndex ) then begin
-    if (Handles[HandleIndex].Kind = HandleKind) and (assigned(Handles[HandleIndex].Instance)) then begin
-      Result := True;
-    end;
-  end;
+  Result := Supports(IHandleRecord(Handle).Instance,anInterface);
 end;
 
 { THandleRecord }
 
-constructor THandleRecord.Create( aKind: THandleKind; anInstance: IInterface; FreeMethod: THandleFreeMethod );
+constructor THandleRecord.Create( anInstance: IInterface );
 begin
   inherited Create;
-  fFreeMethod := FreeMethod;
-  fKind := aKind;
   fInstance := anInstance;
 end;
 
 destructor THandleRecord.Destroy;
 begin
-  if assigned(fFreeMethod) then begin
-    fFreeMethod(fInstance);
-  end;
   fInstance := nil;
   inherited Destroy;
-end;
-
-function THandleRecord.getHandleKind: THandleKind;
-begin
-  Result := fKind;
 end;
 
 function THandleRecord.getInstance: IInterface;

@@ -41,6 +41,7 @@ type
     fPlatformChannel: IMessageChannel;
     fExternalPipe: IMessagePipe;
     fExternalChannelName: string;
+
   protected //- Window & Display management -//
     fDisplayManager: IDisplayManager;
     fWindowManager: IWindowManager;
@@ -73,6 +74,10 @@ type
 implementation
 uses
   SysUtils,
+  darkplatform.logfile,
+  darkplatform.logfile.standard,
+  darkHandles,
+  darkIO.Buffers,
   darkPlatform.messages;
 
 { TCommonMainLoop }
@@ -141,10 +146,44 @@ begin
 end;
 
 function TCommonMainLoop.HandlePlatformMessages( aMessage: TMessage ): nativeuint;
+
+  function PAnsiCharParamToString( pSrc: nativeuint ): string;
+  var
+    L: uint32;
+    Buffer: IUnicodeBuffer;
+    Filename: string;
+  begin
+    L := StrLen( PAnsiChar(aMessage.ParamA) );
+    Buffer := TBuffer.Create(succ(L));
+    Buffer.FillMem(0);
+    Buffer.InsertData(Pointer(aMessage.ParamA),0,L);
+    Result := Buffer.ReadString(TUnicodeFormat.utfANSI,TRUE);
+  end;
+
+var
+  Filename: string;
+  LogMessage: string;
+  LogFile: ILogFile;
+
 begin
   //- Handle Message.
   case aMessage.Value of
-    MSG_PLATFORM_CREATE_WINDOW: Result := doCreateWindow( aMessage.ParamA, aMessage.ParamB );
+
+    TPlatform.MSG_PLATFORM_GET_LOGFILE_HANDLE: begin
+      FileName := PAnsiCharParamToString( aMessage.ParamA );
+      Result := THandles.CreateHandle( TLogFile.Create(Filename) );
+    end;
+
+
+    TPlatform.MSG_PLATFORM_LOG: begin
+      LogMessage := PAnsiCharParamToString( aMessage.ParamA );
+      if THandles.VerifyHandle( aMessage.ParamB, ILogFile ) then begin
+        LogFile := THandles.InstanceOf( aMessage.ParamB ) as ILogFile;
+        LogFile.WriteToLog(LogMessage);
+      end;
+    end;
+
+    TPlatform.MSG_PLATFORM_CREATE_WINDOW: Result := doCreateWindow( aMessage.ParamA, aMessage.ParamB );
     else begin
       Result := 0;
     end;
@@ -175,7 +214,7 @@ end;
 
 procedure TCommonMainLoop.SendInitializedMessage;
 begin
-  fExternalPipe.SendMessage(MSG_PLATFORM_INITIALIZED);
+  fExternalPipe.SendMessage(TPlatform.MSG_PLATFORM_INITIALIZED);
 end;
 
 end.
