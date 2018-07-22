@@ -96,7 +96,6 @@ var
   idx: nativeuint;
   Child: IdvTypeDef;
   TypeString: string;
-  TypeIdx: nativeuint;
 begin
   Result := False;
   if RecordDef.ChildCount=0 then begin
@@ -129,7 +128,6 @@ function TdvTypeDefs.CheckFunctionDependsOn( FuncPointerDef: IdvTypeDef; TypeNam
 var
   idx: nativeuint;
   TypeString: string;
-  TypeIdx: nativeuint;
   Parameter: IdvParameter;
 begin
   Result := False;
@@ -156,7 +154,6 @@ function TdvTypeDefs.CheckAliasDependsOn( AliasDef: IdvTypeDef; TypeName: string
 var
   Child: IdvTypeDef;
   TypeString: string;
-  TypeIdx: nativeuint;
 begin
   Result := False;
   if AliasDef.ChildCount<>1 then begin

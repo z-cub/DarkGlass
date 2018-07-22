@@ -1039,6 +1039,7 @@ var
   ReturnTypeNode: IdvTypeDef;
   idx: uint32;
 begin
+  TargetType := TypeOverrides(TargetType);
   //- Sanity check for ***Void
   if Uppercase(Trim(NewTypeName))='VOID' then begin
     PreviousName := 'pointer';
@@ -1655,13 +1656,13 @@ begin
     end else if utTypeStr='CHAR' then begin
       Parameter.TypedSymbol.TypeKind := 'pAnsiChar';
     end else begin
-      if Parameter.Protection=TParameterProtection.ppNone then begin
-        Parameter.TypedSymbol.TypeKind := TypeOverrides(TypeNode.Text);
-        Parameter.Protection := TParameterProtection.ppVar;
-      end else begin
+//      if Parameter.Protection=TParameterProtection.ppNone then begin
+//        Parameter.TypedSymbol.TypeKind := TypeOverrides(TypeNode.Text);
+//        Parameter.Protection := TParameterProtection.ppVar;
+//      end else begin
         PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
         Parameter.TypedSymbol.TypeKind := PointerType.Name;
-      end;
+//      end;
     end;
   end else begin
     //- Gen a new pointer type.
