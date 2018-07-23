@@ -177,6 +177,8 @@ begin
     Result := 'nativeuint';
   end else if utSrc='INT' then begin
     Result := 'integer';
+  end else if utSrc='CHAR' then begin
+    Result := 'TChar';
   end;
 end;
 
@@ -911,6 +913,7 @@ var
   TypeNode: IXMLNode;
   Name: string;
   TypeKind: string;
+  pTChar: IdvTypeDef;
 begin
   Result := False;
   //- Ensure the hard coded types are in.
@@ -926,6 +929,10 @@ begin
     UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int32_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint32));
     UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('int64_t',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkint64));
     UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('float',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkSingle));
+    UnitNode.InterfaceSection.Types.InsertChild( TdvTypeDef.Create('TChar',TdvTypeKind.tkAlias) ).InsertChild(TdvTypeDef.Create('',TdvTypeKind.tkuint8));
+    pTChar := TdvTypeDef.Create('pTChar',TdvTypeKind.tkTypedPointer);
+    pTChar.InsertChild(TdvTypeDef.Create('TChar',TdvTypeKind.tkUserDefined));
+    UnitNode.InterfaceSection.Types.InsertChild( pTChar );
   end;
   //- Simple Aliases, should have a type and a name.
   NameNode := XMLNode.ChildNodes.FindNode('name');
@@ -1178,10 +1185,10 @@ begin
       //- void pointer parameter
       FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pointer'));
     end else if (PtrCount=1) and (uppercase(trim(TypeStr))='CHAR') then begin
-      //- pcharpAnsiChar
-      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pAnsiChar'));
+      //- pchar
+      FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,'pansichar'));
     end else begin
-      ParamType := GeneratePointerType( ParameterStr, TypeStr, PtrCount, Parent );
+      ParamType := GeneratePointerType( ParameterStr, TypeOverrides(TypeStr), PtrCount, Parent );
       FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr,ParamType.Name));
     end;
   end;
@@ -1281,14 +1288,14 @@ begin
   end;
   NameStr := GetIdentifier(NameStr,PtrCount,ArrayLimitStr);
   if Trim(ArrayLimitStr)<>'' then begin
-    TypeStr := 'array ['+MakeArrayLimit( ArrayLimitStr )+'] of '+TypeStr;
+    TypeStr := 'array ['+MakeArrayLimit( ArrayLimitStr )+'] of '+TypeOverrides(TypeStr);
   end;
   //- If PtrCount=1 and type=void.
   if (LeftStr(Uppercase(Trim(TypeStr)),4)='VOID') and (PtrCount=1) then begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkPointer);
   end else if (LeftStr(Uppercase(Trim(TypeStr)),4)='CHAR') and (PtrCount=1) then begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
-    Member.InsertChild(TdvTypeDef.Create('pAnsiChar',TdvTypeKind.tkUserDefined));
+    Member.InsertChild(TdvTypeDef.Create('pansichar',TdvTypeKind.tkUserDefined));
   end else if (PtrCount>1) then begin
     PointerType := GeneratePointerType( NameStr, TypeStr, PtrCount, Parent );
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
@@ -1644,7 +1651,7 @@ begin
     if utTypeNode='VOID' then begin
       ReturnTypeStr := 'pointer';
     end else if utTypeNode='CHAR' then begin
-      ReturnTypeStr := 'pAnsiChar';
+      ReturnTypeStr := 'pansichar';
     end else begin
       ReturnType := GeneratePointerType( Identifier, XMLNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
       UnitNode.InterfaceSection.Types.InsertChild(ReturnType);
@@ -1714,7 +1721,7 @@ begin
     if utTypeStr='VOID' then begin
       Parameter.TypedSymbol.TypeKind := 'pointer';
     end else if utTypeStr='CHAR' then begin
-      Parameter.TypedSymbol.TypeKind := 'pAnsiChar';
+      Parameter.TypedSymbol.TypeKind := 'pansichar';
     end else begin
 //      if Parameter.Protection=TParameterProtection.ppNone then begin
 //        Parameter.TypedSymbol.TypeKind := TypeOverrides(TypeNode.Text);
