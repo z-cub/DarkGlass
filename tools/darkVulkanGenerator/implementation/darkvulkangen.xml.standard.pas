@@ -117,6 +117,8 @@ type
     function ParseStructMember(XMLNode: IXMLNode; RecordNode: IdvTypeDef; Parent: IdvASTNode ): boolean;
     function ParseAPIConstants(XMLNode: IXMLNode; UnitNode: IdvASTUnit): boolean;
     function MyStringListFind(SL: TStringList; SearchString: string; var FoundIdx: int32): boolean;
+    procedure ManualConditionalDefines( UnitNode: IdvASTUnit );
+    procedure MakeConditional( ConditionalEntity: IdvASTNode; Name: string; Platform: string; OneLine: boolean = False );
 
 
   public
@@ -1055,9 +1057,11 @@ begin
   end;
   //- else..
   PreviousName := 'T'+NewTypeName;
-  ReturnTypeNode := Parent.InsertChild(TdvTypeDef.Create(PreviousName,tkAlias)) as IdvTypeDef;
-  AddGeneratedType( TargetType, ReturnTypeNode );
-  ReturnTypeNode.InsertChild(TdvTypeDef.Create(TargetType,TdvTypeKind.tkUserDefined));
+  if UpperCase(Trim(TargetType))<>'THANDLE' then begin
+    ReturnTypeNode := Parent.InsertChild(TdvTypeDef.Create(PreviousName,tkAlias)) as IdvTypeDef;
+    AddGeneratedType( TargetType, ReturnTypeNode );
+    ReturnTypeNode.InsertChild(TdvTypeDef.Create(TargetType,TdvTypeKind.tkUserDefined));
+  end;
   //- Add pointers to the return type node.
   Ps := '';
   for idx := 0 to pred(PtrCount) do begin
@@ -2067,21 +2071,7 @@ begin
       end;
       OneLine := True;
     end;
-    if assigned(ConditionalEntity) then begin
-      DefineStr := '';
-      DefineStr := fDefines.Values[utPlatform];
-      if DefineStr<>'' then begin
-        // Check to see if an external needs updating
-        if MyStringListFind(fExternalNames, Name+'=NONE',FoundIdx) then begin
-          fExternalNames[FoundIdx] := Name + '=' + DefineStr;
-        end;
-        // Create an ifdef
-        Condition := TdvIfDef.Create(DefineStr);
-        Condition.OnOneLine := OneLine;
-        ConditionalEntity.Parent.ReplaceNode( ConditionalEntity, Condition );
-        Condition.Defined.InsertChild(ConditionalEntity);
-      end;
-    end;
+    MakeConditional(ConditionalEntity, Name, utPlatform, OneLine );
   end;
 end;
 
@@ -2178,6 +2168,68 @@ begin
   Result := ASTNode.InsertChild( TdvASTUnit.Create('vulkan') ) as IdvASTUnit;
 end;
 
+procedure TdvXMLParser.MakeConditional( ConditionalEntity: IdvASTNode; Name: string; Platform: string; OneLine: boolean = False );
+var
+  utPlatform: string;
+  FoundIdx: int32;
+  DefineStr: string;
+  Condition: IdvIfDef;
+begin
+  utPlatform := Uppercase(Trim(Platform));
+  if not assigned(ConditionalEntity) then begin
+    exit;
+  end;
+  DefineStr := '';
+  DefineStr := fDefines.Values[utPlatform];
+  if DefineStr<>'' then begin
+    // Check to see if an external needs updating
+    if MyStringListFind(fExternalNames, Name+'=NONE',FoundIdx) then begin
+      fExternalNames[FoundIdx] := Name + '=' + DefineStr;
+    end;
+    // Create an ifdef
+    Condition := TdvIfDef.Create(DefineStr);
+    Condition.OnOneLine := OneLine;
+    ConditionalEntity.Parent.ReplaceNode( ConditionalEntity, Condition );
+    Condition.Defined.InsertChild(ConditionalEntity);
+  end;
+end;
+
+procedure TdvXMLParser.ManualConditionalDefines( UnitNode: IdvASTUnit );
+var
+  ConditionalEntity: IdvASTNode;
+  EntityName: string;
+begin
+  //- This is a bit of a hack, but there are eight types which are nested
+  //- dependencies of conditionals.
+  //- As there are only eight of them, this is insufficient to warrent the
+  //- additional complexity of a nested dependency tracking routine, so simply
+  //- find and conditional define them manually.
+  EntityName := 'TMirConnection';
+  ConditionalEntity := UnitNode.findTypeByName(EntityName);
+  MakeConditional(ConditionalEntity,EntityName,'MIR',True);
+  EntityName := 'pTMirConnection';
+  ConditionalEntity := UnitNode.findTypeByName(EntityName);
+  MakeConditional(ConditionalEntity,EntityName,'MIR',True);
+  EntityName := 'Twl_display';
+  ConditionalEntity := UnitNode.findTypeByName(EntityName);
+  MakeConditional(ConditionalEntity,EntityName,'WAYLAND',True);
+  EntityName := 'pTwl_display';
+  ConditionalEntity := UnitNode.findTypeByName(EntityName);
+  MakeConditional(ConditionalEntity,EntityName,'WAYLAND',True);
+  EntityName := 'TDisplay';
+  ConditionalEntity := UnitNode.findTypeByName(EntityName);
+  MakeConditional(ConditionalEntity,EntityName,'XLIB',True);
+  EntityName := 'pTDisplay';
+  ConditionalEntity := UnitNode.findTypeByName(EntityName);
+  MakeConditional(ConditionalEntity,EntityName,'XLIB',True);
+  EntityName := 'Txcb_connection_t';
+  ConditionalEntity := UnitNode.findTypeByName(EntityName);
+  MakeConditional(ConditionalEntity,EntityName,'XCB',True);
+  EntityName := 'pTxcb_connection_t';
+  ConditionalEntity := UnitNode.findTypeByName(EntityName);
+  MakeConditional(ConditionalEntity,EntityName,'XCB',True);
+end;
+
 function TdvXMLParser.ParseRegistryNode( XMLNode: IXMLNode; ASTNode: IdvASTNode ): boolean;
 var
   idx: uint32;
@@ -2238,6 +2290,9 @@ begin
       Log.Insert(EUnrecognizedXMLTag,TLogSeverity.lsWarning,[LogBind('xmltag',ChildXMLNode.NodeName)]);
     end;
   end;
+  //- See comments inside ManualConditionalDefines.
+  ManualConditionalDefines( MainUnit );
+  //- Insert the loader.
   InsertLoader( MainUnit );
   Result := True;
 end;
