@@ -49,7 +49,8 @@ type
 
 implementation
 uses
-  sysutils;
+  sysutils,
+  strutils;
 
 type
   ETypeDefReinsertion = class( ELogEntry );
@@ -116,6 +117,9 @@ begin
       continue;
     end;
     TypeString := (Child.Children[0] as IdvTypeDef).Name;
+    if (Length(TypeString)>5) and (LeftStr(TypeString,5)='array') then begin
+      TypeString := RightStr(TypeString,Length(TypeString)-(succ(succ(Pos('of',TypeString)))));
+    end;
     TypeString := StringReplace(TypeString,'^','',[rfReplaceAll]);
     if TypeString=TypeName then begin
       Result := True;

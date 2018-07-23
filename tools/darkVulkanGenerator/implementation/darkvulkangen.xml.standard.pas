@@ -63,7 +63,7 @@ type
     procedure SkipNode(NodeType, Because: string; IsError: boolean = False);
     function GeneratePointerType(NewTypeName, TargetType: string; PtrCount: uint32; Parent: IdvASTNode ): IdvTypeDef;
     class procedure Explode(cDelimiter, sValue: string; var Results: TArrayOfString; iCount: uint32 = 0); static;
-    function GetIdentifier(SourceStr: string; var PtrCount: uint32): string;
+    function GetIdentifier(SourceStr: string; var PtrCount: uint32; var ArrayLimit: string): string;
     function CreateVulkanUnit(ASTNode: IdvASTNode): IdvASTUnit;
     procedure SetConditionals(XMLNode: IXMLNode; UnitNode: IdvASTUnit; aPlatform: string);
     procedure ParseExtensionConditionals(XMLNode: IXMLNode; UnitNode: IdvASTUnit);
@@ -119,6 +119,7 @@ type
     function MyStringListFind(SL: TStringList; SearchString: string; var FoundIdx: int32): boolean;
     procedure ManualConditionalDefines( UnitNode: IdvASTUnit );
     procedure MakeConditional( ConditionalEntity: IdvASTNode; Name: string; Platform: string; OneLine: boolean = False );
+    function MakeArrayLimit(ArrayLimitStr: string): string;
 
 
   public
@@ -130,6 +131,7 @@ type
 implementation
 uses
   sysutils,
+  strUtils,
   darkLog,
   xml.xmldom,
   xml.omnixmldom;
@@ -997,15 +999,29 @@ begin
   Result := True;
 end;
 
-function TdvXMLParser.GetIdentifier( SourceStr: string; var PtrCount: uint32 ): string;
+function TdvXMLParser.GetIdentifier( SourceStr: string; var PtrCount: uint32; var ArrayLimit: string ): string;
 var
   Start, Fin, idx: int32;
+  ArraySwitch: boolean;
 begin
   Result := '';
   PtrCount := 0;
+  ArrayLimit := '';
   {$ifdef NEXTGEN} Start := 0; {$else} Start := 1; {$endif}
   {$ifdef NEXTGEN} Fin := pred(Length(SourceStr)); {$else} Fin := Length(SourceStr); {$endif}
+  ArraySwitch := False;
   for idx := Start to Fin do begin
+    //- Check for array limiter.
+    if ArraySwitch then begin
+      if SourceStr[idx]<>']' then begin
+        ArrayLimit := ArrayLimit + SourceStr[idx];
+        continue;
+      end else begin
+        ArraySwitch := False;
+        continue;
+      end;
+    end;
+    //- Normal parsing.
     if CharInSet(SourceStr[idx],
        [ '0','1','2','3','4','5','6','7','8','9','_',
          'a','b','c','d','e','f','g','h','i','j','k',
@@ -1018,6 +1034,8 @@ begin
       continue;
     end else if SourceStr[idx]='*' then begin
       inc(PtrCount);
+    end else if SourceStr[idx]='[' then begin
+      ArraySwitch := True;
     end else begin
       exit;
     end;
@@ -1088,6 +1106,7 @@ var
   ParamType: IdvTypeDef;
   ParameterStr: string;
   TypeStr: string;
+  ArrayLimitStr: string;
 begin
   // Parsing a function pointer.
   Result := False;
@@ -1099,7 +1118,10 @@ begin
   //- Get the return type as a string.
   ReturnType := XMLNode.ChildNodes[0].Text;
   ReturnType := StringReplace(ReturnType,'typedef','',[rfReplaceAll,rfIgnoreCase]);
-  ReturnType := GetIdentifier( ReturnType, PtrCount );
+  ReturnType := GetIdentifier( ReturnType, PtrCount, ArrayLimitStr );
+  if ArrayLimitStr<>'' then begin
+    Log.Insert(ESkippedNode,TLogSeverity.lsFatal,[LogBind('nodetype','funcpointer'),LogBind('because','Function pointer return type is array.')]);
+  end;
   utReturnType := Uppercase(Trim(ReturnType));
 
   // My second node should be the name of the function
@@ -1145,7 +1167,10 @@ begin
     TypeStr := XMLNode.ChildNodes[idx].Text;
     ParameterStr := XMLNode.ChildNodes[succ(idx)].Text;
     //- We now have all the data about a parameter.
-    ParameterStr := GetIdentifier(ParameterStr,PtrCount);
+    ParameterStr := GetIdentifier(ParameterStr,PtrCount,ArrayLimitStr);
+    if ArrayLimitStr<>'' then begin
+      Log.Insert(ESkippedNode,TLogSeverity.lsFatal,[LogBind('nodetype','funcpointer'),LogBind('because','Function pointer parameter is array.')]);
+    end;
     if (PtrCount=0) then begin
       //- Straight named parameter.
       FuncTypeDef.InsertChild(TdvParameter.Create(ParameterStr, TypeOverrides(TypeStr) ));
@@ -1166,6 +1191,27 @@ begin
   Result := True;
 end;
 
+function TdvXMLParser.MakeArrayLimit( ArrayLimitStr: string ): string;
+var
+  Start, Stop: int32;
+  idx: int32;
+  IsLimit: boolean;
+begin
+  {$ifdef NEXTGEN} Start := 0; Stop := Pred(Length(ArrayLimitStr));
+  {$else} Start := 1; Stop := Length(ArrayLimitStr); {$endif}
+  IsLimit := False;
+  for idx := Start to Stop do begin
+    if not CharInSet(ArrayLimitStr[idx],['0','1','2','3','4','5','6','7','8','9']) then begin
+      IsLimit := True;
+    end;
+  end;
+  if not IsLimit then begin
+    Result := '0..'+IntToStr( pred(StrToInt(ArrayLimitStr)) );
+  end else begin
+    Result := '0..'+ArrayLimitStr+'-1';
+  end;
+end;
+
 function TdvXMLParser.ParseStructMember( XMLNode: IXMLNode; RecordNode: IdvTypeDef; Parent: IdvASTNode ): boolean;
 var
   utNodeName: string;
@@ -1180,6 +1226,7 @@ var
   TempStr: string;
   utTypeStr: string;
   idx: uint32;
+  ArrayLimitStr: string;
 begin
   Result := False;
   utNodeName := Uppercase(Trim(XMLNode.NodeName));
@@ -1218,7 +1265,7 @@ begin
     CommentStr := '';
   end;
   NameStr := '';
-  //- Get the pointer count for the member.
+  //-
   for idx := 0 to pred(XMLNode.ChildNodes.Count) do begin
     utNodeName := Uppercase(Trim(XMLNode.ChildNodes[idx].NodeName));
     if (utNodeName<>'TYPE') and (utNodeName<>'COMMENT') then begin
@@ -1232,11 +1279,14 @@ begin
       end;
     end;
   end;
-  NameStr := GetIdentifier(NameStr,PtrCount);
+  NameStr := GetIdentifier(NameStr,PtrCount,ArrayLimitStr);
+  if Trim(ArrayLimitStr)<>'' then begin
+    TypeStr := 'array ['+MakeArrayLimit( ArrayLimitStr )+'] of '+TypeStr;
+  end;
   //- If PtrCount=1 and type=void.
-  if (Uppercase(Trim(TypeStr))='VOID') and (PtrCount=1) then begin
+  if (LeftStr(Uppercase(Trim(TypeStr)),4)='VOID') and (PtrCount=1) then begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkPointer);
-  end else if (Uppercase(Trim(TypeStr))='CHAR') and (PtrCount=1) then begin
+  end else if (LeftStr(Uppercase(Trim(TypeStr)),4)='CHAR') and (PtrCount=1) then begin
     Member := TdvTypeDef.Create(NameStr,TdvTypeKind.tkAlias);
     Member.InsertChild(TdvTypeDef.Create('pAnsiChar',TdvTypeKind.tkUserDefined));
   end else if (PtrCount>1) then begin
@@ -1556,6 +1606,7 @@ var
   ReturnType: IdvTypeDef;
   ReturnTypeStr: string;
   utTypeNode: string;
+  ArrayLimitStr: string;
 begin
   Result := nil;
   //- Check that the node is valid.
@@ -1577,7 +1628,10 @@ begin
     end;
     Identifier := Identifier + XMLNode.ChildNodes[idx].Text;
   end;
-  Identifier := GetIdentifier(Identifier,PtrCount);
+  Identifier := GetIdentifier(Identifier,PtrCount,ArrayLimitStr);
+  if ArrayLimitStr<>'' then begin
+    Log.Insert(ESkippedNode,TLogSeverity.lsFatal,[LogBind('nodetype','funcpointer'),LogBind('because','Command Prototype is Array.')]);
+  end;
   //- Prepare the function return type.
   utTypeNode := Uppercase(Trim(TypeNode.Text));
   ReturnTypeStr := '';
@@ -1618,6 +1672,8 @@ var
   PtrCount: uint32;
   utTypeStr: string;
   PointerType: IdvTypeDef;
+  ArrayLimitStr: string;
+  TypeStr: string;
 begin
   Result := False;
   ProtectionNode := nil;
@@ -1649,9 +1705,9 @@ begin
       Identifier := Identifier + XMLNode.ChildNodes[idx].Text;
     end;
   end;
-  Identifier := GetIdentifier(Identifier,PtrCount);
+  Identifier := GetIdentifier(Identifier,PtrCount,ArrayLimitStr);
   //- What do we do with a drunken parameter....
-   Parameter.TypedSymbol.Name := Identifier;
+  Parameter.TypedSymbol.Name := Identifier;
   if PtrCount=0 then begin
     Parameter.TypedSymbol.TypeKind := TypeOverrides(TypeNode.Text);
   end else if PtrCount=1 then begin
@@ -1664,13 +1720,23 @@ begin
 //        Parameter.TypedSymbol.TypeKind := TypeOverrides(TypeNode.Text);
 //        Parameter.Protection := TParameterProtection.ppVar;
 //      end else begin
-        PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
+        if Trim(ArrayLimitStr)<>'' then begin
+          TypeStr := TypeNode.Text +  '['+ArrayLimitStr+']';
+        end else begin
+          TypeStr := TypeNode.Text;
+        end;
+        PointerType := GeneratePointerType( TypeStr, TypeStr, PtrCount, UnitNode.InterfaceSection.Types );
         Parameter.TypedSymbol.TypeKind := PointerType.Name;
 //      end;
     end;
   end else begin
     //- Gen a new pointer type.
-    PointerType := GeneratePointerType( TypeNode.Text, TypeNode.Text, PtrCount, UnitNode.InterfaceSection.Types );
+    if Trim(ArrayLimitStr)<>'' then begin
+      TypeStr := TypeNode.Text +  '['+ArrayLimitStr+']';
+    end else begin
+      TypeStr := TypeNode.Text;
+    end;
+    PointerType := GeneratePointerType( TypeStr, TypeStr, PtrCount, UnitNode.InterfaceSection.Types );
     Parameter.TypedSymbol.TypeKind := PointerType.Name;
   end;
   //- Now add the parameter to the function
