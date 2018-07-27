@@ -49,6 +49,11 @@ type
   private
     function doCreateWindow( ParamA: NativeUInt; ParamB: NativeUInt ): nativeuint;
     function HandlePlatformMessages( aMessage: TMessage ): nativeuint;
+    function doCreateMemoryBuffer(BufferSize: nativeuint): nativeuint;
+    function doGetBufferPtr(BufferHandle: nativeuint): nativeuint;
+    function doGetBufferSize(BufferHandle: nativeuint): nativeuint;
+    function doCreateLogFile(FilenameBuffer: nativeuint): nativeuint;
+    procedure doInsertLogEntry(LogHandle, MessageHandle: nativeuint);
   protected //- For use from descendent -//
     //- Handles messages sent to the platform channel.
     procedure CheckMessages;
@@ -145,42 +150,96 @@ begin
   fExternalPipe := nil;
 end;
 
-function TCommonMainLoop.HandlePlatformMessages( aMessage: TMessage ): nativeuint;
-
-  function PAnsiCharParamToString( pSrc: nativeuint ): string;
-  var
-    L: uint32;
-    Buffer: IUnicodeBuffer;
-    Filename: string;
-  begin
-    L := StrLen( PAnsiChar(aMessage.ParamA) );
-    Buffer := TBuffer.Create(succ(L));
-    Buffer.FillMem(0);
-    Buffer.InsertData(Pointer(aMessage.ParamA),0,L);
-    Result := Buffer.ReadString(TUnicodeFormat.utfANSI,TRUE);
+function TCommonMainLoop.doCreateMemoryBuffer( BufferSize: nativeuint ): nativeuint;
+const
+  cMaxBufferSize = $FFFFFFFF;
+var
+  size32: uint32;
+  Buffer: IUnicodeBuffer;
+begin
+  Result := THandles.cNullHandle;
+  if BufferSize>cMaxBufferSize then begin
+    exit;
   end;
+  size32 := BufferSize;
+  Buffer := TBuffer.Create(size32);
+  if not assigned(Buffer) then begin
+    exit;
+  end;
+  Result := THandles.CreateHandle(Buffer);
+end;
 
+function TCommonMainLoop.doGetBufferSize( BufferHandle: nativeuint ): nativeuint;
+begin
+  Result := 0;
+  if not THandles.VerifyHandle(BufferHandle,IUnicodeBuffer) then begin
+    exit;
+  end;
+  Result := (THandles.InstanceOf(BufferHandle) as IUnicodeBuffer).Size;
+end;
+
+function TCommonMainLoop.doGetBufferPtr( BufferHandle: nativeuint ): nativeuint;
+begin
+  Result := 0;
+  if not THandles.VerifyHandle(BufferHandle,IUnicodeBuffer) then begin
+    exit;
+  end;
+  Result := nativeuint((THandles.InstanceOf(BufferHandle) as IUnicodeBuffer).DataPtr);
+end;
+
+function TCommonMainLoop.doCreateLogFile( FilenameBuffer: nativeuint ): nativeuint;
 var
   Filename: string;
-  LogMessage: string;
-  LogFile: ILogFile;
+begin
+  Result := THandles.cNullHandle;
+  if not THandles.VerifyHandle( FilenameBuffer, IUnicodeBuffer ) then begin
+    exit;
+  end;
+  Filename := (THandles.InstanceOf(FilenameBuffer) as IUnicodeBuffer).ReadString(TUnicodeFormat.utf8,TRUE);
+  Result := THandles.CreateHandle( TLogFile.Create(Filename) );
+  THandles.FreeHandle(FilenameBuffer);
+end;
 
+procedure TCommonMainLoop.doInsertLogEntry( LogHandle: nativeuint; MessageHandle: nativeuint );
+var
+  LogFile: ILogFile;
+  MessageText: string;
+begin
+  if not THandles.VerifyHandle(LogHandle,ILogFile) then begin
+    exit;
+  end;
+  LogFile := THandles.InstanceOf(LogHandle) as ILogFile;
+  if not THandles.VerifyHandle(MessageHandle,IUnicodeBuffer) then begin
+    exit;
+  end;
+  MessageText := (THandles.InstanceOf(MessageHandle) as IUnicodeBuffer).ReadString(TUnicodeFormat.utf8,TRUE);
+  LogFile.WriteToLog(MessageText);
+  THandles.FreeHandle(MessageHandle);
+end;
+
+function TCommonMainLoop.HandlePlatformMessages( aMessage: TMessage ): nativeuint;
 begin
   //- Handle Message.
   case aMessage.Value of
 
     TPlatform.MSG_PLATFORM_GET_LOGFILE_HANDLE: begin
-      FileName := PAnsiCharParamToString( aMessage.ParamA );
-      Result := THandles.CreateHandle( TLogFile.Create(Filename) );
+      Result := doCreateLogFile( aMessage.ParamA );
     end;
 
-
     TPlatform.MSG_PLATFORM_LOG: begin
-      LogMessage := PAnsiCharParamToString( aMessage.ParamA );
-      if THandles.VerifyHandle( aMessage.ParamB, ILogFile ) then begin
-        LogFile := THandles.InstanceOf( aMessage.ParamB ) as ILogFile;
-        LogFile.WriteToLog(LogMessage);
-      end;
+      doInsertLogEntry( aMessage.ParamA, aMessage.ParamB );
+    end;
+
+    TPlatform.MSG_CREATE_MEMORY_BUFFER: begin
+      Result := doCreateMemoryBuffer( aMessage.ParamA );
+    end;
+
+    TPlatform.MSG_GET_BUFFER_SIZE: begin
+      Result := doGetBufferSize( aMessage.ParamA );
+    end;
+
+    TPlatform.MSG_GET_BUFFER_POINTER: begin
+      Result := doGetBufferPtr( aMessage.ParamA );
     end;
 
     TPlatform.MSG_PLATFORM_CREATE_WINDOW: Result := doCreateWindow( aMessage.ParamA, aMessage.ParamB );

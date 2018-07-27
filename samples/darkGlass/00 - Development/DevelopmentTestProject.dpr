@@ -31,10 +31,38 @@ uses
   darkplatform.messages,
   sysutils;
 
+function CreateLogFile( Pipe: THandle; Filename: string ): nativeuint;
+var
+  BufferHandle: THandle;
+  BufferPtr: pointer;
+  L: uint32;
+begin
+  L := Length(Filename);
+  BufferHandle := dgSendMessageWait(Pipe,TPlatform.MSG_CREATE_MEMORY_BUFFER,L,0,0,0);
+  BufferPtr := Pointer(dgSendMessageWait(Pipe,TPlatform.MSG_GET_BUFFER_POINTER,BufferHandle,0,0,0));
+  Move( Pointer(UTF8Encode(Filename))^, BufferPtr^, L );
+  Result := dgSendMessageWait(Pipe,TPlatform.MSG_PLATFORM_GET_LOGFILE_HANDLE,BufferHandle,0,0,0);
+end;
+
+
+procedure SendLogMessage( Pipe: THandle; LogFile: THandle; LogMessage: string );
+var
+  BufferHandle: THandle;
+  BufferPtr: pointer;
+  L: uint32;
+begin
+  L := Length(LogMessage);
+  BufferHandle := dgSendMessageWait(Pipe,TPlatform.MSG_CREATE_MEMORY_BUFFER,L,0,0,0);
+  BufferPtr := Pointer(dgSendMessageWait(Pipe,TPlatform.MSG_GET_BUFFER_POINTER,BufferHandle,0,0,0));
+  Move( Pointer(UTF8Encode(LogMessage))^, BufferPtr^, L );
+  dgSendMessageWait(Pipe,TPlatform.MSG_PLATFORM_LOG, LogFile, BufferHandle, 0, 0 );
+end;
+
 function HandleMessage( aMessage: TMessage ): nativeuint;
 var
   PlatformPipe: THandle;
   Response: nativeuint;
+  LogFile: nativeuint;
 begin
   Result := 0;
   case aMessage.Value of
@@ -43,10 +71,8 @@ begin
       PlatformPipe := dgGetMessagePipe(Pointer(UTF8Encode('platform')));
       Response := dgSendMessageWait(PlatformPipe, TPlatform.MSG_PLATFORM_CREATE_WINDOW, 100, 100, 0, 0 );
 
-      // Create a log file and send a message to it.
-      Response := dgSendMessageWait(PlatformPipe, TPlatform.MSG_PLATFORM_GET_LOGFILE_HANDLE, nativeuint(pansichar('darkTest.log')), 0, 0, 0);
-      dgSendMessageWait(PlatformPipe, TPlatform.MSG_PLATFORM_LOG, nativeuint(pansichar('Oh goodness me, logging works!')), Response, 0, 0 );
-
+      LogFile := CreateLogFile( PlatformPipe, 'darkTest.log' );
+      SendLogMessage( PlatformPipe, LogFile,'Memory Marshaled Log Entry.' );
     end;
 
     else begin

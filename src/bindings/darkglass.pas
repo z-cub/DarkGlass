@@ -36,7 +36,7 @@ type
   ///    Used as a handle to objects passed through the messaging system
   ///    to the darkglass engine.
   ///  </summary>
-  THandle = pointer;
+  THandle = nativeuint;
 
   ///  <summary>
   ///    Used to send messages into the darkglass message bus.
@@ -80,7 +80,6 @@ var
   ///  </summary>
   dgInitialize: procedure( MessageHandler: TExternalMessageHandler ); {$ifdef MSWINDOWS} stdcall; {$else} cdecl; {$endif}
 
-  ///
   ///  <summary>
   ///    Finalizes the DarkGlass engine.
   ///    You must call dgFinalize() after calling dgRun().

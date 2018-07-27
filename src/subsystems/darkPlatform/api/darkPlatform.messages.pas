@@ -34,34 +34,75 @@ type
 
     const MSG_PLATFORM_FIRST = $0;
 
+    ///  <summary>
+    ///     Allocates a buffer of memory within the darkglass engine.
+    ///     ParamA is used to specify the size of the memory buffer in bytes.
+    ///  </summary>
+    ///  <remark>
+    ///    You may allocate a maximum of $FFFFFFFF bytes of memory.
+    ///  </remark>
+    ///  <param name="ParamA"> The size of the buffer to allocate in bytes. </param>
+    ///  <param name="ParamB"></param>
+    ///  <param name="ParamC"></param>
+    ///  <param name="ParamD"></param>
+    ///  <returns>
+    ///    Returns a handle to the allocated buffer (or nullhandle if allocation failed.)
+    ///  </returns>
+    const MSG_CREATE_MEMORY_BUFFER = MSG_PLATFORM_FIRST + $1;
+
     /// <summary>
-    ///   Locates a log file specified by name, and returns a handle to it.
-    ///   If the log file does not exist, it will be created.
+    ///    When passed the handle of a buffer (allocated using MSG_CREATE_MEMORY_BUFFER),
+    ///    this message will return the size of the buffer in bytes.
     /// </summary>
-    /// <param name="ParamA"> Cast as pointer, points to a pAnsiChar containing the filepath and name.</param>
+    /// <param name="ParamA"> The handle of the buffer to query. </param>
     /// <param name="ParamB"></param>
     /// <param name="ParamC"></param>
     /// <param name="ParamD"></param>
     /// <returns>
-    ///    Responds with a file handle for the selected log file.
+    ///    The size of the buffer in bytes.
     /// </returns>
-    const MSG_PLATFORM_GET_LOGFILE_HANDLE = MSG_PLATFORM_FIRST + $1;
+    const MSG_GET_BUFFER_SIZE = MSG_PLATFORM_FIRST + $2;
 
     /// <summary>
-    ///   Sends a log message to the specified log file.
+    ///    Returns a pointer to the memory which is managed by a buffer.
+    ///    (Buffer allocated using MSG_CREATE_MEMORY_BUFFER).
     /// </summary>
-    /// <param name="ParamA"> Cast as pointer, points to a pAnsiChar containing the message to be logged. </param>
-    /// <param name="ParamB"> A handle to a log file obtained by sending MSG_PLATFORM_GET_LOGFILE_HANDLE </param>
+    /// <param name="ParamA"> The handle of the buffer to query. </param>
+    /// <param name="ParamB"></param>
+    /// <param name="ParamC"></param>
+    /// <param name="ParamD"></param>
+    /// <returns>
+    ///    A pointer to the memory managed by the specified buffer.
+    /// </returns>
+    const MSG_GET_BUFFER_POINTER = MSG_PLATFORM_FIRST + $3;
+
+    /// <summary>
+    ///    Create s a log file to log messages into.
+    /// </summary>
+    /// <param name="ParamA"> A handle to a buffer (see MSG_CREATE_MEMORY_BUFFER) containing the filename as a UTF-8 string.</param>
+    /// <param name="ParamB"></param>
+    /// <param name="ParamC"></param>
+    /// <param name="ParamD"></param>
+    /// <returns>
+    ///    Returns a handle to the log file.
+    /// </returns>
+    const MSG_PLATFORM_GET_LOGFILE_HANDLE = MSG_PLATFORM_FIRST + $4;
+
+    /// <summary>
+    ///    Inserts an entry into a log.
+    /// </summary>
+    /// <param name="ParamA"> A handle to a log file. </param>
+    /// <param name="ParamB"> A handle to a memory buffer (see MSG_CREATE_MEMORY_BUFFER) containing the log entry as a UTF-8 string. </param>
     /// <param name="ParamC"></param>
     /// <param name="ParamD"></param>
     /// <returns></returns>
-    const MSG_PLATFORM_LOG = MSG_PLATFORM_FIRST + $2;
+    const MSG_PLATFORM_LOG = MSG_PLATFORM_FIRST + $5;
 
     ///  <summary>
     ///    Message sent by the platform when system has initialized and is
     ///    ready to begin receiving messages.
     ///  </summary>
-    const MSG_PLATFORM_INITIALIZED = MSG_PLATFORM_FIRST + $4;
+    const MSG_PLATFORM_INITIALIZED = MSG_PLATFORM_FIRST + $6;
 
     /// <summary>
     ///   Send this message to the platform channel in order to create a new
@@ -72,7 +113,7 @@ type
     /// <param name="ParamC"></param>
     /// <param name="ParamD"></param>
     /// <returns></returns>
-    const MSG_PLATFORM_CREATE_WINDOW = MSG_PLATFORM_FIRST + $5;
+    const MSG_PLATFORM_CREATE_WINDOW = MSG_PLATFORM_FIRST + $7;
 
   end;
 
