@@ -72,6 +72,7 @@ contains
   darkThreading.signaledcriticalsection.windows in '..\..\libs\darkThreading\implementation\windows\darkThreading.signaledcriticalsection.windows.pas',
   darkunicode in '..\..\libs\darkUnicode\api\darkunicode.pas',
   darkunicode.codec.standard in '..\..\libs\darkUnicode\implementation\darkunicode.codec.standard.pas',
-  darkHandles in '..\..\libs\darkHandles\api\darkHandles.pas';
+  darkHandles in '..\..\libs\darkHandles\api\darkHandles.pas',
+  darkHandles.list in '..\..\libs\darkHandles\api\darkHandles.list.pas';
 
 end.

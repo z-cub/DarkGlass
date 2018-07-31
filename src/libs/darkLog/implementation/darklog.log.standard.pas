@@ -41,20 +41,14 @@ type
 
   TLog = class( TInterfacedObject, ILog )
   private
-    fDebugMode: boolean;
     fMessages: IStringDictionary;
     fLogTargets: ILogTargetList;
     fCS: TCriticalSection;
   private //- ILog -//
-    function getDebugMode: boolean;
-    procedure setDebugMode( value: boolean );
     function LogBind( Name: string; Value: string ): TLogBindParameter;
     procedure Register( EntryClass: TLogEntryClass; DefaultText: string ); overload;
-    procedure Register( EntryClass: string; DefaultText: string ); overload;
     function Insert( EntryClass: TLogEntryClass; Severity: TLogSeverity; Additional: array of TLogBindParameter ): string; overload;
     function Insert( EntryClass: TLogEntryClass; Severity: TLogSeverity ): string; overload;
-    function Insert( EntryClass: string; Severity: TLogSeverity; Additional: array of TLogBindParameter ): string; overload;
-    function Insert( EntryClass: string; Severity: TLogSeverity ): string; overload;
     function SaveTranslationsToFile( Filepath: string; Overwrite: boolean = false ): TTranslationResult;
     function LoadTraslationsFromFile( Filepath: string; var Supurflous: TArrayOfString; var Missing: TArrayOfString ): TTranslationResult;
     procedure AddLogTarget( aLogTarget: ILogTarget );
@@ -108,7 +102,6 @@ begin
   fCS := TCriticalSection.Create;
   fLogTargets := TLogTargetList.Create;
   fMessages := TStringDictionary.Create;
-  fDebugMode := False;
 end;
 
 destructor TLog.Destroy;
@@ -172,54 +165,6 @@ begin
   Result := Translated;
 end;
 
-function TLog.Insert( EntryClass: string; Severity: TLogSeverity; Additional: array of TLogBindParameter ): string;
-var
-  Identifier: string;
-  DefaultText: string;
-  MessageText: string;
-  idx: uint32;
-begin
-  Result := '';
-  if (Severity = lsDebug) and (not fDebugMode) then begin
-    exit;
-  end;
-  fCS.Acquire;
-  try
-    // Check that the entry class is registered
-    Identifier := Lowercase(Trim(EntryClass));
-    if not fMessages.getKeyExists(Identifier) then begin
-      //- Insert log message stating that this log entry is not registered.
-      Exit;
-    end;
-    //- Get the translated text and bind parameters to it.
-    DefaultText := fMessages.getValueByKey(Identifier).Value;
-    MessageText := BindParameters(DefaultText, Additional);
-    //- Prefix the severity.
-    case Severity of
-      lsInfo:    MessageText := '[INFO] '+MessageText;
-      lsHint:    MessageText := '[HINT] '+MessageText;
-      lsWarning: MessageText := '[WARNING] '+MessageText;
-      lsError:   MessageText := '[ERROR] '+MessageText;
-      lsFatal:   MessageText := '[FATAL] '+MessageText;
-      lsDebug:   MessageText := '[DEBUG] '+MessageText;
-    end;
-    //- Prefix a timestamp
-    MessageText := '('+ string(FormatDateTime('YYYY-MM-DD HH:nn:SS:ssss',Now)) +') ' + MessageText + sLineBreak;
-    Result := MessageText;
-    //- Insert the message into as many LogTargets as are registered.
-    if fLogTargets.Count>0 then begin
-      for idx := 0 to pred(fLogTargets.Count) do begin
-        fLogTargets.Items[idx].Insert(EntryClass,Additional,MessageText);
-      end;
-    end;
-    //- If the message is fatal, raise an exception.
-    if Severity=lsFatal then begin
-      raise Exception.Create(MessageText);
-    end;
-  finally
-    fCS.Release;
-  end;
-end;
 
 procedure TLog.ExportTranslations( FS: IUnicodeStream );
 var
@@ -242,11 +187,6 @@ begin
     end;
     FS.WriteString( '}', TUnicodeFormat.utf8 );
   end;
-end;
-
-function TLog.getDebugMode: boolean;
-begin
-  Result := fDebugMode;
 end;
 
 function TLog.SaveTranslationsToFile(Filepath: string; Overwrite: boolean): TTranslationResult;
@@ -279,12 +219,6 @@ begin
   finally
     fCS.Release;
   end;
-end;
-
-
-procedure TLog.setDebugMode(value: boolean);
-begin
-  fDebugMode := Value;
 end;
 
 function TLog.GetJSONString( FS: IUnicodeStream; var aString: string ): boolean;
@@ -496,14 +430,52 @@ begin
   end;
 end;
 
-function TLog.Insert(EntryClass: TLogEntryClass; Severity: TLogSeverity): string;
+function TLog.Insert( EntryClass: TLogEntryClass; Severity: TLogSeverity; Additional: array of TLogBindParameter ): string;
+var
+  Identifier: string;
+  DefaultText: string;
+  MessageText: string;
+  idx: uint32;
 begin
   Result := '';
-  if Severity = lsDebug then begin
-    exit;
+  fCS.Acquire;
+  try
+    // Check that the entry class is registered
+    Identifier := Lowercase(Trim(EntryClass.ClassName));
+    if not fMessages.getKeyExists(Identifier) then begin
+      //- Insert log message stating that this log entry is not registered.
+      Exit;
+    end;
+    //- Get the translated text and bind parameters to it.
+    DefaultText := fMessages.getValueByKey(Identifier).Value;
+    MessageText := BindParameters(DefaultText, Additional);
+    //- Prefix the severity.
+    case Severity of
+      lsInfo:    MessageText := '[INFO] '+MessageText;
+      lsHint:    MessageText := '[HINT] '+MessageText;
+      lsWarning: MessageText := '[WARNING] '+MessageText;
+      lsError:   MessageText := '[ERROR] '+MessageText;
+      lsFatal:   MessageText := '[FATAL] '+MessageText;
+      lsDebug:   MessageText := '[DEBUG] '+MessageText;
+    end;
+    //- Prefix a timestamp
+    MessageText := '('+ string(FormatDateTime('YYYY-MM-DD HH:nn:SS:ssss',Now)) +') ' + MessageText + sLineBreak;
+    Result := MessageText;
+    //- Insert the message into as many LogTargets as are registered.
+    if fLogTargets.Count>0 then begin
+      for idx := 0 to pred(fLogTargets.Count) do begin
+        fLogTargets.Items[idx].Insert(EntryClass.ClassName,Additional,MessageText);
+      end;
+    end;
+    //- If the message is fatal, raise an exception.
+    if Severity=lsFatal then begin
+      raise Exception.Create(MessageText);
+    end;
+  finally
+    fCS.Release;
   end;
-  Result := Insert(EntryClass.ClassName,Severity,[]);
 end;
+
 
 function TLog.LoadTraslationsFromFile(Filepath: string; var Supurflous, Missing: TArrayOfString): TTranslationResult;
 var
@@ -547,16 +519,16 @@ begin
   Result := FS.ReadChar(TUnicodeFormat.utf8);
 end;
 
-procedure TLog.Register(EntryClass: string; DefaultText: string);
+procedure TLog.Register(EntryClass: TLogEntryClass; DefaultText: string);
 var
   Identifier: string;
 begin
   fCS.Acquire;
   try
     //- Add the log class and text.
-    Identifier := Lowercase(Trim(EntryClass));
+    Identifier := Lowercase(Trim(EntryClass.ClassName));
     if fMessages.KeyExists[Identifier] then begin
-      raise Exception.Create('Log entry : '+EntryClass+' : is already registered.');
+      raise Exception.Create('Log entry : '+EntryClass.ClassName+' : is already registered.');
     end;
     fMessages.setValueByKey(Identifier,TCollectableString.Create(DefaultText));
   finally
@@ -564,10 +536,6 @@ begin
   end;
 end;
 
-procedure TLog.Register(EntryClass: TLogEntryClass; DefaultText: string);
-begin
-  Register(EntryClass.ClassName,DefaultText);
-end;
 
 procedure TLog.RemoveLogTarget(aLogTarget: ILogTarget);
 var
@@ -596,22 +564,13 @@ begin
   Result := SingletonLog;
 end;
 
-function TLog.Insert(EntryClass: string; Severity: TLogSeverity): string;
+function TLog.Insert(EntryClass: TLogEntryClass; Severity: TLogSeverity ): string;
 begin
   Result := '';
   if Severity = lsDebug then begin
     exit;
   end;
   Result := Insert(EntryClass,Severity,[]);
-end;
-
-function TLog.Insert(EntryClass: TLogEntryClass; Severity: TLogSeverity; Additional: array of TLogBindParameter): string;
-begin
-  Result := '';
-  if Severity = lsDebug then begin
-    exit;
-  end;
-  Result := Insert(EntryClass.ClassName,Severity,Additional);
 end;
 
 initialization

@@ -133,6 +133,9 @@ begin
   if not assigned(Handles) then begin
     exit;
   end;
+  if Handle=THandles.cNullHandle then begin
+    exit;
+  end;
   if FindHandle( Handle, HandleIndex ) then begin
     Handles.RemoveItem(HandleIndex);
   end;

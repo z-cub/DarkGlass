@@ -40,9 +40,21 @@ type
   TLogSeverity = ( lsInfo, lsHint, lsWarning, lsError, lsFatal, lsDebug );
 
   ///  <summary>
+  ///    Bind parameters are used to inject parameters into a log message.
+  ///  </summary>
+  TLogBindParameter = record
+    Name: string;
+    Value: string;
+  end;
+
+  ///  <summary>
   ///    A base class to derrive custom log entries from.
   ///  </summary>
-  ELogEntry = class
+  ELogEntry = class( TInterfacedObject, IInterface )
+  public
+    constructor Register( EntryMessage: string );
+    constructor Create( Severity: TLogSeverity; Parameters: array of TLogBindParameter ); reintroduce; overload;
+    constructor Create( Severity: TLogSeverity ); reintroduce; overload;
   end;
 
   ///  <summary>
@@ -50,14 +62,6 @@ type
   ///    log entries.
   ///  </summary>
   TLogEntryClass = class of ELogEntry;
-
-  ///  <summary>
-  ///    Bind parameters are used to inject parameters into a log message.
-  ///  </summary>
-  TLogBindParameter = record
-    Name: string;
-    Value: string;
-  end;
 
   ///  <summary>
   ///    An array of bind parameters for injection into a log message.
@@ -94,19 +98,6 @@ type
   ILog = interface
     ['{587FD133-6206-461F-A9F7-7D07CF60F93B}']
 
-    ///  <summary>
-    ///    Puts the log into debug mode. In this mode, log entries with a
-    ///    severity of lsDebug will be inserted.
-    ///  </summary>
-    function getDebugMode: boolean;
-
-    ///  <summary>
-    ///     Sets the debug mode (value=true to turn on).
-    ///     When in debug mode, log entries with a severity of lsDebug will be
-    ///     inserted, otherwise they are ignored.
-    ///  </summary>
-    procedure setDebugMode( value: boolean );
-
     ///  Used when binding parameters into a log message.
     function LogBind( Name: string; Value: string ): TLogBindParameter;
 
@@ -124,7 +115,6 @@ type
     ///    Log.Insert( TMyEntryClass, lsInfo, [ LogBind('while','compiling') ] );
     ///  </summary>
     procedure Register( EntryClass: TLogEntryClass; DefaultText: string ); overload;
-    procedure Register( EntryClass: string; DefaultText: string ); overload;
 
     ///  <summary>
     ///    Inserts a log entry into the log.
@@ -142,14 +132,12 @@ type
     ///    parameter.
     ///    Returns the string that is actually inserted, after translation.
     ///  </summary>
-    function Insert( EntryClass: string; Severity: TLogSeverity; Additional: array of TLogBindParameter ): string; overload;
     function Insert( EntryClass: TLogEntryClass; Severity: TLogSeverity; Additional: array of TLogBindParameter ): string; overload;
 
     ///  <summary>
     ///    As the above Insert method, but no additional parameters are provided.
     ///    This method is convenient for log entries which do not require parameters.
     ///  </summary>
-    function Insert( EntryClass: string; Severity: TLogSeverity ): string; overload;
     function Insert( EntryClass: TLogEntryClass; Severity: TLogSeverity ): string; overload;
 
     ///  <summary>
@@ -185,22 +173,7 @@ type
     ///  </summary>
     procedure ClearLogTargets;
 
-    ///  <summary>
-    ///    Get/Set debug mode.
-    ///    When debug mode is enabled, log entries with a severity of lsDebug
-    ///    will be inserted. When debug mode is disabled, log entries with a
-    ///    severity of lsDebug are ignored.
-    ///  </summary>
-    property DebugMode: boolean read getDebugMode write setDebugMode;
   end;
-
-
-///  <summary>
-///    Returns a singleton instance of ILog.
-///    Just calls getLog, convenient for the function name but getLog is
-///    required for log overriding
-///  </summary>
-function Log: ILog;
 
 ///  <summary>
 ///    Scope convenience wrapper around the ILog.LogBind() method of the
@@ -208,6 +181,10 @@ function Log: ILog;
 ///  </summary>
 function LogBind( Name: string; Value: string ): TLogBindParameter;
 
+///  <summary>
+///    Returns the singleton instance of ILog.
+///  </summary>
+function Log: ILog;
 
 implementation
 uses
@@ -221,6 +198,24 @@ end;
 function LogBind( Name: string; Value: string ): TLogBindParameter;
 begin
   Result := Log.LogBind(Name,Value);
+end;
+
+constructor ELogEntry.Create(Severity: TLogSeverity; Parameters: array of TLogBindParameter);
+begin
+  inherited Create;
+  Log.Insert( TLogEntryClass(ClassType), Severity, Parameters );
+end;
+
+constructor ELogEntry.Create(Severity: TLogSeverity);
+begin
+  inherited Create;
+  Log.Insert( TLogEntryClass(ClassType), Severity );
+end;
+
+constructor ELogEntry.Register(EntryMessage: string);
+begin
+  inherited Create;
+  Log.Register( TLogEntryClass(ClassType), EntryMessage);
 end;
 
 end.

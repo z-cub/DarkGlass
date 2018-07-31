@@ -192,6 +192,7 @@
         <DCCReference Include="..\..\libs\darkUnicode\api\darkunicode.pas"/>
         <DCCReference Include="..\..\libs\darkUnicode\implementation\darkunicode.codec.standard.pas"/>
         <DCCReference Include="..\..\libs\darkHandles\api\darkHandles.pas"/>
+        <DCCReference Include="..\..\libs\darkHandles\api\darkHandles.list.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -243,6 +244,12 @@
                 </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgsqlite3.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="..\..\..\out\lib\bpl\pkg_darkLibs.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win64">
+                        <RemoteName>pkg_darkLibs.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
