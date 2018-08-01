@@ -649,7 +649,7 @@ const
 ///  <summary>
 ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getmonitorinfow
 ///  </summary>
-function GetMonitorInfo( hMonitor: THMonitor; lpmi: pMonitorInfo ): longbool; stdcall; external cLibName name 'GetMonitorInfoW';
+function GetMonitorInfo( hMonitor: THMonitor; mi: pMonitorInfoEx ): longbool; stdcall; external cLibName name 'GetMonitorInfoW';
 
 ///  <summary>
 ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-enumdisplaymonitors

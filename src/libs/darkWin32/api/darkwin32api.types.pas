@@ -2877,7 +2877,7 @@ type
   ///  <summary>
   ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nc-winuser-monitorenumproc
   ///  </summary>
-  TMonitorEnumProc = function( Arg1: THMONITOR; Arg2: THDC; Arg3: pRect; Arg4: TLPARAM ): longbool; stdcall;
+  TMonitorEnumProc = function( Arg1: THMonitor; Arg2: THDC; Arg3: pRect; Arg4: TLPARAM ): longbool; stdcall;
 
   ///  <summary>
   ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/ns-winuser-tagmonitorinfo
@@ -2890,13 +2890,17 @@ type
   end;
 
   ///  <summary>
-  ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/ns-winuser-tagmonitorinfoexw
+  ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/ns-winuser-tagmonitorinfoexa
   ///  </summary>
   TMonitorInfoEx = record
-    szDevice: array [0..CCHDEVICENAME] of widechar;
-    base_class: TMonitorInfo;
+    cbSize: DWORD;
+    rcMonitor: TRect;
+    rcWork: TRect;
+    dwFlags: DWORD;
+    szDevice: array[ 0..pred(CCHDEVICENAME) ] of widechar;
   end;
-  pMonitorInfo = ^TMonitorInfoEx;
+  pMonitorInfoEx = ^TMonitorInfoEx;
+
 
 implementation
 

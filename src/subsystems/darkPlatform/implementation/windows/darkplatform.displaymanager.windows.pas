@@ -58,7 +58,7 @@ var
 begin
   Result := True;
   FillChar(MonitorInfo,sizeof(TMonitorInfoEx),0);
-  MonitorInfo.base_class.cbSize := SizeOf(MonitorInfo);
+  MonitorInfo.cbSize := SizeOf(TMonitorInfoEx);
   if GetMonitorInfo(Handle, @MonitorInfo) then begin
     Str := MonitorInfo.szDevice;
     TDisplayManager(pointer(dwData)).CreateDisplayWithDimensions(Str,lprcMonitor^.left,lprcMonitor^.top,lprcMonitor^.right,lprcMonitor^.bottom);
@@ -75,7 +75,7 @@ end;
 constructor TDisplayManager.Create;
 begin
   inherited Create;
-  EnumDisplayMonitors(0,nil, @MonitorEnumProc,NativeUInt(Self));
+  EnumDisplayMonitors(0,nil, {$ifdef fpc}@{$endif}MonitorEnumProc,TLParam(Self));
 end;
 
 {$endif}
