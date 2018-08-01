@@ -29,20 +29,21 @@ unit darkplatform.window.windows;
 interface
 {$ifdef MSWINDOWS}
 uses
-  Windows,
+  darkwin32api.types,
+  darkwin32api.user32,
   darkplatform.display,
   darkplatform.window;
 
 type
   TWindow = class( TInterfacedObject, IWindow )
   private
-    fHandle: hwnd;
+    fHandle: Thwnd;
     fDisplay: IDisplay;
   private
     procedure CreateWindow(aTitle: pWideChar; aTop, aLeft, aWidth, aHeight: int32; aFullscreen: boolean);
   protected
     function getOSHandle: pointer;
-    function HandleWindowMessage( uMsg: uint32; wParam: NativeUInt; lParam: NativeUInt ): NativeUInt;
+    function HandleWindowMessage( uMsg: uint32; wParam: TWParam; lParam: TLParam ): NativeUInt;
   public
     constructor Create( aDisplay: IDisplay ); reintroduce;
     destructor Destroy; override;
@@ -52,8 +53,8 @@ type
 implementation
 {$ifdef MSWINDOWS}
 uses
+  darkwin32api.constants,
   Classes,
-  Messages,
   sysutils;
 
 const
@@ -65,7 +66,7 @@ var
 constructor TWindow.Create( aDisplay: IDisplay );
 begin
   inherited Create;
-  fHandle := hwnd(nil);
+  fHandle := Thwnd(nil);
   fDisplay := aDisplay;
   WindowList.Add(Self);
   CreateWindow( 'Darkglass test',0,0,200,200,FALSE );
@@ -100,7 +101,7 @@ begin
   ShowWindow(fHandle, SW_SHOW);
 end;
 
-function TWindow.HandleWindowMessage(uMsg: uint32; wParam, lParam: NativeUInt): NativeUInt;
+function TWindow.HandleWindowMessage( uMsg: uint32; wParam: TWParam; lParam: TLParam ): NativeUInt;
 begin
   case uMsg of
 
@@ -116,7 +117,7 @@ begin
   end;
 end;
 
-function WindowProc( Handle: HWND; uMsg: uint32; wParam: NativeUInt; lParam: NativeUInt ): NativeUInt; stdcall;
+function WindowProc( Handle: THWND; uMsg: uint32; wParam: TWParam; lParam: TLParam ): TLResult; stdcall;
 var
   idx: uint32;
 begin
@@ -135,15 +136,15 @@ end;
 
 procedure CreateWindowClass;
 var
-  WndClass: tagWndClass;
+  WndClass: TWndClassW;
 begin
   WndClass.style := CS_HREDRAW or CS_VREDRAW or CS_OWNDC;
   WndClass.lpfnWndProc := @WindowProc;
   WndClass.cbClsExtra := 0;
   WndClass.cbWndExtra := 0;
   WndClass.hInstance := System.MainInstance;
-  WndClass.hIcon := LoadIconW(0,MakeIntResource(IDI_APPLICATION));
-  WndClass.hCursor := LoadCursorW(0,MakeIntResource(IDC_ARROW));
+  WndClass.hIcon := LoadIconW(0,TMakeIntResource(IDI_APPLICATION));
+  WndClass.hCursor := LoadCursorW(0,TMakeIntResource(IDC_ARROW));
   WndClass.hbrBackground := 0;
   WndClass.lpszMenuName := nil;
   WndClass.lpszClassName := cDarkGlassClass;
@@ -155,7 +156,7 @@ end;
 
 procedure DestroyWindowClass;
 begin
-  Windows.UnRegisterClass(cDarkGlassClass,system.MainInstance);
+  darkwin32api.user32.UnregisterClass(cDarkGlassClass,system.MainInstance);
 end;
 
 initialization
@@ -163,7 +164,11 @@ initialization
   WindowList := TList.Create;
 
 finalization
+  {$ifdef fpc}
+  WindowList.Free;
+  {$else}
   WindowList.DisposeOf;
+  {$endif}
   DestroyWindowClass;
 
 {$endif}

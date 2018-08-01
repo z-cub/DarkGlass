@@ -32,6 +32,7 @@ in this Software without prior written authorization from The Open Group.
  */
 *)
 unit darkplatform.linux.binding.xlib;
+{$ifdef fpc} {$mode delphi} {$endif}
 
 interface
 uses
@@ -43,7 +44,7 @@ uses
 const
            XlibSpecificationRelease = 6;
                  X_HAVE_UTF8_STRING = 1;
-                              xTrue = TRUE;  // -CC- Renamed 'xTrue' because 'True' is existing reserved word in pascal.
+                              xTrue = TRUE;  // -CC- Renamed 'xTrue' because 'True' is existing reserved word in pascal.
                              xFalse = FALSE;  // -CC- Renamed 'xFalse' because 'False' is existing reserved word in pascal.
                       QueuedAlready = 0;
                  QueuedAfterReading = 1;
@@ -1250,7 +1251,7 @@ XButtonReleasedEvent = XButtonEvent;
 { The types below are not defined in the XLib header, however, Delphi does not
   permit functions to return pointers using the syntax "function(): ^TDataType;"
   Instead we require a "type pDataType = ^DataType;" and then the function
-  is adjusted to read "function(): pDataType;"
+  is adjusted to read "function(): pDataType;" }
 {------------------------------------------------------------------------------}
 type
   pchar = pointer;

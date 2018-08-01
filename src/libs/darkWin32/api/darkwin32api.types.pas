@@ -88,6 +88,7 @@ type
   THGDIOBJ             = THandle;
   TServiceStatusHandle = THandle;
   THRSRC               = THandle;
+  THMONITOR            = THandle;
   PHandle              = ^THandle;
   PHandleArray         = ^THandle;
 
@@ -2872,6 +2873,30 @@ type
   end;
 
   TCONDITION_VARIABLE = TSRWLOCK;
+
+  ///  <summary>
+  ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nc-winuser-monitorenumproc
+  ///  </summary>
+  TMonitorEnumProc = function( Arg1: THMONITOR; Arg2: THDC; Arg3: pRect; Arg4: TLPARAM ): longbool; stdcall;
+
+  ///  <summary>
+  ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/ns-winuser-tagmonitorinfo
+  ///  </summary>
+  TMonitorInfo = record
+    cbSize: DWORD;
+    rcMonitor: TRect;
+    rcWork: TRect;
+    dwFlags: DWORD;
+  end;
+
+  ///  <summary>
+  ///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/ns-winuser-tagmonitorinfoexw
+  ///  </summary>
+  TMonitorInfoEx = record
+    szDevice: array [0..CCHDEVICENAME] of widechar;
+    base_class: TMonitorInfo;
+  end;
+  pMonitorInfo = ^TMonitorInfoEx;
 
 implementation
 

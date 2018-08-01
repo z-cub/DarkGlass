@@ -45,31 +45,20 @@ type
 implementation
 {$ifdef MSWINDOWS}
 uses
-  WinApi.Windows,
   SysUtils,
   classes,
-  MultiMon,
+  darkWin32api.types,
+  darkWin32api.user32,
   darkplatform.display.windows;
 
-function EnumDisplayMonitors(hdc: HDC; lprcIntersect: PRect; lpfnEnumProc: pointer; lData: LPARAM): Boolean; stdcall; external 'User32.dll';
-
-type
-  R = record
-    left: int32;
-    top: int32;
-    right: int32;
-    bottom: int32;
-  end;
-  pR = ^R;
-
-function MonitorEnumProc( Handle: THandle; hdcMonitor: HDC; lprcMonitor: pR; dwData: NativeUInt ): boolean; stdcall;
+function MonitorEnumProc( Handle: THandle; hdcMonitor: THDC; lprcMonitor: pRect; dwData: TLParam ): longbool; stdcall;
 var
   MonitorInfo: TMonitorInfoEx;
   Str: string;
 begin
   Result := True;
   FillChar(MonitorInfo,sizeof(TMonitorInfoEx),0);
-  MonitorInfo.cbSize := SizeOf(MonitorInfo);
+  MonitorInfo.base_class.cbSize := SizeOf(MonitorInfo);
   if GetMonitorInfo(Handle, @MonitorInfo) then begin
     Str := MonitorInfo.szDevice;
     TDisplayManager(pointer(dwData)).CreateDisplayWithDimensions(Str,lprcMonitor^.left,lprcMonitor^.top,lprcMonitor^.right,lprcMonitor^.bottom);

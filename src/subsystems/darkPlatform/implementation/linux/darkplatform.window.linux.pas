@@ -66,6 +66,10 @@ begin
   inherited Destroy;
 end;
 
+const
+  cWM_DELETE_WINDOW {$ifdef fpc}: pansichar {$endif} = 'WM_DELETE_WINDOW';
+  cDarkglass {$ifdef fpc}: pansichar {$endif} = 'Darkglass!';
+
 procedure TWindow.CreateWindow;
 var
   _visual: Visual;
@@ -100,9 +104,17 @@ begin
   end;
 
   XSelectInput( fDisplay.getOSHandle, fHandle, ExposureMask or KeyPressMask or StructureNotifyMask );
-  fAtom := XInternAtom( fDisplay.getOSHandle, Pointer(MarshaledAString(UTF8Encode('WM_DELETE_WINDOW'))), xFalse);
+  {$ifdef fpc}
+  fAtom := XInternAtom( fDisplay.getOSHandle, @cWM_DELETE_WINDOW, xFalse);
+  {$else}
+  fAtom := XInternAtom( fDisplay.getOSHandle, Pointer(MarshaledAString(UTF8Encode(cWM_DELETE_WINDOW))), xFalse);
+  {$endif}
   XSetWMProtocols(fDisplay.getOSHandle, fHandle, @fAtom, 1);
-  XStoreName(fDisplay.getOSHandle, fHandle, Pointer(MarshaledAString(UTF8Encode('Darkglass!'))));
+  {$ifdef fpc}
+  XStoreName(fDisplay.getOSHandle, fHandle, @cDarkglass );
+  {$else}
+  XStoreName(fDisplay.getOSHandle, fHandle, Pointer(MarshaledAString(UTF8Encode(cDarkglass))));
+  {$endif}
 
   if (XMapWindow(fDisplay.getOSHandle,fHandle)=BadWindow) then begin
     raise Exception.Create('Bad Window');

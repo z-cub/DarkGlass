@@ -93,7 +93,7 @@ const
 procedure TCommonMainLoop.CheckMessages;
 begin
   if fPlatformChannel.MessagesWaiting then begin
-    fPlatformChannel.GetMessage(HandlePlatformMessages);
+    fPlatformChannel.GetMessage({$ifdef fpc}@{$endif}HandlePlatformMessages);
   end;
 end;
 

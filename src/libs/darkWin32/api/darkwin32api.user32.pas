@@ -92,7 +92,6 @@ const
 // EndDeferWindowPosEx; Index 1743;	Information not available
 // EndTask; Index 1747;			Information not available
 // EnterReaderModeHelper; Index 1748;	Information not available
-// EnumDisplayMonitors; Index 1756;	Information not available
 // EnumDisplaySettingsExA; Index 1758;	Information not available
 // EnumDisplaySettingsExW; Index 1759;	Information not available
 // EvaluateProximityToPolygon; Index 1770;	Information not available
@@ -126,7 +125,6 @@ const
 // GetMagnificationDesktopMagnification; Index 1867;	Information not available
 // GetMagnificationLensCtxInformation; Index 1868;	Information not available
 // GetMonitorInfoA; Index 1888;		Information not available
-// GetMonitorInfoW; Index 1889;		Information not available
 // GetMouseMovePointsEx; Index 1890;	Information not available
 // GetPhysicalCursorPos; Index 1895;	Information not available
 // GetPointerCursorId; Index 1896;	Information not available
@@ -646,6 +644,17 @@ const
 // USER32.1205; Index 2706;		Information not available
 // USER32.1206; Index 2707;		Information not available
 // USER32.1207; Index 2708;		Information not available
+
+
+///  <summary>
+///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-getmonitorinfow
+///  </summary>
+function GetMonitorInfo( hMonitor: THMonitor; lpmi: pMonitorInfo ): longbool; stdcall; external cLibName name 'GetMonitorInfoW';
+
+///  <summary>
+///    MSDN: https://docs.microsoft.com/en-us/windows/desktop/api/winuser/nf-winuser-enumdisplaymonitors
+///  </summary>
+function EnumDisplayMonitors( hdc: THDC; lprcClip: pRect; lpfnEnum: TMonitorEnumProc; dwParam: TLPARAM ): longbool; stdcall; external cLibName name 'EnumDisplayMonitors';
 
 function ActivateKeyboardLayout(hkl: THKL; Flags: UINT): THKL; stdcall; external cLibName name 'ActivateKeyboardLayout';
 function AdjustWindowRect(var lpRect: TRect; dwStyle: DWORD; bMenu: BOOL): BOOL; stdcall; external cLibName name 'AdjustWindowRect';

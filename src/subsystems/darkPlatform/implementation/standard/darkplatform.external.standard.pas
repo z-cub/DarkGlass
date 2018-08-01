@@ -84,7 +84,7 @@ end;
 function TExternalMessages.Execute: boolean;
 begin
   Result := True;
-  fExternalChannel.GetMessage(HandleExternalMessages);
+  fExternalChannel.GetMessage({$ifdef fpc}@{$endif}HandleExternalMessages);
 end;
 
 procedure TExternalMessages.Finalize;

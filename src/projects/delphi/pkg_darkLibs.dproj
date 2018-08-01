@@ -192,7 +192,6 @@
         <DCCReference Include="..\..\libs\darkUnicode\api\darkunicode.pas"/>
         <DCCReference Include="..\..\libs\darkUnicode\implementation\darkunicode.codec.standard.pas"/>
         <DCCReference Include="..\..\libs\darkHandles\api\darkHandles.pas"/>
-        <DCCReference Include="..\..\libs\darkHandles\api\darkHandles.list.pas"/>
         <DCCReference Include="..\..\libs\darkWin32\api\darkwin32api.gdi32.pas"/>
         <DCCReference Include="..\..\libs\darkWin32\api\darkwin32api.kernel32.pas"/>
         <DCCReference Include="..\..\libs\darkWin32\api\darkwin32api.types.pas"/>
