@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkcollections.list;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 uses
@@ -332,7 +333,11 @@ begin
   end;
 end;
 
+{$ifdef fpc}
+procedure TList.setItem(idx: nativeuint; item: T);
+{$else}
 procedure TList<T>.setItem(idx: nativeuint; item: T);
+{$endif}
 begin
   fItems[idx] := item;
 end;

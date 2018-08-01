@@ -24,12 +24,12 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-
 /// <summary>
 ///   Delphi platform-agnostic wrapper classes around OS dynamic library
 ///   loading functions.
 /// </summary>
 unit darkDynlib;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 

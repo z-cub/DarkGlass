@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darklog.logtarget.logfile.standard;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 uses

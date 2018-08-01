@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkThreading.messagepipe.standard;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 uses
@@ -35,8 +36,10 @@ type
   TMessagePipe = class( TInterfacedObject, IMessagePipe, IMessageRingBuffer )
   private
     fPipeRing: IPipeRing;
-    [weak] fPullCS: ISignaledCriticalSection;
-    [weak] fPushCS: ISignaledCriticalSection;
+    {$ifndef fpc} [weak] {$endif}
+    fPullCS: ISignaledCriticalSection;
+    {$ifndef fpc} [weak] {$endif}
+    fPushCS: ISignaledCriticalSection;
   private //- IMessageRingBuffer -//
     function GetRingBuffer: IPipeRing;
   private //- IMessagePipe -//

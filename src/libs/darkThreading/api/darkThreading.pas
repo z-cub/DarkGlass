@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkThreading;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 
@@ -131,6 +132,12 @@ type
   ///   producer) is able to push items into the buffer, and the other thread
   ///   (the consumer) is able to pull items out of the buffer.
   /// </summary>
+  /// <remark>
+  ///   WARNING: FPC users, this code will compile, however, as of version 3.0.4
+  ///   the compiler will generate an internal error (with no error code) if you
+  ///   attempt to specialize this. Compiler bug? Sorry, this interface / class
+  ///   is unavailable in FPC / Lazarus.
+  /// </remark>
   /// <remarks>
   ///   <b>CAUTION -</b> There is no mechanism to prevent the consumer thread
   ///   from calling the push() method, nor the producer thread from calling
@@ -139,6 +146,7 @@ type
   ///   responsibility to ensure that only one producer, and one consumer
   ///   thread calls the respective methods.
   /// </remarks>
+  {$ifdef fpc} generic {$endif}
   IAtomicRingBuffer<T: record> = interface
     ['{6681F3CF-CF51-4312-816C-3E173F57C2CB}']
 
@@ -188,9 +196,16 @@ type
   /// <summary>
   ///   Implements IAtomicRingBuffer&lt;T: record&gt;
   /// </summary>
+  /// <remark>
+  ///   WARNING: FPC users, this code will compile, however, as of version 3.0.4
+  ///   the compiler will generate an internal error (with no error code) if you
+  ///   attempt to specialize this. Compiler bug? Sorry, this interface / class
+  ///   is unavailable in FPC / Lazarus.
+  /// </remark>
   /// <typeparam name="T">
   ///   A record datatype (or non-object)
   /// </typeparam>
+  {$ifdef fpc} generic {$endif}
   TAtomicRingBuffer<T: record> = class( TInterfacedObject, {$ifdef fpc} specialize {$endif} IAtomicRingBuffer<T> )
   private
     fPushIndex: uint32;
@@ -546,7 +561,11 @@ begin
   Result := darkthreading.threadpool.standard.TThreadPool.Create;
 end;
 
+{$ifdef fpc}
+constructor TAtomicRingBuffer.Create( ItemCount: uint32 );
+{$else}
 constructor TAtomicRingBuffer<T>.Create( ItemCount: uint32 );
+{$endif}
 begin
   inherited Create;
   fPushIndex := 0;
@@ -554,7 +573,11 @@ begin
   SetLength(fItems,ItemCount);
 end;
 
+{$ifdef fpc}
+function TAtomicRingBuffer.IsEmpty: boolean;
+{$else}
 function TAtomicRingBuffer<T>.IsEmpty: boolean;
+{$endif}
 begin
   Result := True;
   if fPullIndex=fPushIndex then begin
@@ -563,7 +586,11 @@ begin
   Result := False;
 end;
 
+{$ifdef fpc}
+function TAtomicRingBuffer.Pull(var item: T): boolean;
+{$else}
 function TAtomicRingBuffer<T>.Pull(var item: T): boolean;
+{$endif}
 var
   NewIndex: uint32;
 begin
@@ -580,7 +607,11 @@ begin
   Result := True;
 end;
 
+{$ifdef fpc}
+function TAtomicRingBuffer.Push(item: T): boolean;
+{$else}
 function TAtomicRingBuffer<T>.Push(item: T): boolean;
+{$endif}
 var
   NewIndex: uint32;
 begin
@@ -596,7 +627,6 @@ begin
   fPushIndex := NewIndex;
   Result := True;
 end;
-
 
 {  TThreadSystem }
 

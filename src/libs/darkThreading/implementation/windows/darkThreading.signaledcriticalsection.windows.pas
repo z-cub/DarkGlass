@@ -25,18 +25,20 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkThreading.signaledcriticalsection.windows;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 {$ifdef MSWINDOWS}
 uses
-  Windows,
+  darkwin32api.types,
+  darkwin32api.kernel32,
   darkThreading;
 
 type
   TWindowsSignaledCriticalSection = class( TInterfacedObject, ISignaledCriticalSection )
   private
-    fMutex: _RTL_SRWLOCK;
-    fCondition: CONDITION_VARIABLE;
+    fMutex: TSRWLOCK;
+    fCondition: TCONDITION_VARIABLE;
   private //- ISignaledCriticalSection -//
     procedure Acquire;
     procedure Release;
@@ -50,6 +52,7 @@ type
 implementation
 {$ifdef MSWINDOWS}
 uses
+  darkwin32api.constants,
   sysutils;
 
 { TWindowsSignaledCriticalSection }

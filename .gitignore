@@ -102,3 +102,6 @@ Android
 *.xml
 *.xml
 Win64
+*.ppu
+*.compiled
+*.bak

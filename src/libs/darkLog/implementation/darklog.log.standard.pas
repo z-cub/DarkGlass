@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darklog.log.standard;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 uses
@@ -407,7 +408,7 @@ begin
     Result := TTranslationResult.forSuccess;
     //- If we got here, test for supurflous entries in the translation file.
     for idx := 0 to pred(Translations.Count) do begin
-      key := Lowercase( Translations.KeyByIndex[idx].Trim );
+      key := Lowercase( Trim(Translations.KeyByIndex[idx]) );
       if not fMessages.KeyExists[key] then begin
         SetLength(Supurflous,succ(Length(Supurflous)));
         Supurflous[pred(Length(Supurflous))] := key;
@@ -416,7 +417,7 @@ begin
     end;
     //- Finally, load the keys in and watch for missing entries in the translation file.
     for idx := 0 to pred(fMessages.Count) do begin
-      key := Lowercase(fMessages.KeyByIndex[idx].Trim);
+      key := Lowercase(Trim(fMessages.KeyByIndex[idx]));
       if Translations.KeyExists[key] then begin
         fMessages.ValueByIndex[idx].Value := Translations.ValueByKey[key].Value;
       end else begin
@@ -510,7 +511,7 @@ end;
 
 function TLog.LogBind(Name, Value: string): TLogBindParameter;
 begin
-  Result.Name := Lowercase(Name.Trim);
+  Result.Name := Lowercase(Trim(Name));
   Result.Value := Value;
 end;
 

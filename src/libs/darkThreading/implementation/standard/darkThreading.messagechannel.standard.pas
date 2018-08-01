@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkThreading.messagechannel.standard;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 uses
@@ -100,7 +101,7 @@ begin
       fPushCS.Release;
     end;
   end;
-  InternalGetMessage(aMessageRec);
+  {$HINTS OFF} InternalGetMessage(aMessageRec); {$HINTS ON} // FPC hints this is uninitialized.
   if not assigned(Handler) then begin
     exit;
   end;

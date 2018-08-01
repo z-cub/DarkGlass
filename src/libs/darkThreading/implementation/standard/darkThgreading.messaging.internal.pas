@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkThgreading.messaging.internal;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 uses
@@ -41,12 +42,31 @@ type
     aMessage: TMessage;
   end;
 
-  ///
-  ///  Internal interface representing the ring buffer portion of a message pipe.
-  IPipeRing = IAtomicRingBuffer<TInternalMessageRecord>;
+  // Duplicating IAtomicRingBuffer< TInternalMessageRecord > because fpc will
+  // not compile  IPipeRing = specialize IAtomicRingBuffer< TInternalMessageRecord >;
+  // giving an internal compiler error (without error code!).
+  IPipeRing = interface
+    function Push( item: TInternalMessageRecord ): boolean;
+    function Pull( var item: TInternalMessageRecord ): boolean;
+    function IsEmpty: boolean;
+  end;
 
-  /// Internal implmentation of the ring buffer portion of a message pipe.
-  TPipeRing = TAtomicRingBuffer<TInternalMessageRecord>;
+  // Duplicating TAtomicRingBuffer< TInternalMessageRecord > because fpc will
+  // not compile  TPipeRing = specialize TAtomicRingBuffer< TInternalMessageRecord >;
+  // giving an internal compiler error (without error code!).
+  TPipeRing = class( TInterfacedObject, IPipeRing )
+  private
+    fPushIndex: uint32;
+    fPullIndex: uint32;
+    fItems: array of TInternalMessageRecord;
+  private //- IPipeRing -//
+    function Push( item: TInternalMessageRecord ): boolean;
+    function Pull( var item: TInternalMessageRecord ): boolean;
+    function IsEmpty: boolean;
+  public
+    constructor Create( ItemCount: uint32 = 128 ); reintroduce;
+  end;
+
 
   ///    Provides access to the ring buffer for the message channel.
   ///    This is used internally, and should not be made public.
@@ -59,5 +79,58 @@ type
   end;
 
 implementation
+
+{ TPipeRing }
+
+function TPipeRing.Push(item: TInternalMessageRecord): boolean;
+var
+  NewIndex: uint32;
+begin
+  Result := False;
+  NewIndex := succ(fPushIndex);
+  if (NewIndex>=Length(fItems)) then begin
+    NewIndex := 0;
+  end;
+  if NewIndex=fPullIndex then begin
+    Exit;
+  end;
+  Move( item, fItems[fPushIndex], sizeof(TInternalMessageRecord) );
+  fPushIndex := NewIndex;
+  Result := True;
+end;
+
+function TPipeRing.Pull(var item: TInternalMessageRecord): boolean;
+var
+  NewIndex: uint32;
+begin
+  Result := False;
+  if fPullIndex=fPushIndex then begin
+    exit;
+  end;
+  Move( fItems[fPullIndex], item, sizeof(TInternalMessageRecord) );
+  NewIndex := succ(fPullIndex);
+  if NewIndex>=Length(fItems) then begin
+    NewIndex := 0;
+  end;
+  fPullIndex := NewIndex;
+  Result := True;
+end;
+
+function TPipeRing.IsEmpty: boolean;
+begin
+  Result := True;
+  if fPullIndex=fPushIndex then begin
+    exit;
+  end;
+  Result := False;
+end;
+
+constructor TPipeRing.Create(ItemCount: uint32);
+begin
+  inherited Create;
+  fPushIndex := 0;
+  fPullIndex := 0;
+  SetLength(fItems,ItemCount);
+end;
 
 end.

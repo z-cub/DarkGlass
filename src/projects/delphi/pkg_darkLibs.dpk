@@ -73,6 +73,12 @@ contains
   darkunicode in '..\..\libs\darkUnicode\api\darkunicode.pas',
   darkunicode.codec.standard in '..\..\libs\darkUnicode\implementation\darkunicode.codec.standard.pas',
   darkHandles in '..\..\libs\darkHandles\api\darkHandles.pas',
-  darkHandles.list in '..\..\libs\darkHandles\api\darkHandles.list.pas';
+  darkHandles.list in '..\..\libs\darkHandles\api\darkHandles.list.pas',
+  darkwin32api.gdi32 in '..\..\libs\darkWin32\api\darkwin32api.gdi32.pas',
+  darkwin32api.kernel32 in '..\..\libs\darkWin32\api\darkwin32api.kernel32.pas',
+  darkwin32api.types in '..\..\libs\darkWin32\api\darkwin32api.types.pas',
+  darkwin32api.user32 in '..\..\libs\darkWin32\api\darkwin32api.user32.pas',
+  darkwin32api.advapi32 in '..\..\libs\darkWin32\api\darkwin32api.advapi32.pas',
+  darkwin32api.constants in '..\..\libs\darkWin32\api\darkwin32api.constants.pas';
 
 end.

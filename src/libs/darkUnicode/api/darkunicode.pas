@@ -24,11 +24,11 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-
 /// <summary>
 ///   Provides the types required for working with the unicode codec.
 /// </summary>
 unit darkUnicode;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 

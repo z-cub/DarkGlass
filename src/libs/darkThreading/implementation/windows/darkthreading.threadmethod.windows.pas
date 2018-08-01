@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkthreading.threadmethod.windows;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 {$ifdef MSWINDOWS}

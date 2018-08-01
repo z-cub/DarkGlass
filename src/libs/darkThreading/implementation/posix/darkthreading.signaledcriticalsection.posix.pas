@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkthreading.signaledcriticalsection.posix;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 {$ifndef MSWINDOWS}

@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkHandles;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 
@@ -95,8 +96,12 @@ type
     destructor Destroy; override;
   end;
 
+type
+  IHandleRecordList = {$ifdef fpc} specialize {$endif} IList<IHandleRecord>;
+  THandleRecordList = {$ifdef fpc} specialize {$endif} TList<IHandleRecord>;
+
 var
-  Handles: IList<IHandleRecord> = nil;
+  Handles: IHandleRecordList = nil;
 
 { THandles }
 
@@ -105,7 +110,7 @@ var
   HandleRecord: IHandleRecord;
 begin
   if not assigned(Handles) then begin
-    Handles := TList<IHandleRecord>.Create(64,False,True);
+    Handles := THandleRecordList.Create(64,False,True);
   end;
   HandleRecord := THandleRecord.Create( anInstance );
   Result := THandle(HandleRecord);

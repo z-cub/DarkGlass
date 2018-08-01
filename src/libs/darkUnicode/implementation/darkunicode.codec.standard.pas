@@ -26,6 +26,7 @@
 //------------------------------------------------------------------------------
 /// <exclude />
 unit darkUnicode.codec.standard;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 uses

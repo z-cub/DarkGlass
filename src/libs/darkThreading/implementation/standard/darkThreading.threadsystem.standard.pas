@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkThreading.threadsystem.standard;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 uses
@@ -57,6 +58,10 @@ uses
   darkCollections.list;
 
 type
+  IThreadSystemList = {$ifdef fpc} specialize {$endif} IList<IThreadSubSystem>;
+  TThreadSystemList = {$ifdef fpc} specialize {$endif} TList<IThreadSubSystem>;
+
+type
   IThreadExecutor = interface
     ['{62101CBD-F657-42F0-A46B-4D22FF453FAE}']
     function isDedicated: boolean;
@@ -68,7 +73,7 @@ type
   private
     fDedicated: boolean;
     fMessageBus: IMessageBus;
-    fSubSystems: IList<IThreadSubSystem>;
+    fSubSystems: IThreadSystemList;
   protected
     function IsDedicated: boolean;
     function getSubSystemCount: uint32;
@@ -81,6 +86,10 @@ type
     constructor Create( MessageBus: IMessageBus ); reintroduce;
     destructor Destroy; override;
   end;
+
+type
+  IThreadExecutorList = {$ifdef fpc} specialize {$endif} IList<IThreadExecutor>;
+  TThreadExecutorList = {$ifdef fpc} specialize {$endif} TList<IThreadExecutor>;
 
 constructor TThreadSystem.Create(ThreadCount: uint32);
 var
@@ -137,13 +146,13 @@ end;
 function TThreadSystem.InstallAnyThread(aSubSystem: IThreadSubSystem): boolean;
 var
   Executor: IThreadExecutor;
-  ExecutorList: IList<IThreadExecutor>;
+  ExecutorList: IThreadExecutorList;
   LeastUsedIndex: uint32;
   idx: uint32;
 begin
   Result := False;
   //- Build a list of executors which are available and not already dedicated
-  ExecutorList := TList<IThreadExecutor>.Create;
+  ExecutorList := TThreadExecutorList.Create;
   if assigned(fThreadPool) and (fThreadPool.ThreadCount>0) then begin
     for idx := 0 to pred(fThreadPool.ThreadCount) do begin
       Executor := (fThreadPool.Threads[idx] as IThreadExecutor);
@@ -234,7 +243,7 @@ begin
   inherited Create;
   fDedicated := False;
   fMessageBus := MessageBus;
-  fSubSystems := TList<IThreadSubSystem>.Create;
+  fSubSystems := TThreadSystemList.Create;
 end;
 
 destructor TThreadExecutor.Destroy;

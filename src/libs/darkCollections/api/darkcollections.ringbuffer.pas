@@ -25,10 +25,9 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkcollections.ringbuffer;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
-uses
-  darkCollections.types;
 
 type
   {$ifdef fpc} generic {$endif}

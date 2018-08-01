@@ -26,6 +26,7 @@
 //------------------------------------------------------------------------------
 /// <exclude />
 unit darkdynlib.dynlib.windows;
+{$ifdef fpc} {$mode objfpc} {$endif}
 
 interface
 {$ifdef MSWINDOWS}

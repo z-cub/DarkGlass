@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="pkg_darkLibs"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <Libraries Value="..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+        <OtherUnitFiles Value="..\..\libs\darkCollections\api;..\..\libs\darkDynlib\api;..\..\libs\darkDynlib\implementation\posix;..\..\libs\darkDynlib\implementation\windows;..\..\libs\darkHandles\api;..\..\libs\darkIO\api;..\..\libs\darkIO\implementation;..\..\libs\darkLog\api;..\..\libs\darkLog\implementation;..\..\libs\darkThreading\api;..\..\libs\darkThreading\implementation\posix;..\..\libs\darkThreading\implementation\standard;..\..\libs\darkThreading\implementation\windows;..\..\libs\darkUnicode\api;..\..\libs\darkUnicode\implementation;..\..\libs\darkWin32\api"/>
+        <UnitOutputDirectory Value="..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="50">
+      <Item1>
+        <Filename Value="..\..\libs\darkCollections\api\darkcollections.dictionary.pas"/>
+        <UnitName Value="darkcollections.dictionary"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\..\libs\darkCollections\api\darkcollections.list.pas"/>
+        <UnitName Value="darkcollections.list"/>
+      </Item2>
+      <Item3>
+        <Filename Value="..\..\libs\darkCollections\api\darkcollections.ringbuffer.pas"/>
+        <UnitName Value="darkcollections.ringbuffer"/>
+      </Item3>
+      <Item4>
+        <Filename Value="..\..\libs\darkCollections\api\darkcollections.stack.pas"/>
+        <UnitName Value="darkcollections.stack"/>
+      </Item4>
+      <Item5>
+        <Filename Value="..\..\libs\darkCollections\api\darkcollections.types.pas"/>
+        <UnitName Value="darkcollections.types"/>
+      </Item5>
+      <Item6>
+        <Filename Value="..\..\libs\darkCollections\api\darkcollections.utils.pas"/>
+        <UnitName Value="darkcollections.utils"/>
+      </Item6>
+      <Item7>
+        <Filename Value="..\..\libs\darkDynlib\api\darkDynlib.pas"/>
+        <UnitName Value="darkDynlib"/>
+      </Item7>
+      <Item8>
+        <Filename Value="..\..\libs\darkDynlib\implementation\posix\darkdynlib.dynlib.posix.pas"/>
+        <UnitName Value="darkdynlib.dynlib.posix"/>
+      </Item8>
+      <Item9>
+        <Filename Value="..\..\libs\darkDynlib\implementation\windows\darkdynlib.dynlib.windows.pas"/>
+        <UnitName Value="darkdynlib.dynlib.windows"/>
+      </Item9>
+      <Item10>
+        <Filename Value="..\..\libs\darkHandles\api\darkHandles.pas"/>
+        <UnitName Value="darkHandles"/>
+      </Item10>
+      <Item11>
+        <Filename Value="..\..\libs\darkIO\api\darkio.buffers.pas"/>
+        <UnitName Value="darkio.buffers"/>
+      </Item11>
+      <Item12>
+        <Filename Value="..\..\libs\darkIO\api\darkio.streams.pas"/>
+        <UnitName Value="darkio.streams"/>
+      </Item12>
+      <Item13>
+        <Filename Value="..\..\libs\darkIO\implementation\darkio.buffer.standard.pas"/>
+        <UnitName Value="darkio.buffer.standard"/>
+      </Item13>
+      <Item14>
+        <Filename Value="..\..\libs\darkIO\implementation\darkio.cyclicbuffer.standard.pas"/>
+        <UnitName Value="darkio.cyclicbuffer.standard"/>
+      </Item14>
+      <Item15>
+        <Filename Value="..\..\libs\darkIO\implementation\darkio.filestream.standard.pas"/>
+        <UnitName Value="darkio.filestream.standard"/>
+      </Item15>
+      <Item16>
+        <Filename Value="..\..\libs\darkIO\implementation\darkio.memorystream.standard.pas"/>
+        <UnitName Value="darkio.memorystream.standard"/>
+      </Item16>
+      <Item17>
+        <Filename Value="..\..\libs\darkIO\implementation\darkio.stream.custom.pas"/>
+        <UnitName Value="darkio.stream.custom"/>
+      </Item17>
+      <Item18>
+        <Filename Value="..\..\libs\darkIO\implementation\darkio.unicodestream.custom.pas"/>
+        <UnitName Value="darkio.unicodestream.custom"/>
+      </Item18>
+      <Item19>
+        <Filename Value="..\..\libs\darkLog\api\darklog.logtarget.console.pas"/>
+        <UnitName Value="darklog.logtarget.console"/>
+      </Item19>
+      <Item20>
+        <Filename Value="..\..\libs\darkLog\api\darklog.logtarget.logfile.pas"/>
+        <UnitName Value="darklog.logtarget.logfile"/>
+      </Item20>
+      <Item21>
+        <Filename Value="..\..\libs\darkLog\api\darklog.logtarget.stream.pas"/>
+        <UnitName Value="darklog.logtarget.stream"/>
+      </Item21>
+      <Item22>
+        <Filename Value="..\..\libs\darkLog\api\darklog.pas"/>
+        <UnitName Value="darklog"/>
+      </Item22>
+      <Item23>
+        <Filename Value="..\..\libs\darkLog\implementation\darklog.log.standard.pas"/>
+        <UnitName Value="darklog.log.standard"/>
+      </Item23>
+      <Item24>
+        <Filename Value="..\..\libs\darkLog\implementation\darklog.logtarget.console.standard.pas"/>
+        <UnitName Value="darklog.logtarget.console.standard"/>
+      </Item24>
+      <Item25>
+        <Filename Value="..\..\libs\darkLog\implementation\darklog.logtarget.logfile.standard.pas"/>
+        <UnitName Value="darklog.logtarget.logfile.standard"/>
+      </Item25>
+      <Item26>
+        <Filename Value="..\..\libs\darkLog\implementation\darklog.logtarget.stream.standard.pas"/>
+        <UnitName Value="darklog.logtarget.stream.standard"/>
+      </Item26>
+      <Item27>
+        <Filename Value="..\..\libs\darkLog\implementation\darklog.tokenizer.standard.pas"/>
+        <UnitName Value="darklog.tokenizer.standard"/>
+      </Item27>
+      <Item28>
+        <Filename Value="..\..\libs\darkThreading\api\darkThreading.pas"/>
+        <UnitName Value="darkThreading"/>
+      </Item28>
+      <Item29>
+        <Filename Value="..\..\libs\darkThreading\implementation\posix\darkthreading.criticalsection.posix.pas"/>
+        <UnitName Value="darkthreading.criticalsection.posix"/>
+      </Item29>
+      <Item30>
+        <Filename Value="..\..\libs\darkThreading\implementation\posix\darkthreading.signaledcriticalsection.posix.pas"/>
+        <UnitName Value="darkthreading.signaledcriticalsection.posix"/>
+      </Item30>
+      <Item31>
+        <Filename Value="..\..\libs\darkThreading\implementation\posix\darkthreading.threadmethod.posix.pas"/>
+        <UnitName Value="darkthreading.threadmethod.posix"/>
+      </Item31>
+      <Item32>
+        <Filename Value="..\..\libs\darkThreading\implementation\standard\darkThgreading.messaging.internal.pas"/>
+        <UnitName Value="darkThgreading.messaging.internal"/>
+      </Item32>
+      <Item33>
+        <Filename Value="..\..\libs\darkThreading\implementation\standard\darkThreading.messagebus.standard.pas"/>
+        <UnitName Value="darkThreading.messagebus.standard"/>
+      </Item33>
+      <Item34>
+        <Filename Value="..\..\libs\darkThreading\implementation\standard\darkThreading.messagechannel.standard.pas"/>
+        <UnitName Value="darkThreading.messagechannel.standard"/>
+      </Item34>
+      <Item35>
+        <Filename Value="..\..\libs\darkThreading\implementation\standard\darkThreading.messagepipe.standard.pas"/>
+        <UnitName Value="darkThreading.messagepipe.standard"/>
+      </Item35>
+      <Item36>
+        <Filename Value="..\..\libs\darkThreading\implementation\standard\darkThreading.threadpool.standard.pas"/>
+        <UnitName Value="darkThreading.threadpool.standard"/>
+      </Item36>
+      <Item37>
+        <Filename Value="..\..\libs\darkThreading\implementation\standard\darkThreading.threadsystem.standard.pas"/>
+        <UnitName Value="darkThreading.threadsystem.standard"/>
+      </Item37>
+      <Item38>
+        <Filename Value="..\..\libs\darkThreading\implementation\windows\darkthreading.criticalsection.windows.pas"/>
+        <UnitName Value="darkthreading.criticalsection.windows"/>
+      </Item38>
+      <Item39>
+        <Filename Value="..\..\libs\darkThreading\implementation\windows\darkThreading.signaledcriticalsection.windows.pas"/>
+        <UnitName Value="darkThreading.signaledcriticalsection.windows"/>
+      </Item39>
+      <Item40>
+        <Filename Value="..\..\libs\darkThreading\implementation\windows\darkthreading.threadmethod.windows.pas"/>
+        <UnitName Value="darkthreading.threadmethod.windows"/>
+      </Item40>
+      <Item41>
+        <Filename Value="..\..\libs\darkUnicode\api\darkunicode.pas"/>
+        <UnitName Value="darkUnicode"/>
+      </Item41>
+      <Item42>
+        <Filename Value="..\..\libs\darkUnicode\implementation\darkunicode.codec.standard.pas"/>
+        <UnitName Value="darkUnicode.codec.standard"/>
+      </Item42>
+      <Item43>
+        <HasRegisterProc Value="True"/>
+      </Item43>
+      <Item44>
+        <HasRegisterProc Value="True"/>
+      </Item44>
+      <Item45>
+        <Filename Value="..\..\libs\darkWin32\api\darkwin32api.advapi32.pas"/>
+        <UnitName Value="darkwin32api.advapi32"/>
+      </Item45>
+      <Item46>
+        <Filename Value="..\..\libs\darkWin32\api\darkwin32api.constants.pas"/>
+        <UnitName Value="darkwin32api.constants"/>
+      </Item46>
+      <Item47>
+        <Filename Value="..\..\libs\darkWin32\api\darkwin32api.gdi32.pas"/>
+        <UnitName Value="darkwin32api.gdi32"/>
+      </Item47>
+      <Item48>
+        <Filename Value="..\..\libs\darkWin32\api\darkwin32api.kernel32.pas"/>
+        <UnitName Value="darkwin32api.kernel32"/>
+      </Item48>
+      <Item49>
+        <Filename Value="..\..\libs\darkWin32\api\darkwin32api.types.pas"/>
+        <UnitName Value="darkwin32api.types"/>
+      </Item49>
+      <Item50>
+        <Filename Value="..\..\libs\darkWin32\api\darkwin32api.user32.pas"/>
+        <UnitName Value="darkwin32api.user32"/>
+      </Item50>
+    </Files>
+    <RequiredPkgs Count="1">
+      <Item1>
+        <PackageName Value="FCL"/>
+      </Item1>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
