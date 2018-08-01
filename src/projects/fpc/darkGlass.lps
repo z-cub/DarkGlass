@@ -4,7 +4,7 @@
     <PathDelim Value="\"/>
     <Version Value="10"/>
     <BuildModes Active="Default"/>
-    <Units Count="3">
+    <Units Count="5">
       <Unit0>
         <Filename Value="darkGlass.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -13,7 +13,6 @@
       </Unit0>
       <Unit1>
         <Filename Value="..\delphi\darkGlass.dpr"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
         <CursorPos Y="5"/>
         <UsageCount Value="10"/>
@@ -27,8 +26,24 @@
         <CursorPos X="14" Y="31"/>
         <UsageCount Value="20"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="..\..\bindings\darkglass.dynamic.pas"/>
+        <EditorIndex Value="2"/>
+        <CursorPos Y="28"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\..\bindings\darkglass.static.pas"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="6"/>
+        <CursorPos Y="29"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit4>
     </Units>
-    <JumpHistory Count="2" HistoryIndex="1">
+    <JumpHistory Count="5" HistoryIndex="4">
       <Position1>
         <Filename Value="darkGlass.lpr"/>
       </Position1>
@@ -36,6 +51,18 @@
         <Filename Value="..\delphi\darkGlass.dpr"/>
         <Caret Line="9"/>
       </Position2>
+      <Position3>
+        <Filename Value="..\delphi\darkGlass.dpr"/>
+        <Caret Line="5"/>
+      </Position3>
+      <Position4>
+        <Filename Value="..\..\bindings\darkglass.dynamic.pas"/>
+        <Caret Line="74" Column="36" TopLine="51"/>
+      </Position4>
+      <Position5>
+        <Filename Value="..\..\bindings\darkglass.dynamic.pas"/>
+        <Caret Line="28" Column="37"/>
+      </Position5>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>

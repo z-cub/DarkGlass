@@ -25,6 +25,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
 unit darkglass.static;
+{$ifdef fpc} {$mode delphi} {$endif}
 
 interface
 
