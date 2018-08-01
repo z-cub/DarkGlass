@@ -120,17 +120,17 @@ const
 var
   ThreadSystem: IThreadSystem = nil;
 
-function dgVersionMajor: uint32;
+function dgVersionMajor: uint32; {$ifdef MSWINDOWS} stdcall; {$else} cdecl; {$endif}
 begin
   Result := cVersionMajor;
 end;
 
-function dgVersionMinor: uint32;
+function dgVersionMinor: uint32; {$ifdef MSWINDOWS} stdcall; {$else} cdecl; {$endif}
 begin
   Result := cVersionMinor;
 end;
 
-procedure dgRun;
+procedure dgRun; {$ifdef MSWINDOWS} stdcall; {$else} cdecl; {$endif}
 begin
   if not assigned(ThreadSystem) then begin
     raise
@@ -140,18 +140,18 @@ begin
   ThreadSystem.Run;
 end;
 
-procedure dgInitialize( MessageHandler: TExternalMessageHandler );
+procedure dgInitialize( MessageHandler: TExternalMessageHandler ); {$ifdef MSWINDOWS} stdcall; {$else} cdecl; {$endif}
 begin
   ThreadSystem := TThreadSystem.Create;
   TDarkPlatform.Initialize( ThreadSystem, MessageHandler );
 end;
 
-procedure dgFinalize;
+procedure dgFinalize; {$ifdef MSWINDOWS} stdcall; {$else} cdecl; {$endif}
 begin
   ThreadSystem := nil;
 end;
 
-function dgGetMessagePipe( lpszChannelName: pointer ): THandle;
+function dgGetMessagePipe( lpszChannelName: pointer ): THandle; {$ifdef MSWINDOWS} stdcall; {$else} cdecl; {$endif}
 var
   ChannelName: string;
   ChannelNameBuffer: IUnicodeBuffer;
@@ -190,7 +190,7 @@ begin
   Result := THandles.CreateHandle(Pipe);
 end;
 
-procedure dgFreeHandle( Handle: THandle );
+procedure dgFreeHandle( Handle: THandle ); {$ifdef MSWINDOWS} stdcall; {$else} cdecl; {$endif}
 begin
   THandles.FreeHandle(Handle);
 end;
