@@ -221,6 +221,7 @@ begin
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin
     exit;
   end;
+  Stream.WriteString('{$Z4}'+sLineBreak,UnicodeFormat);
   Stream.WriteString(getIndentation(Indentation)+'unit '+fUnitName+';'+LineBreaks,UnicodeFormat);
   if getChildCount=0 then begin
     Result := True;

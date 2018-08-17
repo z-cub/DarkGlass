@@ -121,7 +121,6 @@ type
     procedure MakeConditional( ConditionalEntity: IdvASTNode; Name: string; Platform: string; OneLine: boolean = False );
     function MakeArrayLimit(ArrayLimitStr: string): string;
 
-
   public
     constructor Create( Filename: string ); reintroduce;
     destructor Destroy; override;
@@ -1477,6 +1476,8 @@ begin
     ValueStr := trim(XMLNode.Attributes['bitpos']);
     if ValueStr<>'0' then begin
       ValueStr := '1 shl '+ValueStr;
+    end else begin
+      ValueStr := '1';
     end;
   end else begin
     SkipNode('enum','enum has no valid combination of attribuets.',TRUE);
@@ -2046,7 +2047,11 @@ begin
         end;
         Enum.InsertChild(TdvConstant.Create(Name,IntToStr(OffsetValue)));
       end else begin
-        Enum.InsertChild(TdvConstant.Create(Name,'1 shl '+BitPos));
+        if BitPos='0' then begin
+          Enum.InsertChild(TdvConstant.Create(Name,'1'+BitPos));
+        end else begin
+          Enum.InsertChild(TdvConstant.Create(Name,'1 shl '+BitPos));
+        end;
       end;
     end else begin
       //- This is a straight value.

@@ -105,3 +105,4 @@ Win64
 *.ppu
 *.compiled
 *.bak
+/out/bin/Win32/Debug/darkTest.log
