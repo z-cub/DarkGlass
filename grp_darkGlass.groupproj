@@ -18,6 +18,9 @@
         <Projects Include="src\projects\delphi\pkg_darkGlassBindings.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="src\projects\delphi\ide\pkg_darkGlassComponents.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="samples\darkGlass\01 - Static Binding\StaticBinding.dproj">
             <Dependencies/>
         </Projects>
@@ -80,6 +83,15 @@
     <Target Name="pkg_darkGlassBindings:Make">
         <MSBuild Projects="src\projects\delphi\pkg_darkGlassBindings.dproj" Targets="Make"/>
     </Target>
+    <Target Name="pkg_darkGlassComponents">
+        <MSBuild Projects="src\projects\delphi\ide\pkg_darkGlassComponents.dproj"/>
+    </Target>
+    <Target Name="pkg_darkGlassComponents:Clean">
+        <MSBuild Projects="src\projects\delphi\ide\pkg_darkGlassComponents.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="pkg_darkGlassComponents:Make">
+        <MSBuild Projects="src\projects\delphi\ide\pkg_darkGlassComponents.dproj" Targets="Make"/>
+    </Target>
     <Target Name="StaticBinding">
         <MSBuild Projects="samples\darkGlass\01 - Static Binding\StaticBinding.dproj"/>
     </Target>
@@ -108,13 +120,13 @@
         <MSBuild Projects="samples\darkGlass\00 - Development\DevelopmentTestProject.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="pkg_darkLibs;pkg_darkSubSystems;pkg_darkGlass;darkGlass;pkg_darkGlassBindings;StaticBinding;DynamicBinding;DevelopmentTestProject"/>
+        <CallTarget Targets="pkg_darkLibs;pkg_darkSubSystems;pkg_darkGlass;darkGlass;pkg_darkGlassBindings;pkg_darkGlassComponents;StaticBinding;DynamicBinding;DevelopmentTestProject"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="pkg_darkLibs:Clean;pkg_darkSubSystems:Clean;pkg_darkGlass:Clean;darkGlass:Clean;pkg_darkGlassBindings:Clean;StaticBinding:Clean;DynamicBinding:Clean;DevelopmentTestProject:Clean"/>
+        <CallTarget Targets="pkg_darkLibs:Clean;pkg_darkSubSystems:Clean;pkg_darkGlass:Clean;darkGlass:Clean;pkg_darkGlassBindings:Clean;pkg_darkGlassComponents:Clean;StaticBinding:Clean;DynamicBinding:Clean;DevelopmentTestProject:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="pkg_darkLibs:Make;pkg_darkSubSystems:Make;pkg_darkGlass:Make;darkGlass:Make;pkg_darkGlassBindings:Make;StaticBinding:Make;DynamicBinding:Make;DevelopmentTestProject:Make"/>
+        <CallTarget Targets="pkg_darkLibs:Make;pkg_darkSubSystems:Make;pkg_darkGlass:Make;darkGlass:Make;pkg_darkGlassBindings:Make;pkg_darkGlassComponents:Make;StaticBinding:Make;DynamicBinding:Make;DevelopmentTestProject:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

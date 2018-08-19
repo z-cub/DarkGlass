@@ -54,6 +54,7 @@ implementation
 {$ifdef MSWINDOWS}
 uses
   darkwin32api.constants,
+  darkGraphics.context,
   Classes,
   sysutils;
 
@@ -102,8 +103,18 @@ begin
 end;
 
 function TWindow.HandleWindowMessage( uMsg: uint32; wParam: TWParam; lParam: TLParam ): NativeUInt;
+var
+  Temp: IGraphicsContext;
 begin
   case uMsg of
+
+    WM_PAINT: begin
+      Temp := TGraphicsContext.Create(pointer(fHandle),TGraphicsAPI.gaVulkan,0,0);
+      Temp.Clear;
+      Temp := nil;
+      Result := 0;
+      exit;
+    end;
 
     WM_CLOSE: begin
       SendMessage(System.MainInstance,WM_DESTROY,0,0);

@@ -25,6 +25,7 @@ package pkg_darkGlass;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Consolidates the sub systems and supporting libraries of the DarkGlass game engine.'}
 {$IMPLICITBUILD ON}
 
 requires

@@ -1,4 +1,4 @@
-package pkg_darkGlassBindings;
+package pkg_darkGlassComponents;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,16 +25,12 @@ package pkg_darkGlassBindings;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Provides the low-level static and dynamic bindings for the DarkGlass engine.'}
 {$IMPLICITBUILD ON}
 
 requires
   rtl;
 
 contains
-  darkglass.dynamic in '..\..\bindings\darkglass.dynamic.pas',
-  darkglass in '..\..\bindings\darkglass.pas',
-  darkglass.static in '..\..\bindings\darkglass.static.pas';
+  darkglass.components.runtime.darkglass in '..\..\..\components\runtime\darkglass.components.runtime.darkglass.pas';
 
 end.
-

@@ -25,6 +25,7 @@ package pkg_darkLibs;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'Contains the supporting libraries used in the construction of the DarkGlass game engine.'}
 {$IMPLICITBUILD ON}
 
 requires
@@ -78,6 +79,8 @@ contains
   darkwin32api.types in '..\..\libs\darkWin32\api\darkwin32api.types.pas',
   darkwin32api.user32 in '..\..\libs\darkWin32\api\darkwin32api.user32.pas',
   darkwin32api.advapi32 in '..\..\libs\darkWin32\api\darkwin32api.advapi32.pas',
-  darkwin32api.constants in '..\..\libs\darkWin32\api\darkwin32api.constants.pas';
+  darkwin32api.constants in '..\..\libs\darkWin32\api\darkwin32api.constants.pas',
+  darkgraphics.context in '..\..\libs\darkGraphics\interface\darkgraphics.context.pas',
+  darkgraphics.context.dummy in '..\..\libs\darkGraphics\implementation\dummy\darkgraphics.context.dummy.pas';
 
 end.
