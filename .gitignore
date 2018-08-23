@@ -106,3 +106,4 @@ Win64
 *.compiled
 *.bak
 /out/bin/Win32/Debug/darkTest.log
+out/bin/Win32/Debug/darkTest.log
