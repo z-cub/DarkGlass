@@ -1,1 +1,0 @@
-{$I ..\delphi\darkglass.dpr}
