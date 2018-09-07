@@ -1,0 +1,44 @@
+package pkg_darkIO;
+
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darkio.cyclicbuffer.standard in '..\..\units\darkio.cyclicbuffer.standard.pas',
+  darkio.filestream.standard in '..\..\units\darkio.filestream.standard.pas',
+  darkio.memorystream.standard in '..\..\units\darkio.memorystream.standard.pas',
+  darkio.stream.custom in '..\..\units\darkio.stream.custom.pas',
+  darkio.streams in '..\..\units\darkio.streams.pas',
+  darkio.unicodestream.custom in '..\..\units\darkio.unicodestream.custom.pas',
+  darkio.buffer.standard in '..\..\units\darkio.buffer.standard.pas',
+  darkio.buffers in '..\..\units\darkio.buffers.pas';
+
+end.

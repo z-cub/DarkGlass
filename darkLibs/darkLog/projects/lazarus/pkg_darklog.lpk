@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="pkg_darklog"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <Libraries Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+        <OtherUnitFiles Value="..\..\units"/>
+        <UnitOutputDirectory Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="13">
+      <Item1>
+        <Filename Value="..\..\units\darklog.logtarget.stream.pas"/>
+        <UnitName Value="darklog.logtarget.stream"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\..\units\darklog.logtarget.stream.standard.pas"/>
+        <UnitName Value="darklog.logtarget.stream.standard"/>
+      </Item2>
+      <Item3>
+        <Filename Value="..\..\units\darklog.pas"/>
+        <UnitName Value="darklog"/>
+      </Item3>
+      <Item4>
+        <Filename Value="..\..\units\darklog.tokenizer.standard.pas"/>
+        <UnitName Value="darklog.tokenizer.standard"/>
+      </Item4>
+      <Item5>
+        <Filename Value="..\..\units\darklog.log.standard.pas"/>
+        <UnitName Value="darklog.log.standard"/>
+      </Item5>
+      <Item6>
+        <Filename Value="..\..\units\darklog.logtarget.console.pas"/>
+        <UnitName Value="darklog.logtarget.console"/>
+      </Item6>
+      <Item7>
+        <Filename Value="..\..\units\darklog.logtarget.console.standard.pas"/>
+        <UnitName Value="darklog.logtarget.console.standard"/>
+      </Item7>
+      <Item8>
+        <Filename Value="..\..\units\darklog.logtarget.logfile.pas"/>
+        <UnitName Value="darklog.logtarget.logfile"/>
+      </Item8>
+      <Item9>
+        <Filename Value="..\..\units\darklog.logtarget.logfile.standard.pas"/>
+        <UnitName Value="darklog.logtarget.logfile.standard"/>
+      </Item9>
+      <Item10>
+        <Filename Value="..\..\units\darklog.log.pas"/>
+        <UnitName Value="darklog.log"/>
+      </Item10>
+      <Item11>
+        <Filename Value="..\..\units\darklog.logentry.pas"/>
+        <UnitName Value="darklog.logentry"/>
+      </Item11>
+      <Item12>
+        <Filename Value="..\..\units\darklog.logtarget.pas"/>
+        <UnitName Value="darklog.logtarget"/>
+      </Item12>
+      <Item13>
+        <Filename Value="..\..\units\darklog.types.pas"/>
+        <UnitName Value="darklog.types"/>
+      </Item13>
+    </Files>
+    <RequiredPkgs Count="1">
+      <Item1>
+        <PackageName Value="FCL"/>
+      </Item1>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

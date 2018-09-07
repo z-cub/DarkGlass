@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="pkg_darkUnicode"/>
+    <AddToProjectUsesSection Value="True"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <Libraries Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+        <OtherUnitFiles Value="..\..\units\api;..\..\units\interface;..\..\units\implementation;..\..\units"/>
+        <UnitOutputDirectory Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="3">
+      <Item1>
+        <Filename Value="..\..\units\darkunicode.codec.pas"/>
+        <UnitName Value="darkunicode.codec"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\..\units\darkunicode.codec.standard.pas"/>
+        <UnitName Value="darkunicode.codec.standard"/>
+      </Item2>
+      <Item3>
+        <Filename Value="..\..\units\darkunicode.pas"/>
+        <UnitName Value="darkunicode"/>
+      </Item3>
+    </Files>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

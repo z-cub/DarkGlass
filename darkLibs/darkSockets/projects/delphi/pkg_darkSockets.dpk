@@ -1,0 +1,42 @@
+package pkg_darkSockets;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darksockets.sockets.delphi.windows in '..\..\units\darksockets.sockets.delphi.windows.pas',
+  darksockets.sockets.fpc.posix in '..\..\units\darksockets.sockets.fpc.posix.pas',
+  darksockets.sockets.fpc.windows in '..\..\units\darksockets.sockets.fpc.windows.pas',
+  darksockets.sockets in '..\..\units\darksockets.sockets.pas',
+  darksockets.sockets.standard in '..\..\units\darksockets.sockets.standard.pas',
+  darksockets in '..\..\units\darksockets.pas',
+  darksockets.sockets.delphi.posix in '..\..\units\darksockets.sockets.delphi.posix.pas';
+
+end.

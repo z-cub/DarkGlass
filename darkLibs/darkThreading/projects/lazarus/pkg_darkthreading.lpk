@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="pkg_darkThreading"/>
+    <Type Value="RunTimeOnly"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <Libraries Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+        <OtherUnitFiles Value="..\..\units"/>
+        <UnitOutputDirectory Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="25">
+      <Item1>
+        <Filename Value="..\..\units\darkthreading.messagebus.pas"/>
+        <UnitName Value="darkthreading.messagebus"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\..\units\darkthreading.messagebus.standard.pas"/>
+        <UnitName Value="darkThreading.messagebus.standard"/>
+      </Item2>
+      <Item3>
+        <Filename Value="..\..\units\darkthreading.messagechannel.pas"/>
+        <UnitName Value="darkthreading.messagechannel"/>
+      </Item3>
+      <Item4>
+        <Filename Value="..\..\units\darkthreading.messagechannel.standard.pas"/>
+        <UnitName Value="darkThreading.messagechannel.standard"/>
+      </Item4>
+      <Item5>
+        <Filename Value="..\..\units\darkthreading.messagepipe.pas"/>
+        <UnitName Value="darkthreading.messagepipe"/>
+      </Item5>
+      <Item6>
+        <Filename Value="..\..\units\darkthreading.messagepipe.standard.pas"/>
+        <UnitName Value="darkThreading.messagepipe.standard"/>
+      </Item6>
+      <Item7>
+        <Filename Value="..\..\units\darkthreading.pas"/>
+        <UnitName Value="darkThreading"/>
+      </Item7>
+      <Item8>
+        <Filename Value="..\..\units\darkthreading.poolthread.pas"/>
+        <UnitName Value="darkthreading.poolthread"/>
+      </Item8>
+      <Item9>
+        <Filename Value="..\..\units\darkthreading.signaledcriticalsection.pas"/>
+        <UnitName Value="darkthreading.signaledcriticalsection"/>
+      </Item9>
+      <Item10>
+        <Filename Value="..\..\units\darkthreading.signaledcriticalsection.posix.pas"/>
+        <UnitName Value="darkthreading.signaledcriticalsection.posix"/>
+      </Item10>
+      <Item11>
+        <Filename Value="..\..\units\darkthreading.signaledcriticalsection.windows.pas"/>
+        <UnitName Value="darkThreading.signaledcriticalsection.windows"/>
+      </Item11>
+      <Item12>
+        <Filename Value="..\..\units\darkthreading.threadmethod.pas"/>
+        <UnitName Value="darkthreading.threadmethod"/>
+      </Item12>
+      <Item13>
+        <Filename Value="..\..\units\darkthreading.threadmethod.posix.pas"/>
+        <UnitName Value="darkthreading.threadmethod.posix"/>
+      </Item13>
+      <Item14>
+        <Filename Value="..\..\units\darkthreading.threadmethod.windows.pas"/>
+        <UnitName Value="darkthreading.threadmethod.windows"/>
+      </Item14>
+      <Item15>
+        <Filename Value="..\..\units\darkthreading.threadpool.pas"/>
+        <UnitName Value="darkthreading.threadpool"/>
+      </Item15>
+      <Item16>
+        <Filename Value="..\..\units\darkthreading.threadpool.standard.pas"/>
+        <UnitName Value="darkThreading.threadpool.standard"/>
+      </Item16>
+      <Item17>
+        <Filename Value="..\..\units\darkthreading.threadsubsystem.pas"/>
+        <UnitName Value="darkthreading.threadsubsystem"/>
+      </Item17>
+      <Item18>
+        <Filename Value="..\..\units\darkthreading.threadsystem.pas"/>
+        <UnitName Value="darkthreading.threadsystem"/>
+      </Item18>
+      <Item19>
+        <Filename Value="..\..\units\darkthreading.threadsystem.standard.pas"/>
+        <UnitName Value="darkThreading.threadsystem.standard"/>
+      </Item19>
+      <Item20>
+        <Filename Value="..\..\units\darkthgreading.messaging.internal.pas"/>
+        <UnitName Value="darkThgreading.messaging.internal"/>
+      </Item20>
+      <Item21>
+        <Filename Value="..\..\units\darkthreading.atomicringbuffer.pas"/>
+        <UnitName Value="darkthreading.atomicringbuffer"/>
+      </Item21>
+      <Item22>
+        <Filename Value="..\..\units\darkthreading.criticalsection.pas"/>
+        <UnitName Value="darkthreading.criticalsection"/>
+      </Item22>
+      <Item23>
+        <Filename Value="..\..\units\darkthreading.criticalsection.posix.pas"/>
+        <UnitName Value="darkthreading.criticalsection.posix"/>
+      </Item23>
+      <Item24>
+        <Filename Value="..\..\units\darkthreading.criticalsection.windows.pas"/>
+        <UnitName Value="darkthreading.criticalsection.windows"/>
+      </Item24>
+      <Item25>
+        <Filename Value="..\..\units\darkthreading.message.pas"/>
+        <UnitName Value="darkthreading.message"/>
+      </Item25>
+    </Files>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

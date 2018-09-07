@@ -1,0 +1,48 @@
+package pkg_darkLog;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darklog.logtarget.stream in '..\..\units\darklog.logtarget.stream.pas',
+  darklog.logtarget.stream.standard in '..\..\units\darklog.logtarget.stream.standard.pas',
+  darklog in '..\..\units\darklog.pas',
+  darklog.tokenizer.standard in '..\..\units\darklog.tokenizer.standard.pas',
+  darklog.log.standard in '..\..\units\darklog.log.standard.pas',
+  darklog.logtarget.console in '..\..\units\darklog.logtarget.console.pas',
+  darklog.logtarget.console.standard in '..\..\units\darklog.logtarget.console.standard.pas',
+  darklog.logtarget.logfile in '..\..\units\darklog.logtarget.logfile.pas',
+  darklog.logtarget.logfile.standard in '..\..\units\darklog.logtarget.logfile.standard.pas',
+  darklog.types in '..\..\units\darklog.types.pas',
+  darklog.logentry in '..\..\units\darklog.logentry.pas',
+  darklog.logtarget in '..\..\units\darklog.logtarget.pas',
+  darklog.log in '..\..\units\darklog.log.pas';
+
+end.

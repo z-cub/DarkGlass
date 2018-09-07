@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="pkg_darkTest"/>
+    <AddToProjectUsesSection Value="True"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="..\..\api;..\..\interfaces;..\..\implementation;..\..\units\api;..\..\units\interface;..\..\units\implementation;..\..\units"/>
+        <UnitOutputDirectory Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="5">
+      <Item1>
+        <Filename Value="..\..\units\darktest.testcase.standard.pas"/>
+        <UnitName Value="darktest.testcase.standard"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\..\units\darktest.testlistener.standard.pas"/>
+        <UnitName Value="darktest.testlistener.standard"/>
+      </Item2>
+      <Item3>
+        <Filename Value="..\..\units\darktest.testrunner.standard.pas"/>
+        <UnitName Value="darktest.testrunner.standard"/>
+      </Item3>
+      <Item4>
+        <Filename Value="..\..\units\darktest.application.pas"/>
+        <UnitName Value="darktest.application"/>
+      </Item4>
+      <Item5>
+        <Filename Value="..\..\units\darktest.pas"/>
+        <UnitName Value="darktest.api"/>
+      </Item5>
+    </Files>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

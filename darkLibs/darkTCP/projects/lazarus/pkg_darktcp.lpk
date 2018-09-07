@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="pkg_darkTCP"/>
+    <Type Value="RunTimeOnly"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <Libraries Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+        <OtherUnitFiles Value="..\..\units"/>
+        <UnitOutputDirectory Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)\"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="8">
+      <Item1>
+        <Filename Value="..\..\units\darktcp.connection.pas"/>
+        <UnitName Value="darktcp.connection"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\..\units\darktcp.pas"/>
+        <UnitName Value="darktcp"/>
+      </Item2>
+      <Item3>
+        <Filename Value="..\..\units\darktcp.server.pas"/>
+        <UnitName Value="darktcp.server"/>
+      </Item3>
+      <Item4>
+        <Filename Value="..\..\units\darktcp.server.standard.pas"/>
+        <UnitName Value="darktcp.server.standard"/>
+      </Item4>
+      <Item5>
+        <Filename Value="..\..\units\darktcp.types.pas"/>
+        <UnitName Value="darktcp.types"/>
+      </Item5>
+      <Item6>
+        <Filename Value="..\..\units\darktcp.client.pas"/>
+        <UnitName Value="darktcp.client"/>
+      </Item6>
+      <Item7>
+        <Filename Value="..\..\units\darktcp.client.standard.pas"/>
+        <UnitName Value="darktcp.client.standard"/>
+      </Item7>
+      <Item8>
+        <Filename Value="..\..\units\darktcp.command.pas"/>
+        <UnitName Value="darktcp.command"/>
+      </Item8>
+    </Files>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

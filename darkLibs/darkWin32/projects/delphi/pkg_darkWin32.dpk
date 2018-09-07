@@ -1,0 +1,41 @@
+package pkg_darkWin32;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darkwin32.gdi32 in '..\..\units\darkwin32.gdi32.pas',
+  darkwin32.kernel32 in '..\..\units\darkwin32.kernel32.pas',
+  darkwin32.types in '..\..\units\darkwin32.types.pas',
+  darkwin32.user32 in '..\..\units\darkwin32.user32.pas',
+  darkwin32.advapi32 in '..\..\units\darkwin32.advapi32.pas',
+  darkwin32.constants in '..\..\units\darkwin32.constants.pas';
+
+end.

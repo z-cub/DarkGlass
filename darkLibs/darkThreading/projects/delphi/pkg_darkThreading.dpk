@@ -1,0 +1,60 @@
+package pkg_darkThreading;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darkthreading.criticalsection.windows in '..\..\units\darkthreading.criticalsection.windows.pas',
+  darkthreading.messagebus.standard in '..\..\units\darkthreading.messagebus.standard.pas',
+  darkthreading.messagechannel.standard in '..\..\units\darkthreading.messagechannel.standard.pas',
+  darkthreading.messagepipe.standard in '..\..\units\darkthreading.messagepipe.standard.pas',
+  darkthreading in '..\..\units\darkthreading.pas',
+  darkthreading.signaledcriticalsection.posix in '..\..\units\darkthreading.signaledcriticalsection.posix.pas',
+  darkthreading.signaledcriticalsection.windows in '..\..\units\darkthreading.signaledcriticalsection.windows.pas',
+  darkthreading.threadmethod.posix in '..\..\units\darkthreading.threadmethod.posix.pas',
+  darkthreading.threadmethod.windows in '..\..\units\darkthreading.threadmethod.windows.pas',
+  darkthreading.threadpool.standard in '..\..\units\darkthreading.threadpool.standard.pas',
+  darkthreading.threadsystem.standard in '..\..\units\darkthreading.threadsystem.standard.pas',
+  darkthgreading.messaging.internal in '..\..\units\darkthgreading.messaging.internal.pas',
+  darkthreading.criticalsection.posix in '..\..\units\darkthreading.criticalsection.posix.pas',
+  darkthreading.threadmethod in '..\..\units\darkthreading.threadmethod.pas',
+  darkthreading.criticalsection in '..\..\units\darkthreading.criticalsection.pas',
+  darkthreading.signaledcriticalsection in '..\..\units\darkthreading.signaledcriticalsection.pas',
+  darkthreading.atomicringbuffer in '..\..\units\darkthreading.atomicringbuffer.pas',
+  darkthreading.message in '..\..\units\darkthreading.message.pas',
+  darkthreading.messagepipe in '..\..\units\darkthreading.messagepipe.pas',
+  darkthreading.messagechannel in '..\..\units\darkthreading.messagechannel.pas',
+  darkthreading.messagebus in '..\..\units\darkthreading.messagebus.pas',
+  darkthreading.poolthread in '..\..\units\darkthreading.poolthread.pas',
+  darkthreading.threadpool in '..\..\units\darkthreading.threadpool.pas',
+  darkthreading.threadsubsystem in '..\..\units\darkthreading.threadsubsystem.pas',
+  darkthreading.threadsystem in '..\..\units\darkthreading.threadsystem.pas';
+
+end.

@@ -1,0 +1,72 @@
+package pkg_darkPlatform;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darkplatform.platform in '..\..\units\darkplatform.platform.pas',
+  darkplatform in '..\..\units\darkplatform.pas',
+  darkplatform.platform.common in '..\..\units\darkplatform.platform.common.pas',
+  darkplatform.platform.windows in '..\..\units\darkplatform.platform.windows.pas',
+  darkplatform.displaymanager in '..\..\units\darkplatform.displaymanager.pas',
+  darkplatform.window in '..\..\units\darkplatform.window.pas',
+  darkplatform.windowmanager in '..\..\units\darkplatform.windowmanager.pas',
+  darkplatform.display in '..\..\units\darkplatform.display.pas',
+  darkplatform.displaymanager.linux in '..\..\units\darkplatform.displaymanager.linux.pas',
+  darkplatform.displaymanager.macos in '..\..\units\darkplatform.displaymanager.macos.pas',
+  darkplatform.displaymanager.windows in '..\..\units\darkplatform.displaymanager.windows.pas',
+  darkplatform.window.android in '..\..\units\darkplatform.window.android.pas',
+  darkplatform.window.ios in '..\..\units\darkplatform.window.ios.pas',
+  darkplatform.window.linux in '..\..\units\darkplatform.window.linux.pas',
+  darkplatform.window.macos in '..\..\units\darkplatform.window.macos.pas',
+  darkplatform.window.windows in '..\..\units\darkplatform.window.windows.pas',
+  darkplatform.windowmanager.android in '..\..\units\darkplatform.windowmanager.android.pas',
+  darkplatform.windowmanager.common in '..\..\units\darkplatform.windowmanager.common.pas',
+  darkplatform.windowmanager.ios in '..\..\units\darkplatform.windowmanager.ios.pas',
+  darkplatform.windowmanager.linux in '..\..\units\darkplatform.windowmanager.linux.pas',
+  darkplatform.windowmanager.macos in '..\..\units\darkplatform.windowmanager.macos.pas',
+  darkplatform.display.android in '..\..\units\darkplatform.display.android.pas',
+  darkplatform.display.ios in '..\..\units\darkplatform.display.ios.pas',
+  darkplatform.display.linux in '..\..\units\darkplatform.display.linux.pas',
+  darkplatform.display.macos in '..\..\units\darkplatform.display.macos.pas',
+  darkplatform.display.windows in '..\..\units\darkplatform.display.windows.pas',
+  darkplatform.displaymanager.android in '..\..\units\darkplatform.displaymanager.android.pas',
+  darkplatform.displaymanager.common in '..\..\units\darkplatform.displaymanager.common.pas',
+  darkplatform.displaymanager.ios in '..\..\units\darkplatform.displaymanager.ios.pas',
+  darkplatform.windowmanager.windows in '..\..\units\darkplatform.windowmanager.windows.pas',
+  darkplatform.platform.linux in '..\..\units\darkplatform.platform.linux.pas',
+  darkplatform.platform.android in '..\..\units\darkplatform.platform.android.pas',
+  darkplatform.appglue.android in '..\..\units\darkplatform.appglue.android.pas',
+  darkplatform.platform.macos in '..\..\units\darkplatform.platform.macos.pas',
+  darkplatform.applicationdelegate.macos in '..\..\units\darkplatform.applicationdelegate.macos.pas',
+  darkplatform.windowdelegate.macos in '..\..\units\darkplatform.windowdelegate.macos.pas',
+  darkplatform.platform.ios in '..\..\units\darkplatform.platform.ios.pas';
+
+end.

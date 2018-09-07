@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="pkg_darksockets"/>
+    <Type Value="RunTimeOnly"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <Libraries Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)"/>
+        <OtherUnitFiles Value="..\..\units"/>
+        <UnitOutputDirectory Value="..\..\..\..\out\lib\$(TargetCPU)-$(TargetOS)\"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="7">
+      <Item1>
+        <Filename Value="..\..\units\darksockets.sockets.fpc.windows.pas"/>
+        <UnitName Value="darksockets.sockets.fpc.windows"/>
+      </Item1>
+      <Item2>
+        <Filename Value="..\..\units\darksockets.sockets.pas"/>
+        <UnitName Value="darksockets.sockets"/>
+      </Item2>
+      <Item3>
+        <Filename Value="..\..\units\darksockets.sockets.standard.pas"/>
+        <UnitName Value="darksockets.sockets.standard"/>
+      </Item3>
+      <Item4>
+        <Filename Value="..\..\units\darksockets.pas"/>
+        <UnitName Value="darksockets"/>
+      </Item4>
+      <Item5>
+        <Filename Value="..\..\units\darksockets.sockets.delphi.posix.pas"/>
+        <UnitName Value="darksockets.sockets.delphi.posix"/>
+      </Item5>
+      <Item6>
+        <Filename Value="..\..\units\darksockets.sockets.delphi.windows.pas"/>
+        <UnitName Value="darksockets.sockets.delphi.windows"/>
+      </Item6>
+      <Item7>
+        <Filename Value="..\..\units\darksockets.sockets.fpc.posix.pas"/>
+        <UnitName Value="darksockets.sockets.fpc.posix"/>
+      </Item7>
+    </Files>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
