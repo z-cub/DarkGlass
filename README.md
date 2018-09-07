@@ -1,3 +1,7 @@
+* CAUTION * - This commit is the last before a major refactoring, which may contain several empty or broken commits. 
+Commit: 61f313f6281ef1adaa4250caa8c070ffeff22324
+This notice will be removed when the refactor is complete.
+
 # DarkGlass
 
 <p> <strong> DarkGlass </strong> is a general purpose game engine written using Delphi. </p>
