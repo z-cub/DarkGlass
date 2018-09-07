@@ -1,7 +1,3 @@
-* CAUTION * - This commit is the last before a major refactoring, which may contain several empty or broken commits. 
-Commit: 61f313f6281ef1adaa4250caa8c070ffeff22324
-This notice will be removed when the refactor is complete.
-
 # DarkGlass
 
 <p> <strong> DarkGlass </strong> is a general purpose game engine written using Delphi. </p>
@@ -34,6 +30,3 @@ Additional targets may also be possible in the future depending upon research to
 
 DarkGlass will be designed to support interchangable graphics API's for rendering, with initial development targeting OpenGL and OpenGL-ES. With option to pivot to Vulkan early in development, and DirectX support being considered experimental in the initial phase.
 
-# Building & Usage
-
-Please see the Building.md file for build instructions.
