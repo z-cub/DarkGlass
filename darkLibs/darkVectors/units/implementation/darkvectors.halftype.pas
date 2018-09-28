@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+Ôªø//------------------------------------------------------------------------------
 // This file is part of the DarkGlass game engine project.
 // More information can be found here: http://chapmanworld.com/darkglass
 //
@@ -7,7 +7,7 @@
 // Copyright 2018 Craig Chapman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the ìSoftwareî),
+// copy of this software and associated documentation files (the ‚ÄúSoftware‚Äù),
 // to deal in the Software without restriction, including without limitation
 // the rights to use, copy, modify, merge, publish, distribute, sublicense,
 // and/or sell copies of the Software, and to permit persons to whom the
@@ -16,7 +16,7 @@
 // The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED ìAS ISî, WITHOUT WARRANTY OF ANY KIND,
+// THE SOFTWARE IS PROVIDED ‚ÄúAS IS‚Äù, WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -24,7 +24,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkmath.halftype;
+unit darkvectors.halftype;
 
 interface
 
@@ -35,10 +35,12 @@ type
     class operator Implicit(a: half): single;
     class operator Implicit(a: double): half;
     class operator Implicit(a: half): double;
+    {$ifndef CPU64BITS}
     class operator Explicit(a: single): half;
     class operator Explicit(a: half): single;
     class operator Explicit(a: double): half;
     class operator Explicit(a: half): double;
+    {$endif}
     class operator Add(a, b: half): half;
     class operator Subtract(a, b: half): half;
     class operator Multiply(a, b: half): half;
@@ -196,6 +198,7 @@ end;
 
 { half }
 
+{$ifndef CPU64BITS}
 class operator half.Explicit(a: single): half;
 begin
   Result.Value := FloatToHalf(a);
@@ -205,6 +208,7 @@ class operator half.Explicit(a: half): single;
 begin
   Result := HalfToFloat(a.Value);
 end;
+{$endif}
 
 class operator half.Add(a, b: half): half;
 begin
@@ -216,6 +220,7 @@ begin
   Result.value := FloatToHalf( HalfToFloat(a.value) / HalfToFloat(b.value) );
 end;
 
+{$ifndef CPU64BITS}
 class operator half.Explicit(a: half): double;
 var
   s: single;
@@ -231,6 +236,7 @@ begin
   s := a;
   Result.value := FloatToHalf(s);
 end;
+{$endif}
 
 class operator half.Implicit(a: half): single;
 begin

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+Ôªø//------------------------------------------------------------------------------
 // This file is part of the DarkGlass game engine project.
 // More information can be found here: http://chapmanworld.com/darkglass
 //
@@ -7,7 +7,7 @@
 // Copyright 2018 Craig Chapman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the ìSoftwareî),
+// copy of this software and associated documentation files (the ‚ÄúSoftware‚Äù),
 // to deal in the Software without restriction, including without limitation
 // the rights to use, copy, modify, merge, publish, distribute, sublicense,
 // and/or sell copies of the Software, and to permit persons to whom the
@@ -16,7 +16,7 @@
 // The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED ìAS ISî, WITHOUT WARRANTY OF ANY KIND,
+// THE SOFTWARE IS PROVIDED ‚ÄúAS IS‚Äù, WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -24,7 +24,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkmath.engine;
+unit darkvectors.computeengine;
 
 interface
 
@@ -32,8 +32,8 @@ type
   ///  <summary>
   ///    Specifies the float type to be used in the darkMath interfaces.
   ///    Note: This is not necessarily the same float type which is used
-  ///    by the selected mathEngine implementation internally. The type will
-  ///    be appropriately converted by the implementation.
+  ///    by the selected compute engine implementation internally. The type
+  ///    will be appropriately converted by the implementation.
   ///  </summary>
   float = double;
 
@@ -64,12 +64,8 @@ type
     /// <summary>
     ///   IEEE-754 double precision floating point (8-bytes)
     /// </summary>
-    ftDouble,
+    ftDouble
 
-    ///  <summary>
-    ///    IEEE-754 extended precision floating point (10-bytes 80-bit)
-    ///  </summary>
-    ftExtended
   );
 
   ///  <summary>
@@ -79,21 +75,26 @@ type
   TFloatTypes = set of TFloatType;
 
   ///  <exclude/>
-  IMathEngine = interface; // forward.
+  IComputeEngine = interface; // forward.
 
   ///  <exclude/>
-  IMathEngineObject = interface; // forward.
+  IComputeObject = interface; // forward.
 
   ///  <summary>
   ///    Represents a data buffer which has been allocated on the target
   ///    math engine. For example, if computation is to be performed on the
   ///    GPU, then this represents a GPU buffer.
   ///  </summary>
-  IMathEngineBuffer = interface
+  IComputeBuffer = interface
     ['{BB4313EE-91E7-4A50-8B48-8D3BFDDA2D2F}']
 
     ///  <summary>
-    ///    Used internally by implementations of IMathEngine to uniquely
+    ///    Returns the size of the float supported by the math engine in bytes.
+    ///  </summary>
+    function getFloatSize: uint8;
+
+    ///  <summary>
+    ///    Used internally by implementations of IComputeEngine to uniquely
     ///    identify this buffer.
     ///  </summary>
     function getHandle: pointer;
@@ -101,7 +102,7 @@ type
     ///  <summary>
     ///    Returns the math engine instance on which this buffer was allocated.
     ///  </summary>
-    function getMathEngine: IMathEngine;
+    function getComputeEngine: IComputeEngine;
 
     ///  <summary>
     ///    Returns the size of the engine buffer in bytes.
@@ -133,40 +134,54 @@ type
     ///  <summary>
     ///    Returns a math object (vector or matrix) as specified by the width
     ///    and height properties. The size of the object in bytes is determined
-    ///    by the following formula  sizeof(float) * Width * Height.
+    ///    by the following formula  Width * Height * FloatSize.
+    ///    OffsetElements specifies the number of floats at which to offset the
+    ///    object within this buffer.
     ///  </summary>
-    function getObject( Offset: uint64; Height: uint64; Width: uint64 ): IMathEngineObject;
+    function getObject( OffsetElements: uint64; Height: uint64; Width: uint64 ): IComputeObject;
 
     //- Pascal only -//
+
+    ///  <summary>
+    ///    The handle of the buffer on the target device.
+    ///    *Varies among implementations.
+    ///  </summary>
+    property Handle: pointer read getHandle;
+
     ///  <summary>
     ///    Provides a reference to the math engine instance to which this
     ///    buffer belongs.
     ///  </summary>
-    property Engine: IMathEngine read getMathEngine;
+    property Engine: IComputeEngine read getComputeEngine;
 
     ///  <summary>
     ///    Returns the size of the buffer in bytes.
     ///  </summary>
     property Size: uint64 read getSize;
+
+    ///  <summary>
+    ///    Returns the size of a float according to the math engine.
+    ///  </summary>
+    property FloatSize: uint8 read getFloatSize;
   end;
 
   ///  <summary>
   ///    Represents an object (Matrix/Vector) which exists within an engine
   ///    buffer.
   ///  </summary>
-  IMathEngineObject = interface
+  IComputeObject = interface
     ['{4909C273-0CA3-4864-A6C9-F619679B62E1}']
 
     ///  <summary>
-    ///    Returns the instance of an IEngineBuffer to which this object
+    ///    Returns the instance of an IComputeBuffer to which this object
     ///    belongs.
     ///  </summary>
-    function getEngineBuffer: IMathEngineBuffer;
+    function getComputeBuffer: IComputeBuffer;
 
     ///  <summary>
     ///    Returns the math engine to which this object belongs.
     ///  </summary>
-    function getMathEngine: IMathEngine;
+    function getComputeEngine: IComputeEngine;
 
     ///  <summary>
     ///    Returns the offset of this object within the buffer, in bytes.
@@ -232,14 +247,14 @@ type
     ///    Returns a reference to the engine buffer in which this engine object
     ///    is stored.
     ///  </summary>
-    property Buffer: IMathEngineBuffer read getEngineBuffer;
+    property Buffer: IComputeBuffer read getComputeBuffer;
 
     ///  <summary>
     ///    Returns a reference to the math engine which hosts the buffer in
     ///    which this object is stored. This is the engine that will perform
     ///    computation on this object.
     ///  </summary>
-    property Engine: IMathEngine read getMathEngine;
+    property Engine: IComputeEngine read getComputeEngine;
 
     ///  <summary>
     ///    Returns an enumeration which describes the type of floating
@@ -266,7 +281,6 @@ type
     ///  </summary>
     property Height: uint64 read getHeight;
 
-    ///
     ///  <summary>
     ///    Provides array style access to the elements within this object.
     ///    It is advised to use the getElements() and setElements() methods
@@ -279,11 +293,11 @@ type
 
   ///  <summary>
   ///    Represents a math engine, which is used to host instances of
-  ///    IMathEngineBuffer, and to perform computation on instances of
-  ///    IMathEngineObject.
+  ///    IComputeBuffer, and to perform computation on instances of
+  ///    IComputeObject.
   ///  </summary>
-  IMathEngine = interface
-    ['{6AA5C4A8-E7F9-416E-AD49-2E567D69EA00}']
+  IComputeEngine = interface
+  ['{6AA5C4A8-E7F9-416E-AD49-2E567D69EA00}']
 
     ///  <summary>
     ///    Returns the type of float supported by this engine.
@@ -297,159 +311,160 @@ type
 
     ///  <summary>
     ///    Requests a buffer be created on the math engine.
-    ///    The size of the buffer is specified in cbSize.
+    ///    The size of the buffer is specified in ElementCount, where the
+    ///    actual size of an element is determined by FloatSize.
     ///    If the buffer is sucessfully allocated, an instance of
-    ///    IMathEngineBuffer is returned, else the return value is nil.
-    ///    If allocation fails, it will be due to either the cbSize value
-    ///    exceedinbg MaxAllocation or due to there being insufficient memory
+    ///    IComputeBuffer is returned, else the return value is nil.
+    ///    If allocation fails, it will be due to either ElementCount*FloatSize
+    ///    exceeding MaxAllocation, or due to there being insufficient memory
     ///    available on the target device.
     ///  </summary>
-    function getBuffer( cbSize: uint64 ): IMathEngineBuffer;
+    function getBuffer( ElementCount: uint64 ): IComputeBuffer;
 
     ///  <summary>
     ///    Calculates the sum of all elements within the Source object and
     ///    places the result in 'ScalarResult'.
     ///  </summary>
-    procedure getSum( Source: IMathEngineObject; var ScalarResult: float ); overload;
+    procedure getSum( Source: IComputeObject; var ScalarResult: float ); overload;
 
     ///  <summary>
     ///    Adds each element of the Source object to the corresponding element
     ///    of the Target object. The source and target objects must be the
     ///    same size.
     ///  </summary>
-    procedure Addition( Source: IMathEngineObject; Target: IMathEngineObject ); overload;
+    procedure Addition( Source: IComputeObject; Target: IComputeObject ); overload;
 
     ///  <summary>
     ///    Adds ScalarValue to each element of the target object.
     ///  </summary>
-    procedure Addition( Target: IMathEngineObject; ScalarValue: float ); overload;
+    procedure Addition( Target: IComputeObject; ScalarValue: float ); overload;
 
     ///  <summary>
     ///    Subtracts each element of the source object from the corresponding
     ///    element of the target object. The source and target objects must
     ///    be the same size.
     ///  </summary>
-    procedure Subtraction( Source: IMathEngineObject; Target: IMathEngineObject ); overload;
+    procedure Subtraction( Source: IComputeObject; Target: IComputeObject ); overload;
 
     ///  <summary>
     ///    Subtracts the ScarlarValue from each element in the target object.
     ///  </summary>
-    procedure Subtraction( Target: IMathEngineObject; ScalarValue: float ); overload;
+    procedure Subtraction( Target: IComputeObject; ScalarValue: float ); overload;
 
     ///  <summary>
     ///    Multiplies each element in the Target object by the corresponding
     ///    element in the source object.
     ///  </summary>
-    procedure Multiplication( Source: IMathEngineObject; Target: IMathEngineObject ); overload;
+    procedure Multiplication( Source: IComputeObject; Target: IComputeObject ); overload;
 
     ///  <summary>
     ///    Multiplies each element in the Target object by ScalarValue.
     ///  </summary>
-    procedure Multiplication( Target: IMathEngineObject; ScalarValue: float ); overload;
+    procedure Multiplication( Target: IComputeObject; ScalarValue: float ); overload;
 
     ///  <summary>
     ///    Divides each element in the Target object by the corresponding
     ///    element in the Source object.
     ///  </summary>
-    procedure Division( Source: IMathEngineObject; Target: IMathEngineObject ); overload;
+    procedure Division( Source: IComputeObject; Target: IComputeObject ); overload;
 
     ///  <summary>
     ///    Divides each element in the Target object by ScalarValue.
     ///  </summary>
-    procedure Division( Target: IMathEngineObject; ScalarValue: float ); overload;
+    procedure Division( Target: IComputeObject; ScalarValue: float ); overload;
 
     ///  <summary>
     ///    Performs a Tanh operation on each element of the Target object.
     ///  </summary>
-    procedure Tanh( Target: IMathEngineObject );
+    procedure Tanh( Target: IComputeObject );
 
     ///  <summary>
     ///    Performs a Tanh operation on each element of the Target object
     ///    scaled to the range -1 .. 1
     ///  </summary>
-    procedure ScaledTanh( Target: IMathEngineObject );
+    procedure ScaledTanh( Target: IComputeObject );
 
     ///  <summary>
     ///    Performs the sigmoid function on each element of the Target object.
     ///  </summary>
-    procedure Sigmoid( Target: IMathEngineObject  );
+    procedure Sigmoid( Target: IComputeObject  );
 
     ///  <summary>
     ///    Performs the Relu funciton on each element of the Target object.
     ///  </summary>
-    procedure Relu( Target: IMathEngineObject );
+    procedure Relu( Target: IComputeObject );
 
     ///  <summary>
     ///    Performs the Elu function on each element of the Target object.
     ///  </summary>
-    procedure Elu( Target: IMathEngineObject );
+    procedure Elu( Target: IComputeObject );
 
     ///  <summary>
     ///    Performs a softmax calculation on the Target object.
     ///  </summary>
-    procedure Softmax( Target: IMathEngineObject );
+    procedure Softmax( Target: IComputeObject );
 
     ///  <summary>
     ///    Calculates the derivative of TanH on each element of the Target
     ///    object.
     ///  </summary>
-    procedure TanhDerivative( Target: IMathEngineObject );
+    procedure TanhDerivative( Target: IComputeObject );
 
     ///  <summary>
     ///    Calculates the derivative of TanH scaled to -1..1 on each element
     ///    of the Target object.
     ///  </summary>
-    procedure ScaledTanhDerivative( Target: IMathEngineObject );
+    procedure ScaledTanhDerivative( Target: IComputeObject );
 
     ///  <summary>
     ///    Calculates the derivative of the sigmoid funciton on each element
     ///    of the Target object.
     ///  </summary>
-    procedure SigmoidDerivative( Target: IMathEngineObject );
+    procedure SigmoidDerivative( Target: IComputeObject );
 
     ///  <summary>
     ///    Calculates the derivative of the Relu function on each element of
     ///    the Target object.
     ///  </summary>
-    procedure ReluDerivative( Target: IMathEngineObject );
+    procedure ReluDerivative( Target: IComputeObject );
 
     ///  <summary>
     ///    Calculates the derivative of the Elu function on each element of
     ///    the Target object.
     ///  </summary>
-    procedure EluDerivative( Target: IMathEngineObject );
+    procedure EluDerivative( Target: IComputeObject );
 
     ///  <summary>
     ///    Calculates the derivative of linear mapping on each element of
     ///    the Target object.
     ///  </summary>
-    procedure LinearDerivative( Target: IMathEngineObject );
+    procedure LinearDerivative( Target: IComputeObject );
 
     ///  <summary>
     ///    Sets each element in the Target object to it's natural log.
     ///  </summary>
-    procedure Log( Target: IMathEngineObject );
+    procedure Log( Target: IComputeObject );
 
     ///  <summary>
     ///    Sets each element in the Target object to it's exponent.
     ///  </summary>
-    procedure Exp( Target: IMathEngineObject );
+    procedure Exp( Target: IComputeObject );
 
     ///  <summary>
     ///    Sets each element of the target object to ScalarValue.
     ///  </summary>
-    procedure Fill( Target: IMathEngineObject; ScalarValue: float );
+    procedure Fill( Target: IComputeObject; ScalarValue: float );
 
     ///  <summary>
     ///    Subtracts each element of the target object from zero.
     ///  </summary>
-    procedure Negate( Target: IMathEngineObject );
+    procedure Negate( Target: IComputeObject );
 
     ///  <summary>
     ///    Copies the Source object to the Target object.
     ///    Note the Source and Target objects must be the same size.
     ///  </summary>
-    procedure Copy( Source: IMathEngineObject; Target: IMathEngineObject );
+    procedure Copy( Source: IComputeObject; Target: IComputeObject );
 
     ///  <summary>
     ///    Calculates the dot-product of the SourceA and SourceB objects and
@@ -458,7 +473,7 @@ type
     ///    expecting the dot-product calculation to generate a matrix or
     ///    vector.
     ///  </summary>
-    procedure DotProduct( SourceA: IMathEngineObject; SourceB: IMathEngineObject; Target: IMathEngineObject ); overload;
+    procedure DotProduct( SourceA: IComputeObject; SourceB: IComputeObject; Target: IComputeObject ); overload;
 
     ///  <summary>
     ///    Calculates the dot-product of the SourceA and SourceB objects and
@@ -466,10 +481,7 @@ type
     ///    This override of the dot-product method should be used when
     ///    expecting the dot-product calculation to generate a scalar value.
     ///  </summary>
-    procedure DotProduct( SourceA: IMathEngineObject; SourceB: IMathEngineObject; var ScalarResult: float ); overload;
-
-//    procedure Transpose(FloatType: TFloatType; Source: IMathEngineBuffer; Target: IMathEngineBuffer; SourceWidth: uint32; SourceHeight: uint32; SourceOffset, TargetOffset: uint32 );
-//    procedure Identity(FloatType: TFloatType; Target: IMathEngineBuffer; TargetWidth: uint32; TargetHeight: uint32; TargetOffset: uint32 );
+    procedure DotProduct( SourceA: IComputeObject; SourceB: IComputeObject; var ScalarResult: float ); overload;
 
     //- Pascal Only -//
     property FloatType: TFloatType read getFloatType;

@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+Ôªø//------------------------------------------------------------------------------
 // This file is part of the DarkGlass game engine project.
 // More information can be found here: http://chapmanworld.com/darkglass
 //
@@ -7,7 +7,7 @@
 // Copyright 2018 Craig Chapman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the ìSoftwareî),
+// copy of this software and associated documentation files (the ‚ÄúSoftware‚Äù),
 // to deal in the Software without restriction, including without limitation
 // the rights to use, copy, modify, merge, publish, distribute, sublicense,
 // and/or sell copies of the Software, and to permit persons to whom the
@@ -16,7 +16,7 @@
 // The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED ìAS ISî, WITHOUT WARRANTY OF ANY KIND,
+// THE SOFTWARE IS PROVIDED ‚ÄúAS IS‚Äù, WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -24,11 +24,11 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkmath.device;
+unit darkvectors.computedevice;
 
 interface
 uses
-  darkmath.engine;
+  darkvectors.computeengine;
 
 type
   ///  <summary>
@@ -93,7 +93,7 @@ type
    function getSupportedTypes: TFloatTypes;
 
     /// <summary>
-    ///   Returns an instance of IMathEngine to support the specified
+    ///   Returns an instance of IComputeEngine to support the specified
     ///   floating-point data type. <br />If an instance does not already exist
     ///   for the specified floating point type, it will be created, otherwise
     ///   the existing instance will be returned.
@@ -102,7 +102,7 @@ type
     ///   An enumeration which identifies the floating-point data type to be
     ///   supported by the returned math engine.
     /// </param>
-    function getEngine( FloatType: TFloatType ): IMathEngine;
+    function getEngine( FloatType: TFloatType ): IComputeEngine;
 
     //- Pascal Only -//
     property Name: string read getName;

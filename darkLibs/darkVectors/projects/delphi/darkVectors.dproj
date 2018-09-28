@@ -1,7 +1,7 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{6D66986E-C7AC-4761-8BDC-EF9EF6D22165}</ProjectGuid>
-        <MainSource>pkg_darkMath.dpk</MainSource>
+        <ProjectGuid>{4161C482-5EF1-41DD-BF6F-A0411641FFB3}</ProjectGuid>
+        <MainSource>darkVectors.dpk</MainSource>
         <ProjectVersion>18.4</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
@@ -82,9 +82,9 @@
         <GenPackage>true</GenPackage>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
-        <SanitizedProjectName>pkg_darkMath</SanitizedProjectName>
-        <DCC_UnitSearchPath>..\..\..\..\out\lib\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <SanitizedProjectName>darkVectors</SanitizedProjectName>
         <DCC_BplOutput>..\..\..\..\out\lib\bpl</DCC_BplOutput>
+        <DCC_UnitSearchPath>..\..\..\..\out\lib\$(Platform)\$(Config);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <DCC_CBuilderOutput>None</DCC_CBuilderOutput>
@@ -146,6 +146,7 @@
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <DCC_IMPLICIT_IMPORT>false</DCC_IMPLICIT_IMPORT>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
@@ -158,17 +159,27 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="..\..\units\darkmath.engine.pas"/>
-        <DCCReference Include="..\..\units\darkmath.device.pas"/>
-        <DCCReference Include="..\..\units\darkmath.provider.pas"/>
-        <DCCReference Include="..\..\units\darkmath.providers.pas"/>
-        <DCCReference Include="..\..\units\darkmath.provider.software.pas"/>
-        <DCCReference Include="..\..\units\darkmath.device.software.pas"/>
-        <DCCReference Include="..\..\units\darkmath.engine.software.pas"/>
-        <DCCReference Include="..\..\units\darkmath.halftype.pas"/>
-        <DCCReference Include="..\..\units\darkmath.engineobject.standard.pas"/>
-        <DCCReference Include="..\..\units\darkmath.pas"/>
-        <DCCReference Include="..\..\units\darkmath.buffer.software.pas"/>
+        <DCCReference Include="..\..\units\api\darkvectors.pas"/>
+        <DCCReference Include="..\..\units\interfaces\darkvectors.computedevice.pas"/>
+        <DCCReference Include="..\..\units\interfaces\darkvectors.computeengine.pas"/>
+        <DCCReference Include="..\..\units\interfaces\darkvectors.computeprovider.pas"/>
+        <DCCReference Include="..\..\units\implementation\software\darkvectors.computebuffer.software.pas"/>
+        <DCCReference Include="..\..\units\implementation\software\darkvectors.computedevice.software.pas"/>
+        <DCCReference Include="..\..\units\implementation\software\darkvectors.computeengine.software.pas"/>
+        <DCCReference Include="..\..\units\implementation\darkvectors.computeobject.standard.pas"/>
+        <DCCReference Include="..\..\units\implementation\darkvectors.halftype.pas"/>
+        <DCCReference Include="..\..\units\implementation\software\darkvectors.computeprovider.software.pas"/>
+        <DCCReference Include="..\..\units\implementation\darkvectors.computeproviders.singleton.pas"/>
+        <DCCReference Include="..\..\units\types\darkvectors.vector.pas"/>
+        <DCCReference Include="..\..\units\types\darkvectors.matrix.pas"/>
+        <DCCReference Include="..\..\units\implementation\darkvectors.aliases.pas"/>
+        <DCCReference Include="..\..\units\implementation\external\darkvectors.computebuffer.external.pas"/>
+        <DCCReference Include="..\..\units\implementation\external\darkvectors.computeobject.external.pas"/>
+        <DCCReference Include="..\..\units\implementation\external\darkvectors.computedevice.external.pas"/>
+        <DCCReference Include="..\..\units\implementation\external\darkvectors.computeengine.external.pas"/>
+        <DCCReference Include="..\..\units\implementation\external\darkvectors.computeprovider.external.pas"/>
+        <DCCReference Include="..\..\units\interfaces\darkvectors.external.binding.pas"/>
+        <DCCReference Include="..\..\units\implementation\external\darkvectors.external.binding.export.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -187,7 +198,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">pkg_darkMath.dpk</Source>
+                    <Source Name="MainSource">darkVectors.dpk</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k250.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
@@ -197,19 +208,8 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\pkg_darkMath.bpl" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>pkg_darkMath.bpl</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgunwind.1.0.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
-                    <Platform Name="iOSSimulator">
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -218,14 +218,25 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
+                <DeployFile LocalName="$(BDS)\Redist\iossimulator\libcgunwind.1.0.dylib" Class="DependencyModule">
+                    <Platform Name="iOSSimulator">
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\19.0\Bpl\darkVectors.bpl" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>darkVectors.bpl</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="$(BDS)\Redist\osx32\libcgsqlite3.dylib" Class="DependencyModule">
                     <Platform Name="OSX32">
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="..\..\..\..\out\lib\bpl\pkg_darkMath.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="..\..\..\..\out\lib\bpl\darkVectors.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win64">
-                        <RemoteName>pkg_darkMath.bpl</RemoteName>
+                        <RemoteName>darkVectors.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

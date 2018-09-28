@@ -24,30 +24,17 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkmath;
+unit darkvectors.computeobject.external;
 
 interface
 uses
-  darkmath.engine,
-  darkmath.device,
-  darkmath.halftype,
-  darkmath.provider,
-  darkmath.providers;
+  darkvectors.computeengine;
 
 type
-  half              = darkmath.halftype.half;
-  float             = darkmath.engine.float;
-  TArrayOfFloat     = darkmath.engine.TArrayOfFloat;
-  TFloatType        = darkmath.engine.TFloatType;
-  IMathEngineBuffer = darkmath.engine.IMathEngineBuffer;
-  IMathEngineObject = darkmath.engine.IMathEngineObject;
-  IMathEngine       = darkmath.engine.IMathEngine;
-  IComputeDevice    = darkmath.device.IComputeDevice;
-  IComputeProvider  = darkmath.provider.IComputeProvider;
-  ComputeProviders  = darkmath.providers.ComputeProviders;
+  TComputeObject = class( TInterfacedObject, IComputeObject )
+
+  end;
 
 implementation
-uses
-  darkmath.provider.software;
 
 end.

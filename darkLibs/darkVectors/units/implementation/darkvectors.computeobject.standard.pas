@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+Ôªø//------------------------------------------------------------------------------
 // This file is part of the DarkGlass game engine project.
 // More information can be found here: http://chapmanworld.com/darkglass
 //
@@ -7,7 +7,7 @@
 // Copyright 2018 Craig Chapman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the ìSoftwareî),
+// copy of this software and associated documentation files (the ‚ÄúSoftware‚Äù),
 // to deal in the Software without restriction, including without limitation
 // the rights to use, copy, modify, merge, publish, distribute, sublicense,
 // and/or sell copies of the Software, and to permit persons to whom the
@@ -16,7 +16,7 @@
 // The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED ìAS ISî, WITHOUT WARRANTY OF ANY KIND,
+// THE SOFTWARE IS PROVIDED ‚ÄúAS IS‚Äù, WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -24,38 +24,38 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkmath.engineobject.standard;
+unit darkvectors.computeobject.standard;
+{$ifdef fpc} {$ifdef CPU64} {$define CPU64BITS} {$endif} {$endif}
 
 interface
 uses
-  darkmath.halftype,
-  darkmath.engine;
+  darkvectors.halftype,
+  darkvectors.computeengine;
 
 type
-  TMathEngineObject = class( TInterfacedObject, IMathEngineObject )
+  TComputeObject = class( TInterfacedObject, IComputeObject )
   private
-    fMathEngineBuffer: IMathEngineBuffer;
+    fComputeBuffer: IComputeBuffer;
     fOffset: uint64;
     fWidth: uint64;
     fHeight: uint64;
   private
     procedure getElementData(ElementIndex, ElementCount: uint64; ElementBuffer: pointer);
     procedure setElementData(ElementIndex, ElementCount: uint64; ElementBuffer: pointer);
-  private //- IMathEngineObject -//
-    function getEngineBuffer: IMathEngineBuffer;
-    function getMathEngine: IMathEngine;
+  private //- IComputeObject -//
+    function getComputeBuffer: IComputeBuffer;
+    function getComputeEngine: IComputeEngine;
     function getOffset: uint64;
     function getFloatType: TFloatType;
     function getFloatSize: uint8;
     function getWidth: uint64;
     function getHeight: uint64;
-
-    procedure getElements(ElementIndex, ElementCount: uint64; var Elements: TArrayOfFloat);
-    procedure setElements(ElementIndex: uint64; Elements: TArrayOfFloat);
     function getElement(ElementIndex: uint64): float;
     procedure setElement(ElementIndex: uint64; value: float);
+    procedure getElements(ElementIndex, ElementCount: uint64; var Elements: TArrayOfFloat);
+    procedure setElements(ElementIndex: uint64; Elements: TArrayOfFloat);
   public
-    constructor Create( EngineBuffer: IMathEngineBuffer; Offset: uint64; Height: uint64; Width: uint64 ); reintroduce;
+    constructor Create( ComputeBuffer: IComputeBuffer; Offset: uint64; Height: uint64; Width: uint64 ); reintroduce;
     destructor Destroy; override;
   end;
 
@@ -63,24 +63,24 @@ implementation
 uses
   darkio.buffers;
 
-{ TMathEngineObject }
+{ TComputeObject }
 
-constructor TMathEngineObject.Create(EngineBuffer: IMathEngineBuffer; Offset: uint64; Height: uint64; Width: uint64 );
+constructor TComputeObject.Create(ComputeBuffer: IComputeBuffer; Offset: uint64; Height: uint64; Width: uint64 );
 begin
   inherited Create;
-  fMathEngineBuffer := EngineBuffer;
+  fComputeBuffer := ComputeBuffer;
   fOffset := Offset;
   fWidth := Width;
   fHeight := Height;
 end;
 
-destructor TMathEngineObject.Destroy;
+destructor TComputeObject.Destroy;
 begin
-  fMathEngineBuffer := nil;
+  fComputeBuffer := nil;
   inherited Destroy;
 end;
 
-function TMathEngineObject.getElement(ElementIndex: uint64): float;
+function TComputeObject.getElement(ElementIndex: uint64): float;
 var
   aHalf: half;
   aSingle: single;
@@ -98,17 +98,17 @@ begin
   end;
 end;
 
-procedure TMathEngineObject.getElementData(ElementIndex, ElementCount: uint64; ElementBuffer: pointer);
+procedure TComputeObject.getElementData(ElementIndex, ElementCount: uint64; ElementBuffer: pointer);
 var
   BufferOffset: uint64;
   DataSize: uint64;
 begin
   BufferOffset := fOffset + (ElementIndex*getFloatSize);
   DataSize := ElementCount * getFloatSize;
-  getEngineBuffer.getData(ElementBuffer,BufferOffset,DataSize);
+  getComputeBuffer.getData(ElementBuffer,BufferOffset,DataSize);
 end;
 
-procedure TMathEngineObject.getElements(ElementIndex, ElementCount: uint64; var Elements: TArrayOfFloat );
+procedure TComputeObject.getElements(ElementIndex, ElementCount: uint64; var Elements: TArrayOfFloat );
 var
   idx: uint64;
   Buffer: IBuffer;
@@ -119,10 +119,6 @@ begin
     exit;
   end;
   SetLength( Elements, ElementCount );
-  if getFloatType=ftDouble then begin
-    getElementData(ElementIndex,ElementCount,@Elements[0]);
-    exit;
-  end;
   Buffer := TBuffer.Create( getFloatSize * ElementCount );
   try
     getElementData(ElementIndex,ElementCount,Buffer.DataPtr);
@@ -131,6 +127,8 @@ begin
       case getFloatType of
         ftHalf: Elements[idx] := half(PtrData^);
         ftSingle: Elements[idx] := single(PtrData^);
+        ftDouble: Elements[idx] := double(PtrData^);
+        {$ifndef CPU64BITS} ftExtended: Elements[idx] := single(PtrData^); {$endif}
       end;
       ptrData := pointer( nativeuint( ptrData ) + getFloatSize );
     end;
@@ -139,42 +137,42 @@ begin
   end;
 end;
 
-function TMathEngineObject.getEngineBuffer: IMathEngineBuffer;
+function TComputeObject.getComputeBuffer: IComputeBuffer;
 begin
-  Result := fMathEngineBuffer;
+  Result := fComputeBuffer;
 end;
 
-function TMathEngineObject.getFloatSize: uint8;
+function TComputeObject.getFloatSize: uint8;
 begin
-  Result := getEngineBuffer.Engine.FloatSize;
+  Result := getComputeBuffer.Engine.FloatSize;
 end;
 
-function TMathEngineObject.getFloatType: TFloatType;
+function TComputeObject.getFloatType: TFloatType;
 begin
-  Result := getEngineBuffer.Engine.FloatType;
+  Result := getComputeBuffer.Engine.FloatType;
 end;
 
-function TMathEngineObject.getHeight: uint64;
+function TComputeObject.getHeight: uint64;
 begin
   Result := fHeight;
 end;
 
-function TMathEngineObject.getMathEngine: IMathEngine;
+function TComputeObject.getComputeEngine: IComputeEngine;
 begin
-  Result := getEngineBuffer.Engine;
+  Result := getComputeBuffer.Engine;
 end;
 
-function TMathEngineObject.getOffset: uint64;
+function TComputeObject.getOffset: uint64;
 begin
   Result := fOffset;
 end;
 
-function TMathEngineObject.getWidth: uint64;
+function TComputeObject.getWidth: uint64;
 begin
   Result := fWidth;
 end;
 
-procedure TMathEngineObject.setElement(ElementIndex: uint64; value: float);
+procedure TComputeObject.setElement(ElementIndex: uint64; value: float);
 var
   aHalf: half;
   aSingle: single;
@@ -192,27 +190,23 @@ begin
   end;
 end;
 
-procedure TMathEngineObject.setElementData(ElementIndex, ElementCount: uint64; ElementBuffer: pointer);
+procedure TComputeObject.setElementData(ElementIndex, ElementCount: uint64; ElementBuffer: pointer);
 var
   BufferOffset: uint64;
   DataSize: uint64;
 begin
   BufferOffset := fOffset + (ElementIndex*getFloatSize);
   DataSize := ElementCount * getFloatSize;
-  getEngineBuffer.setData(ElementBuffer,BufferOffset,DataSize);
+  getComputeBuffer.setData(ElementBuffer,BufferOffset,DataSize);
 end;
 
-procedure TMathEngineObject.setElements(ElementIndex: uint64; Elements: TArrayOfFloat );
+procedure TComputeObject.setElements(ElementIndex: uint64; Elements: TArrayOfFloat );
 var
   idx: uint64;
   Buffer: IBuffer;
   DataPtr: pointer;
 begin
   if Length(Elements)=0 then begin
-    exit;
-  end;
-  if getFloatType=ftDouble then begin
-    setElementData(ElementIndex,Length(Elements),@Elements[0]);
     exit;
   end;
   Buffer := TBuffer.Create(getFloatSize*Length(Elements));
@@ -222,6 +216,9 @@ begin
       case getFloatType of
         ftHalf: half(DataPtr^) := Elements[idx];
         ftSingle: single(DataPtr^) := Elements[idx];
+        ftDouble: double(DataPtr^) := Elements[idx];
+        {$ifndef CPU64BITS} ftExtended: extended(DataPtr^) := Elements[idx]; {$endif}
+
       end;
       DataPtr := Pointer( nativeuint( DataPtr ) + getFloatSize );
     end;

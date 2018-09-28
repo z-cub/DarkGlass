@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+Ôªø//------------------------------------------------------------------------------
 // This file is part of the DarkGlass game engine project.
 // More information can be found here: http://chapmanworld.com/darkglass
 //
@@ -7,7 +7,7 @@
 // Copyright 2018 Craig Chapman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the ìSoftwareî),
+// copy of this software and associated documentation files (the ‚ÄúSoftware‚Äù),
 // to deal in the Software without restriction, including without limitation
 // the rights to use, copy, modify, merge, publish, distribute, sublicense,
 // and/or sell copies of the Software, and to permit persons to whom the
@@ -16,7 +16,7 @@
 // The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED ìAS ISî, WITHOUT WARRANTY OF ANY KIND,
+// THE SOFTWARE IS PROVIDED ‚ÄúAS IS‚Äù, WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -24,77 +24,84 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkmath.buffer.software;
+unit darkvectors.computebuffer.software;
 
 interface
 uses
   darkIO.buffers,
-  darkmath.engine;
+  darkvectors.computeengine;
 
 type
-  TMathEngineBuffer = class( TInterfacedObject, IMathEngineBuffer )
+  TComputeBuffer = class( TInterfacedObject, IComputeBuffer )
   private
     fBuffer: IBuffer;
-    fMathEngine: IMathEngine;
-  private //- IMathEngineBuffer -//
+    fComputeEngine: IComputeEngine;
+  private //- IComputeBuffer -//
     function getHandle: pointer;
-    function getMathEngine: IMathEngine;
+    function getComputeEngine: IComputeEngine;
     function getSize: uint64;
+    function getFloatSize: uint8;
     procedure getData( TargetPtr: pointer; Offset: uint64; cbBytes: uint64 );
     procedure setData( SourcePtr: pointer; Offset: uint64; cbBytes: uint64 );
-    function getObject( Offset: uint64; Height: uint64; Width: uint64 ): IMathEngineObject;
+    function getObject( OffsetElements: uint64; Height: uint64; Width: uint64 ): IComputeObject;
   public
-    constructor Create( Engine: IMathEngine; Size: uint64 ); reintroduce;
+    constructor Create( Engine: IComputeEngine; Size: uint64 ); reintroduce;
     destructor Destroy; override;
 
   end;
 
 implementation
 uses
-  darkmath.engineobject.standard;
+  darkvectors.computeobject.standard;
 
-{ TMathEngineBuffer }
+{ TComputeBuffer }
 
-constructor TMathEngineBuffer.Create(Engine: IMathEngine; Size: uint64);
+constructor TComputeBuffer.Create(Engine: IComputeEngine; Size: uint64);
 begin
   inherited Create;
-  fMathEngine := Engine;
+  fComputeEngine := Engine;
   fBuffer := TBuffer.Create(Size);
 end;
 
-destructor TMathEngineBuffer.Destroy;
+destructor TComputeBuffer.Destroy;
 begin
   fBuffer := nil;
-  fMathEngine := nil;
+  fComputeEngine := nil;
   inherited Destroy;
 end;
 
-procedure TMathEngineBuffer.getData(TargetPtr: pointer; Offset, cbBytes: uint64);
+procedure TComputeBuffer.getData(TargetPtr: pointer; Offset, cbBytes: uint64);
 begin
   fBuffer.ExtractData(TargetPtr,Offset,cbBytes);
 end;
 
-function TMathEngineBuffer.getHandle: pointer;
+function TComputeBuffer.getFloatSize: uint8;
+begin
+  Result := fComputeEngine.FloatSize;
+end;
+
+function TComputeBuffer.getHandle: pointer;
 begin
   Result := fBuffer;
 end;
 
-function TMathEngineBuffer.getMathEngine: IMathEngine;
+function TComputeBuffer.getComputeEngine: IComputeEngine;
 begin
-  Result := fMathEngine;
+  Result := fComputeEngine;
 end;
 
-function TMathEngineBuffer.getObject(Offset, Height, Width: uint64): IMathEngineObject;
+
+function TComputeBuffer.getObject(OffsetElements, Height, Width: uint64): IComputeObject;
 begin
-  Result := TMathEngineObject.Create(Self,Offset,Height,Width);
+  Result := TComputeObject.Create(Self,OffsetElements*getFloatSize,Height,Width);
 end;
 
-function TMathEngineBuffer.getSize: uint64;
+function TComputeBuffer.getSize: uint64;
 begin
   Result := fBuffer.Size;
 end;
 
-procedure TMathEngineBuffer.setData(SourcePtr: pointer; Offset, cbBytes: uint64);
+procedure TComputeBuffer.setData(SourcePtr: pointer; Offset, cbBytes: uint64);
 begin
   fBuffer.InsertData(SourcePtr,Offset,cbBytes);
 end;

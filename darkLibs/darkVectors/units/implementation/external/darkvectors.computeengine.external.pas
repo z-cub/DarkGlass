@@ -24,63 +24,17 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkmath.provider.software;
+unit darkvectors.computeengine.external;
 
 interface
-
-
-implementation
 uses
-  darkmath.device,
-  darkmath.provider,
-  darkmath.providers,
-  darkmath.device.software;
+  darkvectors.computeengine;
 
 type
-  TComputeProvider = class( TInterfacedObject, IComputeProvider )
-  private
-    fDevice: IComputeDevice;
-  private //- IComputeProvider -//
-    function getName: string;
-    function getDeviceCount: uint64;
-    function getDevice( DeviceIndex: uint64 ): IComputeDevice;
-  public
-    constructor Create; reintroduce;
-    destructor Destroy; override;
+  TComputeEngine = class( TInterfacedObject, IComputeEnigne )
+
   end;
 
-{ TComputeProvider }
-
-constructor TComputeProvider.Create;
-begin
-  inherited Create;
-  fDevice := TComputeDevice.Create;
-end;
-
-destructor TComputeProvider.Destroy;
-begin
-  fDevice := nil;
-  inherited Destroy;
-end;
-
-function TComputeProvider.getDevice(DeviceIndex: uint64): IComputeDevice;
-begin
-  Result := fDevice;
-end;
-
-function TComputeProvider.getDeviceCount: uint64;
-begin
-  Result := 1;
-end;
-
-function TComputeProvider.getName: string;
-begin
-  Result := 'Software';
-end;
-
-initialization
-  ComputeProviders.Add( TComputeProvider.Create );
-
-finalization
+implementation
 
 end.

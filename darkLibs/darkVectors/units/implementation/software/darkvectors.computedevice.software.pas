@@ -1,4 +1,4 @@
-//------------------------------------------------------------------------------
+Ôªø//------------------------------------------------------------------------------
 // This file is part of the DarkGlass game engine project.
 // More information can be found here: http://chapmanworld.com/darkglass
 //
@@ -7,7 +7,7 @@
 // Copyright 2018 Craig Chapman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the ìSoftwareî),
+// copy of this software and associated documentation files (the ‚ÄúSoftware‚Äù),
 // to deal in the Software without restriction, including without limitation
 // the rights to use, copy, modify, merge, publish, distribute, sublicense,
 // and/or sell copies of the Software, and to permit persons to whom the
@@ -16,7 +16,7 @@
 // The above copyright notice and this permission notice shall be included
 // in all copies or substantial portions of the Software.
 //
-// THE SOFTWARE IS PROVIDED ìAS ISî, WITHOUT WARRANTY OF ANY KIND,
+// THE SOFTWARE IS PROVIDED ‚ÄúAS IS‚Äù, WITHOUT WARRANTY OF ANY KIND,
 // EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
 // IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -24,21 +24,20 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkmath.device.software;
+unit darkvectors.computedevice.software;
 {$ifdef fpc} {$ifdef CPU64} {$define CPU64BITS} {$endif} {$endif}
 
 interface
 uses
-  darkmath.engine,
-  darkmath.device;
+  darkvectors.computeengine,
+  darkvectors.computedevice;
 
 type
   TComputeDevice = class( TInterfacedObject, IComputeDevice )
   private
-    fHalfMathEngine: IMathEngine;
-    fSingleMathEngine: IMathEngine;
-    fDoubleMathEngine: IMathEngine;
-    {$ifdef CPU64BITS} fExtendedMathEngine: IMathEngine; {$endif}
+    fHalfEngine: IComputeEngine;
+    fSingleEngine: IComputeEngine;
+    fDoubleEngine: IComputeEngine;
   private //- IComputeDevice -//
    function getName: string;
    function getVendor: string;
@@ -49,7 +48,7 @@ type
    function getMemoryInUse: uint64;
    function getMemoryAvailable: uint64;
    function getSupportedTypes: TFloatTypes;
-   function getEngine( FloatType: TFloatType ): IMathEngine;
+   function getEngine( FloatType: TFloatType ): IComputeEngine;
   public
     constructor Create; reintroduce;
     destructor Destroy; override;
@@ -61,7 +60,7 @@ uses
   windows,
   registry,
   {$endif}
-  darkMath.engine.software;
+  darkvectors.computeengine.software;
 
 
 { TComputeDevice }
@@ -89,16 +88,16 @@ end;
 constructor TComputeDevice.Create;
 begin
   inherited Create;
-  fHalfMathEngine := nil;
-  fSingleMathEngine := nil;
-  fDoubleMathEngine := nil;
+  fHalfEngine := nil;
+  fSingleEngine := nil;
+  fDoubleEngine := nil;
 end;
 
 destructor TComputeDevice.Destroy;
 begin
-  fHalfMathEngine := nil;
-  fSingleMathEngine := nil;
-  fDoubleMathEngine := nil;
+  fHalfEngine := nil;
+  fSingleEngine := nil;
+  fDoubleEngine := nil;
   inherited Destroy;
 end;
 
@@ -112,40 +111,31 @@ begin
   Result := System.CPUCount;
 end;
 
-function TComputeDevice.getEngine(FloatType: TFloatType): IMathEngine;
+function TComputeDevice.getEngine(FloatType: TFloatType): IComputeEngine;
 begin
   Result := nil;
   case FloatType of
 
     ftHalf: begin
-      if not assigned(fHalfMathEngine) then begin
-        fHalfMathEngine := TMathEngine.Create( FloatType );
+      if not assigned(fHalfEngine) then begin
+        fHalfEngine := TComputeEngine.Create( FloatType );
       end;
-      Result := fHalfMathEngine;
+      Result := fHalfEngine;
     end;
 
     ftSingle: begin
-      if not assigned(fSingleMathEngine) then begin
-        fSingleMathEngine := TMathEngine.Create( FloatType );
+      if not assigned(fSingleEngine) then begin
+        fSingleEngine := TComputeEngine.Create( FloatType );
       end;
-      Result := fSingleMathEngine;
+      Result := fSingleEngine;
     end;
 
     ftDouble: begin
-      if not assigned(fDoubleMathEngine) then begin
-        fDoubleMathEngine := TMathEngine.Create( FloatType );
+      if not assigned(fDoubleEngine) then begin
+        fDoubleEngine := TComputeEngine.Create( FloatType );
       end;
-      Result := fDoubleMathEngine;
+      Result := fDoubleEngine;
     end;
-
-    {$ifdef CPU64BITS}
-    ftExtended: begin
-      if not assigned(fExtendedMathEngine) then begin
-        fExtendedMathEngine := TMathEngine.Create( FloatType );
-      end;
-      Result := fExtendedMathEngine;
-    end;
-    {$endif}
 
   end;
 end;
@@ -205,9 +195,6 @@ end;
 function TComputeDevice.getSupportedTypes: TFloatTypes;
 begin
   Result := [ TFloatType.ftHalf, TFloatType.ftSingle, TFloatType.ftDouble ];
-  {$ifdef CPU64BITS}
-  Result := [ TFloatType.ftHalf, TFloatType.ftSingle, TFloatType.ftDouble, TFloatType.ftExtended ];
-  {$endif}
 end;
 
 function TComputeDevice.getVendor: string;
