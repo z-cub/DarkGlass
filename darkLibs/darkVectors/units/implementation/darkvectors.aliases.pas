@@ -41,9 +41,7 @@ uses
   darkvectors.computeobject.standard,
   darkvectors.computeproviders.singleton,
   darkvectors.computeprovider.software,
-  darkvectors.halftype,
-  darkVectors.external.binding,
-  darkVectors.external.binding.export;
+  darkvectors.halftype;
 
 type
   float = darkvectors.computeengine.float;
@@ -57,8 +55,6 @@ type
   IComputeObject = darkvectors.computeengine.IComputeObject;
   TComputeObject = darkvectors.computeobject.standard.TComputeObject;
   half = darkvectors.halftype.half;
-  IVectorsBinding = darkVectors.external.binding.IVectorsBinding;
-  TExternalBindingExport = darkVectors.external.binding.TExternalBindingExport;
 
 implementation
 

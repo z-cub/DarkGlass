@@ -173,13 +173,6 @@
         <DCCReference Include="..\..\units\types\darkvectors.vector.pas"/>
         <DCCReference Include="..\..\units\types\darkvectors.matrix.pas"/>
         <DCCReference Include="..\..\units\implementation\darkvectors.aliases.pas"/>
-        <DCCReference Include="..\..\units\implementation\external\darkvectors.computebuffer.external.pas"/>
-        <DCCReference Include="..\..\units\implementation\external\darkvectors.computeobject.external.pas"/>
-        <DCCReference Include="..\..\units\implementation\external\darkvectors.computedevice.external.pas"/>
-        <DCCReference Include="..\..\units\implementation\external\darkvectors.computeengine.external.pas"/>
-        <DCCReference Include="..\..\units\implementation\external\darkvectors.computeprovider.external.pas"/>
-        <DCCReference Include="..\..\units\interfaces\darkvectors.external.binding.pas"/>
-        <DCCReference Include="..\..\units\implementation\external\darkvectors.external.binding.export.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

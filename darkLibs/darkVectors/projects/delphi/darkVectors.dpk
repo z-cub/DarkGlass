@@ -44,13 +44,6 @@ contains
   darkvectors.computeproviders.singleton in '..\..\units\implementation\darkvectors.computeproviders.singleton.pas',
   darkvectors.vector in '..\..\units\types\darkvectors.vector.pas',
   darkvectors.matrix in '..\..\units\types\darkvectors.matrix.pas',
-  darkvectors.aliases in '..\..\units\implementation\darkvectors.aliases.pas',
-  darkvectors.computebuffer.external in '..\..\units\implementation\external\darkvectors.computebuffer.external.pas',
-  darkvectors.computeobject.external in '..\..\units\implementation\external\darkvectors.computeobject.external.pas',
-  darkvectors.computedevice.external in '..\..\units\implementation\external\darkvectors.computedevice.external.pas',
-  darkvectors.computeengine.external in '..\..\units\implementation\external\darkvectors.computeengine.external.pas',
-  darkvectors.computeprovider.external in '..\..\units\implementation\external\darkvectors.computeprovider.external.pas',
-  darkvectors.external.binding in '..\..\units\interfaces\darkvectors.external.binding.pas',
-  darkvectors.external.binding.export in '..\..\units\implementation\external\darkvectors.external.binding.export.pas';
+  darkvectors.aliases in '..\..\units\implementation\darkvectors.aliases.pas';
 
 end.
