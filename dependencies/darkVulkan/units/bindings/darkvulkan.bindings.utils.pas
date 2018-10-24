@@ -24,67 +24,54 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkvulkangen.ast._function.standard;
+unit darkvulkan.bindings.utils;
 
 interface
 uses
-  darkIO.streams,
-  darkvulkangen.ast,
-  darkvulkangen.ast.node.standard;
+  darkvulkan.bindings.vulkan;
 
-type
-  TdvFunction = class( TdvASTNode, IdvFunction )
-  private
-    fHeader: IdvFunctionHeader;
-    fBody: IdvCompoundStatement;
-  private
-    function getBodySection: IdvCompoundStatement;
-    function getHeader: IdvFunctionHeader; //- IdvFuntion -//
-  protected
-    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
-  public
-    constructor Create( name: string ); reintroduce;
-    destructor Destroy; override;
-  end;
+///  <summary>
+///    Returns true if the parameter value is VK_SUCCESS, else returns
+///    false.
+///  </summary>
+function VKSUCCESS( value: vkResult ): boolean;
+
+///  <summary>
+///    Returns false if the parameter value is VK_SUCCESS, else returns
+///    true.
+///  </summary>
+function VKFAILED( value: vkResult ): boolean;
+
+///  <summary>
+///    Uses darkUnicode to convert a pchar / pansichar to a string.
+///  </summary>
+function StrPChar( value: pointer ): string;
 
 implementation
 uses
-  darkLog,
-  darkvulkangen.ast.functionheader.standard,
-  darkvulkangen.ast.compoundstatement.standard;
+  darkIO.buffers;
 
-{ TdvFunction }
-
-constructor TdvFunction.Create( name: string );
+function VKSUCCESS( value: vkResult ): boolean;
 begin
-  inherited Create;
-  fHeader := inherited InsertChild( TdvFunctionHeader.Create( name ) ) as IdvFunctionHeader;
-  fBody := inherited InsertChild( TdvCompoundStatement.Create ) as IdvCompoundStatement;
-  fBody.LineBreaks := 2;
+  Result := (value = VK_SUCCESS);
 end;
 
-destructor TdvFunction.Destroy;
+function VKFAILED( value: vkResult ): boolean;
 begin
-  fBody := nil;
-  fHeader := nil;
-  inherited Destroy;
+  Result := not (value = VK_SUCCESS);
 end;
 
-function TdvFunction.getBodySection: IdvCompoundStatement;
+function StrPChar( value: pointer ): string;
+var
+  Buffer: IUnicodeBuffer;
 begin
-  Result := fBody;
-end;
-
-function TdvFunction.getHeader: IdvFunctionHeader;
-begin
-  Result := fHeader;
-end;
-
-function TdvFunction.InsertChild(node: IdvASTNode): IdvASTNode;
-begin
-  Result := nil;
-  Log.Insert(ENoChildren,TLogSeverity.lsError);
+  Buffer := TBuffer.Create(0);
+  try
+    Buffer.AppendData(value);
+    Result := Buffer.ReadString(TUnicodeFormat.utfANSI,true);
+  finally
+    Buffer := nil;
+  end;
 end;
 
 end.
-

@@ -24,67 +24,76 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkvulkangen.ast._function.standard;
+unit darkvulkan.layer.standard;
 
 interface
 uses
-  darkIO.streams,
-  darkvulkangen.ast,
-  darkvulkangen.ast.node.standard;
+  darkIO.buffers,
+  darkvulkan.layer;
 
 type
-  TdvFunction = class( TdvASTNode, IdvFunction )
+  TvkLayer = class( TInterfacedObject, IvkLayer )
   private
-    fHeader: IdvFunctionHeader;
-    fBody: IdvCompoundStatement;
-  private
-    function getBodySection: IdvCompoundStatement;
-    function getHeader: IdvFunctionHeader; //- IdvFuntion -//
-  protected
-    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
+    fName: IUnicodeBuffer;
+    fDescription: string;
+    fImplementation: uint32;
+    fSpec: uint32;
+  private //- IvkLayer -//
+    function getNameAsPAnsiChar: pointer;
+    function getName: string;
+    function getSpecVersion: uint32;
+    function getImplementationVersion: uint32;
+    function getDescription: string;
   public
-    constructor Create( name: string ); reintroduce;
+    constructor Create( Name, Description: string; ImplementationVersion, SpecVersion: uint32 ); reintroduce;
     destructor Destroy; override;
+
   end;
 
+
 implementation
-uses
-  darkLog,
-  darkvulkangen.ast.functionheader.standard,
-  darkvulkangen.ast.compoundstatement.standard;
 
-{ TdvFunction }
+{ TvkLayer }
 
-constructor TdvFunction.Create( name: string );
+constructor TvkLayer.Create(Name, Description: string; ImplementationVersion, SpecVersion: uint32);
 begin
   inherited Create;
-  fHeader := inherited InsertChild( TdvFunctionHeader.Create( name ) ) as IdvFunctionHeader;
-  fBody := inherited InsertChild( TdvCompoundStatement.Create ) as IdvCompoundStatement;
-  fBody.LineBreaks := 2;
+  fName := TBuffer.Create(succ(Length(Name)));
+  fName.WriteString(Name,TUnicodeFormat.utfANSI);
+  fDescription := Description;
+  fImplementation := ImplementationVersion;
+  fSpec := SpecVersion;
 end;
 
-destructor TdvFunction.Destroy;
+destructor TvkLayer.Destroy;
 begin
-  fBody := nil;
-  fHeader := nil;
-  inherited Destroy;
+  fName := nil;
+  inherited;
 end;
 
-function TdvFunction.getBodySection: IdvCompoundStatement;
+function TvkLayer.getDescription: string;
 begin
-  Result := fBody;
+  Result := fDescription;
 end;
 
-function TdvFunction.getHeader: IdvFunctionHeader;
+function TvkLayer.getImplementationVersion: uint32;
 begin
-  Result := fHeader;
+  Result := fImplementation;
 end;
 
-function TdvFunction.InsertChild(node: IdvASTNode): IdvASTNode;
+function TvkLayer.getName: string;
 begin
-  Result := nil;
-  Log.Insert(ENoChildren,TLogSeverity.lsError);
+  Result := fName.ReadString(TUnicodeFormat.utfAnsi,True);
+end;
+
+function TvkLayer.getNameAsPAnsiChar: pointer;
+begin
+  Result := fName.DataPtr;
+end;
+
+function TvkLayer.getSpecVersion: uint32;
+begin
+  Result := fSpec;
 end;
 
 end.
-

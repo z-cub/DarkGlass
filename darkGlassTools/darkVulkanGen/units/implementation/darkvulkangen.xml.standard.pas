@@ -1788,15 +1788,11 @@ begin
     exit;
   end;
   //- Insert initialization and finalization, and the dynlib variable
-  UnitNode.InitializationSection.InsertChild(TdvASTPlainText.Create('  LoadPointers(0,FALSE);'));
   UnitNode.FinalizationSection.InsertChild(TdvASTPlainText.Create('  dynLib := nil; '));
   UnitNode.ImplementationSection.InsertChild(TdvASTPlainText.Create('const'+sLineBreak+'  cLibName = {$ifdef MSWINDOWS}''vulkan-1.dll''{$else}''libvulkan.so''{$endif};'+sLineBreak+sLineBreak));
   UnitNode.ImplementationSection.Variables.InsertChild(TdvVariable.Create('dynlib','IDynLib','nil'));
   //- Insert the function for initially loading pointers.
-  FunctionHeader := UnitNode.InterfaceSection.InsertChild(TdvFunctionHeader.Create('LoadPointers')) as IdvFunctionHeader;
-  FunctionHeader.InsertChild(TdvParameter.Create('Instance','vkInstance',TParameterProtection.ppIn));
-  FunctionHeader.InsertChild(TdvParameter.Create('UseInstance','boolean = true',TParameterProtection.ppNone));
-  aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('LoadPointers')) as IdvFunction;
+  aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('Tvk.LoadPointers')) as IdvFunction;
   aFunction.Header.InsertChild(TdvParameter.Create('Instance','vkInstance',TParameterProtection.ppIn));
   aFunction.Header.InsertChild(TdvParameter.Create('UseInstance','boolean = true',TParameterProtection.ppNone));
   aFunction.Header.ReturnType := '';
@@ -1808,7 +1804,6 @@ begin
   aFunction.Body.Content := aFunction.Body.Content + '      exit; '+sLineBreak;
   aFunction.Body.Content := aFunction.Body.Content + '    end; '+sLineBreak;
   aFunction.Body.Content := aFunction.Body.Content + '  end; '+sLineBreak;
-
   //- Insert the functions for loading
   for idx := 0 to pred(fExternalNames.Count) do begin
     Name := fExternalNames.Names[idx];
@@ -1826,6 +1821,18 @@ begin
     end;
     aFunction.Body.Content := aFunction.Body.Content + sLineBreak;
   end;
+
+  //- Reload pointers
+  aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('Tvk.ReloadPointers')) as IdvFunction;
+  aFunction.Header.InsertChild(TdvParameter.Create('Instance','vkInstance',TParameterProtection.ppIn));
+  aFunction.Header.ReturnType := '';
+  aFunction.Body.Content := 'LoadPointers(Instance,TRUE); ';
+
+  //- Constructor
+  aFunction := UnitNode.ImplementationSection.InsertChild(TdvFunction.Create('Tvk.Create')) as IdvFunction;
+  aFunction.Header.ReturnType := '';
+  aFunction.Header.IsConstructor := True;
+  aFunction.Body.Content := 'inherited; '+sLineBreak+'  LoadPointers(0,FALSE);';
 
   //- Now insert the function for testing to see if Vulkan is loaded (just the dll)
   FunctionHeader := UnitNode.InterfaceSection.InsertChild(TdvFunctionHeader.Create('VulkanAvailable')) as IdvFunctionHeader;
@@ -1910,7 +1917,7 @@ function TdvXMLParser.ParseRegistryCommands( XMLNode: IXMLNode; UnitNode: IdvAST
 var
   idx: int32;
   ChildNode: IXMLNode;
-  CommandVars: IdvASTNode;
+  CommandVars: IdvVariables;
 begin
   Result := False;
   if XMLNode.ChildNodes.Count=0 then begin
@@ -1943,7 +1950,18 @@ begin
       exit;
     end;
   end;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('type')).LineBreaks:=1;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('  Tvk = class')).LineBreaks:=1;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('  private')).LineBreaks:=1;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('    procedure LoadPointers( const Instance: vkInstance; UseInstance: boolean = true );')).LineBreaks:=1;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('  public')).LineBreaks:=1;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('    procedure ReloadPointers( const Instance: vkInstance );')).LineBreaks:=1;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('  public')).LineBreaks:=1;
+  CommandVars.setKeyword('');
   UnitNode.InterfaceSection.InsertChild(CommandVars);
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('  public')).LineBreaks:=1;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('    constructor Create; reintroduce;')).LineBreaks:=1;
+  UnitNode.InterfaceSection.InsertChild(TdvASTPlainText.Create('  end;')).LineBreaks:=1;
   Result := True;
 end;
 

@@ -70,7 +70,7 @@ type
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; virtual;
     function getIndentation( Indentation: uint32 ): string;
   public
-    constructor Create( IsSpecialNode: boolean = False ); reintroduce;
+    constructor Create( IsSpecialNode: boolean = False ); reintroduce; virtual;
     destructor Destroy; override;
   end;
 

@@ -39,6 +39,7 @@ type
     fIsFunction: boolean;
     fName: string;
     fReturnType: string;
+    fIsConstructor: boolean;
   private //- IdvFunctionHeader -//
     function getReturnType: string;
     procedure setReturnType( value: string );
@@ -46,6 +47,8 @@ type
     procedure setName( value: string );
     function getIsVariable: boolean;
     procedure setIsVariable( value: boolean );
+    function getIsConstructor: boolean;
+    procedure setIsConstructor( value: boolean );
   protected
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
   public
@@ -61,9 +64,15 @@ uses
 constructor TdvFunctionHeader.Create(name: string);
 begin
   inherited Create;
+  fIsConstructor := False;
   fisVariable := False;
   setReturnType('');
   setName(Name);
+end;
+
+function TdvFunctionHeader.getIsConstructor: boolean;
+begin
+  Result := fIsConstructor;
 end;
 
 function TdvFunctionHeader.getIsVariable: boolean;
@@ -83,6 +92,11 @@ begin
   end else begin
     Result := '';
   end;
+end;
+
+procedure TdvFunctionHeader.setIsConstructor(value: boolean);
+begin
+  fIsConstructor := value;
 end;
 
 procedure TdvFunctionHeader.setIsVariable(value: boolean);
@@ -121,13 +135,21 @@ begin
     if fIsVariable then begin
       Stream.WriteString(getIndentation(Indentation)+fName+': function ',UnicodeFormat);
     end else begin
-      Stream.WriteString(getIndentation(Indentation)+'function '+fName,UnicodeFormat);
+      if getIsConstructor then begin
+        Stream.WriteString(getIndentation(Indentation)+'constructor '+fName,UnicodeFormat);
+      end else begin
+        Stream.WriteString(getIndentation(Indentation)+'function '+fName,UnicodeFormat);
+      end;
     end;
   end else begin
     if fIsVariable then begin
       Stream.WriteString(getIndentation(Indentation)+fName+': procedure ',UnicodeFormat);
     end else begin
-      Stream.WriteString(getIndentation(Indentation)+'procedure '+fName,UnicodeFormat);
+      if getIsConstructor then begin
+        Stream.WriteString(getIndentation(Indentation)+'constructor '+fName,UnicodeFormat);
+      end else begin
+        Stream.WriteString(getIndentation(Indentation)+'procedure '+fName,UnicodeFormat);
+      end;
     end;
   end;
   //- Write the parameters ( children ).

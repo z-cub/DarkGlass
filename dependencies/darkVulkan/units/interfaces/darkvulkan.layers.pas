@@ -24,67 +24,55 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkvulkangen.ast._function.standard;
+unit darkvulkan.layers;
 
 interface
 uses
-  darkIO.streams,
-  darkvulkangen.ast,
-  darkvulkangen.ast.node.standard;
+  darkvulkan.layer;
 
 type
-  TdvFunction = class( TdvASTNode, IdvFunction )
-  private
-    fHeader: IdvFunctionHeader;
-    fBody: IdvCompoundStatement;
-  private
-    function getBodySection: IdvCompoundStatement;
-    function getHeader: IdvFunctionHeader; //- IdvFuntion -//
-  protected
-    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
-  public
-    constructor Create( name: string ); reintroduce;
-    destructor Destroy; override;
+  ///  <summary>
+  ///    Represents the available layers on the vulkan implementation.
+  ///  </summary>
+  IvkLayers = interface
+    ['{156B3FC3-CD6D-44D6-9771-DAAD21A67346}']
+
+    ///  <summary>
+    ///    Returns the number of layers supported.
+    ///  </summary>
+    function getCount: uint64;
+
+    ///  <summary>
+    ///    Returns an IvkLayer instance representing the layer
+    ///    specified by index.
+    ///  </summary>
+    function getLayer( index: uint64 ): IvkLayer;
+
+    ///  <summary>
+    ///    Returns a layer as specified by name.
+    ///  </summary>
+    function getByName( name: string ): IvkLayer;
+
+    ///  <summary>
+    ///    Returns true if the named layer is present in the layers
+    ///    list, otherwise returns false.
+    ///  </summary>
+    function Exists( name: string ): boolean;
+
+    //- Pascal Only, properties -//
+    ///  <summary>
+    ///    Returns the number of layers supported.
+    ///  </summary>
+    property Count: uint64 read getCount;
+
+    ///  <summary>
+    ///    Returns the layer specified by index.
+    ///  </summary>
+    property Name[ index: uint64 ]: IvkLayer read getLayer; default;
+
   end;
 
 implementation
-uses
-  darkLog,
-  darkvulkangen.ast.functionheader.standard,
-  darkvulkangen.ast.compoundstatement.standard;
-
-{ TdvFunction }
-
-constructor TdvFunction.Create( name: string );
-begin
-  inherited Create;
-  fHeader := inherited InsertChild( TdvFunctionHeader.Create( name ) ) as IdvFunctionHeader;
-  fBody := inherited InsertChild( TdvCompoundStatement.Create ) as IdvCompoundStatement;
-  fBody.LineBreaks := 2;
-end;
-
-destructor TdvFunction.Destroy;
-begin
-  fBody := nil;
-  fHeader := nil;
-  inherited Destroy;
-end;
-
-function TdvFunction.getBodySection: IdvCompoundStatement;
-begin
-  Result := fBody;
-end;
-
-function TdvFunction.getHeader: IdvFunctionHeader;
-begin
-  Result := fHeader;
-end;
-
-function TdvFunction.InsertChild(node: IdvASTNode): IdvASTNode;
-begin
-  Result := nil;
-  Log.Insert(ENoChildren,TLogSeverity.lsError);
-end;
 
 end.
 

@@ -35,13 +35,35 @@ uses
 
 type
   TdvVariables = class( TdvASTNode, IdvVariables )
+  private
+    fKeyword: string;
   protected
+    procedure setKeyword( value: string );
+    function getKeyword: string;
     function WriteToStream( Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32 ): boolean; override;
+  public
+    constructor Create( IsSpecialNode: boolean = False ); override;
   end;
 
 implementation
 
 { TdvVariables }
+
+constructor TdvVariables.Create(IsSpecialNode: boolean);
+begin
+  inherited Create;
+  fKeyword := 'var';
+end;
+
+function TdvVariables.getKeyword: string;
+begin
+  Result := fKeyword;
+end;
+
+procedure TdvVariables.setKeyword(value: string);
+begin
+  fKeyword := value;
+end;
 
 function TdvVariables.WriteToStream(Stream: IUnicodeStream; UnicodeFormat: TUnicodeFormat; Indentation: uint32): boolean;
 var
@@ -51,7 +73,7 @@ begin
   if not WriteBeforeNode(Stream,UnicodeFormat,Indentation) then begin
     exit;
   end;
-  Stream.WriteString(sLineBreak+getIndentation(Indentation)+'var'+sLineBreak,UnicodeFormat);
+  Stream.WriteString(sLineBreak+getIndentation(Indentation)+fKeyword+sLineBreak,UnicodeFormat);
   if getChildCount>0 then begin
     inc(Indentation,cIndentationStep);
     for idx := 0 to pred(getChildCount) do begin

@@ -24,67 +24,80 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkvulkangen.ast._function.standard;
+unit darkplugins.export;
 
 interface
 uses
-  darkIO.streams,
-  darkvulkangen.ast,
-  darkvulkangen.ast.node.standard;
+  classes,
+  sysutils,
+  darkplugins.plugin;
 
 type
-  TdvFunction = class( TdvASTNode, IdvFunction )
+  TExportablePlugin = class( TInterfacedObject, IPlugin )
   private
-    fHeader: IdvFunctionHeader;
-    fBody: IdvCompoundStatement;
-  private
-    function getBodySection: IdvCompoundStatement;
-    function getHeader: IdvFunctionHeader; //- IdvFuntion -//
-  protected
-    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
+    fVersionMajor: uint32;
+    fVersionMinor: uint32;
+    fCategory: TGUID;
+    fName: string;
+  private //- IPlugin -//
+    function getVersionMajor: uint32;
+    function getVersionMinor: uint32;
+    function getCategory: TGUID;
+    function getName: string;
+    function getInstance: IInterface;
   public
-    constructor Create( name: string ); reintroduce;
-    destructor Destroy; override;
+    constructor Create( aVersionMajor: uint32; aVersionMinor: uint32; aCategory: TGUID; aName: string ); reintroduce; virtual;
   end;
 
 implementation
 uses
-  darkLog,
-  darkvulkangen.ast.functionheader.standard,
-  darkvulkangen.ast.compoundstatement.standard;
+  darkplugins.plugin.export;
 
-{ TdvFunction }
+var
+  SingletonPlugin: IPlugin = nil;
 
-constructor TdvFunction.Create( name: string );
+constructor TExportablePlugin.Create(aVersionMajor, aVersionMinor: uint32; aCategory: TGUID; aName: string);
 begin
   inherited Create;
-  fHeader := inherited InsertChild( TdvFunctionHeader.Create( name ) ) as IdvFunctionHeader;
-  fBody := inherited InsertChild( TdvCompoundStatement.Create ) as IdvCompoundStatement;
-  fBody.LineBreaks := 2;
+  if assigned(SingletonPlugin) then begin
+    raise
+      Exception.Create('Plugin is already instanced.');
+  end;
+  fVersionMajor := aVersionMajor;
+  fVersionMinor := aVersionMinor;
+  fCategory := aCategory;
+  fName := aName;
+  SingletonPlugin := Self;
+  darkPlugins.plugin.export.ExportPlugin(SingletonPlugin);
 end;
 
-destructor TdvFunction.Destroy;
+function TExportablePlugin.getCategory: TGUID;
 begin
-  fBody := nil;
-  fHeader := nil;
-  inherited Destroy;
+  Result := fCategory;
 end;
 
-function TdvFunction.getBodySection: IdvCompoundStatement;
+function TExportablePlugin.getInstance: IInterface;
 begin
-  Result := fBody;
+  Result := Self;
 end;
 
-function TdvFunction.getHeader: IdvFunctionHeader;
+function TExportablePlugin.getName: string;
 begin
-  Result := fHeader;
+  Result := fName;
 end;
 
-function TdvFunction.InsertChild(node: IdvASTNode): IdvASTNode;
+function TExportablePlugin.getVersionMajor: uint32;
 begin
-  Result := nil;
-  Log.Insert(ENoChildren,TLogSeverity.lsError);
+  Result := fVersionMajor;
 end;
+
+function TExportablePlugin.getVersionMinor: uint32;
+begin
+  Result := fVersionMinor;
+end;
+
+initialization
+finalization
+  SingletonPlugin := nil;
 
 end.
-

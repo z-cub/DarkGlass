@@ -24,67 +24,74 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkvulkangen.ast._function.standard;
+unit darkplugins.plugin.export;
 
 interface
 uses
-  darkIO.streams,
-  darkvulkangen.ast,
-  darkvulkangen.ast.node.standard;
+  darkPlugins.plugin;
 
-type
-  TdvFunction = class( TdvASTNode, IdvFunction )
-  private
-    fHeader: IdvFunctionHeader;
-    fBody: IdvCompoundStatement;
-  private
-    function getBodySection: IdvCompoundStatement;
-    function getHeader: IdvFunctionHeader; //- IdvFuntion -//
-  protected
-    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
-  public
-    constructor Create( name: string ); reintroduce;
-    destructor Destroy; override;
-  end;
+procedure ExportPlugin( Plugin: IPlugin );
 
 implementation
 uses
-  darkLog,
-  darkvulkangen.ast.functionheader.standard,
-  darkvulkangen.ast.compoundstatement.standard;
+  darkIO.buffers;
 
-{ TdvFunction }
+var
+  ExportPlg: IPlugin = nil;
 
-constructor TdvFunction.Create( name: string );
+procedure ExportPlugin( Plugin: IPlugin );
 begin
-  inherited Create;
-  fHeader := inherited InsertChild( TdvFunctionHeader.Create( name ) ) as IdvFunctionHeader;
-  fBody := inherited InsertChild( TdvCompoundStatement.Create ) as IdvCompoundStatement;
-  fBody.LineBreaks := 2;
+  ExportPlg := Plugin;
 end;
 
-destructor TdvFunction.Destroy;
+function getVersionMajor: uint32; cdecl; export;
 begin
-  fBody := nil;
-  fHeader := nil;
-  inherited Destroy;
+  Result := ExportPlg.VersionMajor;
 end;
 
-function TdvFunction.getBodySection: IdvCompoundStatement;
+function getVersionMinor: uint32; cdecl; export;
 begin
-  Result := fBody;
+  Result := ExportPlg.VersionMinor;
 end;
 
-function TdvFunction.getHeader: IdvFunctionHeader;
+function getCategory: TGUID; cdecl; export;
 begin
-  Result := fHeader;
+  Result := ExportPlg.Category;
 end;
 
-function TdvFunction.InsertChild(node: IdvASTNode): IdvASTNode;
+procedure getName( lpName: pointer; var lpSize: uint32 ); cdecl; export;
+var
+  Buffer: IUnicodeBuffer;
 begin
-  Result := nil;
-  Log.Insert(ENoChildren,TLogSeverity.lsError);
+  Buffer := TBuffer.Create;
+  try
+    Buffer.AsString := ExportPlg.Name;
+    if assigned(lpName) then begin
+      lpSize := Buffer.Size;
+      Buffer.ExtractData(lpName,0,Buffer.Size);
+    end else begin
+      lpSize := Buffer.Size;
+    end;
+  finally
+    Buffer := nil;
+  end;
 end;
+
+function getInstance: IInterface; cdecl; export;
+begin
+  Result := ExportPlg.getInstance;
+end;
+
+exports
+  getVersionMajor,
+  getVersionMinor,
+  getCategory,
+  getName,
+  getInstance;
+
+initialization
+
+finalization
+  ExportPlg := nil; // dispose the plugin
 
 end.
-

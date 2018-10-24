@@ -24,67 +24,59 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkvulkangen.ast._function.standard;
+unit darkvulkan.extension.standard;
 
 interface
 uses
-  darkIO.streams,
-  darkvulkangen.ast,
-  darkvulkangen.ast.node.standard;
+  darkIO.buffers,
+  darkvulkan.extension;
 
 type
-  TdvFunction = class( TdvASTNode, IdvFunction )
+  TvkExtension = class( TInterfacedObject, IvkExtension )
   private
-    fHeader: IdvFunctionHeader;
-    fBody: IdvCompoundStatement;
-  private
-    function getBodySection: IdvCompoundStatement;
-    function getHeader: IdvFunctionHeader; //- IdvFuntion -//
-  protected
-    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
+    fName: IUnicodeBuffer;
+    fVersion: uint32;
+  private //- IvkExtension -//
+    function getName: string;
+    function getNameAsPAnsiChar: pointer;
+    function getVersion: uint32;
   public
-    constructor Create( name: string ); reintroduce;
+    constructor Create( name: string; version: uint32 ); reintroduce;
     destructor Destroy; override;
   end;
 
 implementation
-uses
-  darkLog,
-  darkvulkangen.ast.functionheader.standard,
-  darkvulkangen.ast.compoundstatement.standard;
 
-{ TdvFunction }
+{ TvkExtension }
 
-constructor TdvFunction.Create( name: string );
+constructor TvkExtension.Create(name: string; version: uint32);
 begin
   inherited Create;
-  fHeader := inherited InsertChild( TdvFunctionHeader.Create( name ) ) as IdvFunctionHeader;
-  fBody := inherited InsertChild( TdvCompoundStatement.Create ) as IdvCompoundStatement;
-  fBody.LineBreaks := 2;
+  fVersion := Version;
+  fName := TBuffer.Create(succ(Length(name)));
+  fName.FillMem(0);
+  fName.WriteString(Name,TUnicodeFormat.utfAnsi);
 end;
 
-destructor TdvFunction.Destroy;
+destructor TvkExtension.Destroy;
 begin
-  fBody := nil;
-  fHeader := nil;
-  inherited Destroy;
+  fName := nil;
+  inherited;
 end;
 
-function TdvFunction.getBodySection: IdvCompoundStatement;
+function TvkExtension.getName: string;
 begin
-  Result := fBody;
+  Result := fName.ReadString(TUnicodeFormat.utfANSI,True);
 end;
 
-function TdvFunction.getHeader: IdvFunctionHeader;
+function TvkExtension.getNameAsPAnsiChar: pointer;
 begin
-  Result := fHeader;
+  Result := fName.DataPtr;
 end;
 
-function TdvFunction.InsertChild(node: IdvASTNode): IdvASTNode;
+function TvkExtension.getVersion: uint32;
 begin
-  Result := nil;
-  Log.Insert(ENoChildren,TLogSeverity.lsError);
+  Result := fVersion;
 end;
 
 end.
-

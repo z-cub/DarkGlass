@@ -1,0 +1,45 @@
+package pkg_darkplugins;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darkplugins.category in '..\..\units\interfaces\darkplugins.category.pas',
+  darkplugins.plugin in '..\..\units\interfaces\darkplugins.plugin.pas',
+  darkplugins.manager in '..\..\units\interfaces\darkplugins.manager.pas',
+  darkplugins.category.standard in '..\..\units\implementation\darkplugins.category.standard.pas',
+  darkplugins.plugin.standard in '..\..\units\implementation\darkplugins.plugin.standard.pas',
+  darkplugins.plugin.export in '..\..\units\implementation\darkplugins.plugin.export.pas',
+  darkplugins.export in '..\..\units\api\darkplugins.export.pas',
+  darkplugins.import in '..\..\units\api\darkplugins.import.pas',
+  darkplugins.manager.standard in '..\..\units\implementation\darkplugins.manager.standard.pas',
+  darkplugins.installer in '..\..\units\implementation\darkplugins.installer.pas';
+
+end.

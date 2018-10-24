@@ -1,0 +1,50 @@
+package pkg_darkVulkan;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl;
+
+contains
+  darkvulkan.bindings.vulkan in '..\..\units\bindings\darkvulkan.bindings.vulkan.pas',
+  darkvulkan.instance in '..\..\units\interfaces\darkvulkan.instance.pas',
+  darkvulkan.instance.standard in '..\..\units\implementation\darkvulkan.instance.standard.pas',
+  darkvulkan.bindings.utils in '..\..\units\bindings\darkvulkan.bindings.utils.pas',
+  darkVulkan in '..\..\units\api\darkVulkan.pas',
+  darkvulkan.extensions in '..\..\units\interfaces\darkvulkan.extensions.pas',
+  darkvulkan.layers in '..\..\units\interfaces\darkvulkan.layers.pas',
+  darkvulkan.extensions.standard in '..\..\units\implementation\darkvulkan.extensions.standard.pas',
+  darkvulkan.layers.standard in '..\..\units\implementation\darkvulkan.layers.standard.pas',
+  darkvulkan.extension in '..\..\units\interfaces\darkvulkan.extension.pas',
+  darkvulkan.extension.standard in '..\..\units\implementation\darkvulkan.extension.standard.pas',
+  darkvulkan.layer in '..\..\units\interfaces\darkvulkan.layer.pas',
+  darkvulkan.layer.standard in '..\..\units\implementation\darkvulkan.layer.standard.pas',
+  darkvulkan.extensions.required in '..\..\units\implementation\darkvulkan.extensions.required.pas',
+  darkvulkan.layers.lunarg in '..\..\units\implementation\darkvulkan.layers.lunarg.pas';
+
+end.

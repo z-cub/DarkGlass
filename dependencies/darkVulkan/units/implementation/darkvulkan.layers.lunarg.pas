@@ -24,67 +24,84 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkvulkangen.ast._function.standard;
+unit darkvulkan.layers.lunarg;
 
 interface
 uses
-  darkIO.streams,
-  darkvulkangen.ast,
-  darkvulkangen.ast.node.standard;
+  darkCollections.types,
+  darkvulkan.layer,
+  darkvulkan.layers;
 
 type
-  TdvFunction = class( TdvASTNode, IdvFunction )
+  TvkLunarGLayers = class( TInterfacedObject, IvkLayers )
   private
-    fHeader: IdvFunctionHeader;
-    fBody: IdvCompoundStatement;
-  private
-    function getBodySection: IdvCompoundStatement;
-    function getHeader: IdvFunctionHeader; //- IdvFuntion -//
-  protected
-    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
+    fLayers: ICollection;
+  private //- IvkLayuers -//
+    function getCount: uint64;
+    function getLayer( index: uint64 ): IvkLayer;
+    function getByName( name: string ): IvkLayer;
+    function Exists( name: string ): boolean;
   public
-    constructor Create( name: string ); reintroduce;
+    constructor Create; reintroduce;
     destructor Destroy; override;
   end;
 
 implementation
 uses
-  darkLog,
-  darkvulkangen.ast.functionheader.standard,
-  darkvulkangen.ast.compoundstatement.standard;
+  darkIO.buffers,
+  darkCollections.list,
+  darkvulkan.bindings.vulkan,
+  darkvulkan.bindings.utils,
+  darkvulkan.layer.standard;
 
-{ TdvFunction }
+type
+  IvkLayerList = IList<IvkLayer>;
+  TvkLayerList = TList<IvkLayer>;
 
-constructor TdvFunction.Create( name: string );
+{ TvkLunarGLayers }
+
+constructor TvkLunarGLayers.Create;
 begin
   inherited Create;
-  fHeader := inherited InsertChild( TdvFunctionHeader.Create( name ) ) as IdvFunctionHeader;
-  fBody := inherited InsertChild( TdvCompoundStatement.Create ) as IdvCompoundStatement;
-  fBody.LineBreaks := 2;
+  fLayers := TvkLayerList.Create;
+  IvkLayerList(fLayers).Add(TvkLayer.Create('VK_LAYER_LUNARG_standard_validation','',0,0));
 end;
 
-destructor TdvFunction.Destroy;
+destructor TvkLunarGLayers.Destroy;
 begin
-  fBody := nil;
-  fHeader := nil;
+  fLayers := nil;
   inherited Destroy;
 end;
 
-function TdvFunction.getBodySection: IdvCompoundStatement;
+function TvkLunarGLayers.Exists(name: string): boolean;
 begin
-  Result := fBody;
+  Result := assigned( getByName( name ) );
 end;
 
-function TdvFunction.getHeader: IdvFunctionHeader;
-begin
-  Result := fHeader;
-end;
-
-function TdvFunction.InsertChild(node: IdvASTNode): IdvASTNode;
+function TvkLunarGLayers.getByName(name: string): IvkLayer;
+var
+  idx: uint64;
 begin
   Result := nil;
-  Log.Insert(ENoChildren,TLogSeverity.lsError);
+  if getCount=0 then begin
+    exit;
+  end;
+  for idx := 0 to pred(getCount) do begin
+    if getLayer(idx).Name=name then begin
+      Result := getLayer(idx);
+      exit;
+    end;
+  end;
+end;
+
+function TvkLunarGLayers.getCount: uint64;
+begin
+  Result := IvkLayerList(fLayers).Count;
+end;
+
+function TvkLunarGLayers.getLayer(index: uint64): IvkLayer;
+begin
+  Result := IvkLayerList(fLayers).Items[index];
 end;
 
 end.
-

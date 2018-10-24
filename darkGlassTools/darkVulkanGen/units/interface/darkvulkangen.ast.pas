@@ -183,6 +183,8 @@ type
   /// Defines a section of variables, where each child is an IdvVariable
   IdvVariables = interface( IdvASTNode )
     ['{D20F4CA0-7DA2-4E00-AC68-71A5E9E2698D}']
+    procedure setKeyword( value: string );
+    function getKeyword: string;
   end;
 
   TdvTypeKind = (
@@ -295,11 +297,14 @@ type
     procedure setName( value: string );
     function getIsVariable: boolean;
     procedure setIsVariable( value: boolean );
+    function getIsConstructor: boolean;
+    procedure setIsConstructor( value: boolean );
 
     //- Pascal Only, properties.
     property Name: string read getName write setName;
     property IsVariable: boolean read getIsVariable write setIsVariable;
     property ReturnType: string read getReturnType write setReturnType;
+    property IsConstructor: boolean read getIsConstructor write setIsConstructor;
   end;
 
   ///  <summary>

@@ -24,67 +24,53 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 //------------------------------------------------------------------------------
-unit darkvulkangen.ast._function.standard;
+unit darkvulkan.extensions;
 
 interface
 uses
-  darkIO.streams,
-  darkvulkangen.ast,
-  darkvulkangen.ast.node.standard;
+  darkvulkan.extension;
 
 type
-  TdvFunction = class( TdvASTNode, IdvFunction )
-  private
-    fHeader: IdvFunctionHeader;
-    fBody: IdvCompoundStatement;
-  private
-    function getBodySection: IdvCompoundStatement;
-    function getHeader: IdvFunctionHeader; //- IdvFuntion -//
-  protected
-    function InsertChild( node: IdvASTNode ): IdvASTNode; override;
-  public
-    constructor Create( name: string ); reintroduce;
-    destructor Destroy; override;
+  ///  <summary>
+  ///    Represents the available extensions on the vulkan implementation.
+  ///  </summary>
+  IvkExtensions = interface
+    ['{DC2EF626-A924-4EA0-AA02-4920899BA660}']
+    ///  <summary>
+    ///    Returns the number of extensions supported.
+    ///  </summary>
+    function getCount: uint64;
+
+    ///  <summary>
+    ///    Returns an IvkExtension instance representing the extension
+    ///    specified by index.
+    ///  </summary>
+    function getExtension( index: uint64 ): IvkExtension;
+
+    ///  <summary>
+    ///    Returns an extension as specified by name.
+    ///  </summary>
+    function getByName( name: string ): IvkExtension;
+
+    ///  <summary>
+    ///    Returns true if the named extension is present in the extensions
+    ///    list, otherwise returns false.
+    ///  </summary>
+    function Exists( name: string ): boolean;
+
+    //- Pascal Only, properties -//
+    ///  <summary>
+    ///    Returns the number of extensions supported.
+    ///  </summary>
+    property Count: uint64 read getCount;
+
+    ///  <summary>
+    ///    Returns the extension specified by index.
+    ///  </summary>
+    property Name[ index: uint64 ]: IvkExtension read getExtension; default;
+
   end;
 
 implementation
-uses
-  darkLog,
-  darkvulkangen.ast.functionheader.standard,
-  darkvulkangen.ast.compoundstatement.standard;
-
-{ TdvFunction }
-
-constructor TdvFunction.Create( name: string );
-begin
-  inherited Create;
-  fHeader := inherited InsertChild( TdvFunctionHeader.Create( name ) ) as IdvFunctionHeader;
-  fBody := inherited InsertChild( TdvCompoundStatement.Create ) as IdvCompoundStatement;
-  fBody.LineBreaks := 2;
-end;
-
-destructor TdvFunction.Destroy;
-begin
-  fBody := nil;
-  fHeader := nil;
-  inherited Destroy;
-end;
-
-function TdvFunction.getBodySection: IdvCompoundStatement;
-begin
-  Result := fBody;
-end;
-
-function TdvFunction.getHeader: IdvFunctionHeader;
-begin
-  Result := fHeader;
-end;
-
-function TdvFunction.InsertChild(node: IdvASTNode): IdvASTNode;
-begin
-  Result := nil;
-  Log.Insert(ENoChildren,TLogSeverity.lsError);
-end;
 
 end.
-
